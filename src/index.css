@@ -1058,3 +1058,69 @@ textarea:focus {
 .fifa-locked {
   filter: grayscale(1) brightness(0.4);
 }
+
+/* ---------- Fotos ---------- */
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(0, 0, 0, 0.75);
+  display: grid;
+  place-items: center;
+  padding: 16px;
+}
+.modal-box {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 16px;
+  width: 100%;
+  max-width: 340px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: stretch;
+}
+.modal-box h3 {
+  margin: 0;
+}
+.cropper {
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #111;
+  touch-action: none;
+  cursor: grab;
+  align-self: center;
+  user-select: none;
+}
+.cropper:active {
+  cursor: grabbing;
+}
+.cropper img {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  max-width: none;
+  pointer-events: none;
+}
+.cropper-guide {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  /* forma de la foto a la carta: arrodonida a dalt */
+  border-radius: 50% 50% 12px 12px;
+  box-shadow: 0 0 0 999px rgba(0, 0, 0, 0.45);
+  outline: 2px dashed rgba(255, 255, 255, 0.6);
+  outline-offset: -2px;
+}
+.card-with-ctl {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.photo-ctl-compact .btn {
+  padding: 6px 10px;
+  font-size: 13px;
+}

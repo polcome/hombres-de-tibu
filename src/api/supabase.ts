@@ -13,11 +13,17 @@ function check<T>(r: { data: T; error: { message: string } | null }): T {
 export function createSupabaseApi(url: string, key: string): Api {
   const sb: SupabaseClient = createClient(url, key)
 
+  async function upload(memberId: string, name: string, image: Blob) {
+    const path = `${memberId}/${name}-${Date.now()}.jpg`
+    check(await sb.storage.from('avatars').upload(path, image, { contentType: 'image/jpeg', upsert: true }))
+    return sb.storage.from('avatars').getPublicUrl(path).data.publicUrl
+  }
+
   return {
     mode: 'supabase',
 
     async loadAll() {
-      const [members, months, trainings, awards, expedients, comments, ballots, voters] = await Promise.all([
+      const [members, months, trainings, awards, expedients, comments, ballots, voters, cardPhotos] = await Promise.all([
         sb.from('members').select('id,slug,name,nickname,photo_url,is_admin,active,auth_id').order('name'),
         sb.from('months').select('*').order('id'),
         sb.from('trainings').select('id,member_id,date,kind,count,baseline,note').order('date'),
@@ -26,6 +32,7 @@ export function createSupabaseApi(url: string, key: string): Api {
         sb.from('comments').select('*').order('created_at'),
         sb.from('ballots').select('*'),
         sb.from('voters').select('*'),
+        sb.from('card_photos').select('*'),
       ])
       return {
         members: check(members),
@@ -36,6 +43,8 @@ export function createSupabaseApi(url: string, key: string): Api {
         comments: check(comments),
         ballots: check(ballots),
         voters: check(voters),
+        // Si encara no s'ha executat la migració de fotos, no petem
+        cardPhotos: cardPhotos.error ? [] : cardPhotos.data,
       } as DB
     },
 
@@ -132,12 +141,17 @@ export function createSupabaseApi(url: string, key: string): Api {
     async resetMember(id) {
       return check(await sb.rpc('admin_reset_member', { p_member: id })) as string
     },
-    async uploadPhoto(memberId, file) {
-      const path = `${memberId}-${Date.now()}.${file.name.split('.').pop() || 'jpg'}`
-      check(await sb.storage.from('avatars').upload(path, file, { upsert: true }))
-      const url = sb.storage.from('avatars').getPublicUrl(path).data.publicUrl
+    async setPhoto(memberId, image) {
+      const url = image ? await upload(memberId, 'base', image) : null
       await this.updateMember(memberId, { photo_url: url })
-      return url
+    },
+    async setCardPhoto(memberId, cardKey, image) {
+      if (!image) {
+        check(await sb.from('card_photos').delete().eq('member_id', memberId).eq('card_key', cardKey))
+        return
+      }
+      const url = await upload(memberId, cardKey.replace(/[^a-z0-9-]/gi, '_'), image)
+      check(await sb.from('card_photos').upsert({ member_id: memberId, card_key: cardKey, url }))
     },
     async deleteExpedient(id) {
       check(await sb.from('expedients').delete().eq('id', id))

@@ -34,7 +34,7 @@ function seed(): DB {
     active: true,
   }))
   const by = (s: string) => members.find((m) => m.slug === s)!.id
-  const db: DB = { members, months: [], trainings: [], awards: [], expedients: [], comments: [], ballots: [], voters: [] }
+  const db: DB = { members, months: [], trainings: [], awards: [], expedients: [], comments: [], ballots: [], voters: [], cardPhotos: [] }
 
   BASE.forEach(([slug, , gym, fora]) => {
     db.trainings.push({ id: uid(), member_id: by(slug), date: '2026-10-16', kind: 'gym', count: gym, baseline: true, note: 'Recompte inicial 2026' })
@@ -98,6 +98,12 @@ function mutate(fn: (db: DB) => void) {
   fn(db)
   save(db)
 }
+const toDataUrl = (b: Blob) =>
+  new Promise<string>((res) => {
+    const r = new FileReader()
+    r.onload = () => res(r.result as string)
+    r.readAsDataURL(b)
+  })
 const tick = () => new Promise((r) => setTimeout(r, 80))
 
 export function resetDemo() {
@@ -117,7 +123,7 @@ export function createDemoApi(): Api {
     async loadAll() {
       await tick()
       const db = load()
-      return db
+      return { ...db, cardPhotos: db.cardPhotos ?? [] }
     },
     async me() {
       return meId()
@@ -222,14 +228,17 @@ export function createDemoApi(): Api {
     async resetMember() {
       return 'DEMO'
     },
-    async uploadPhoto(memberId, file) {
-      const url = await new Promise<string>((res) => {
-        const r = new FileReader()
-        r.onload = () => res(r.result as string)
-        r.readAsDataURL(file)
-      })
+    async setPhoto(memberId, image) {
+      const url = image ? await toDataUrl(image) : null
       await this.updateMember(memberId, { photo_url: url })
-      return url
+    },
+    async setCardPhoto(memberId, cardKey, image) {
+      requireAdmin()
+      const url = image ? await toDataUrl(image) : null
+      mutate((db) => {
+        db.cardPhotos = (db.cardPhotos ?? []).filter((p) => !(p.member_id === memberId && p.card_key === cardKey))
+        if (url) db.cardPhotos.push({ member_id: memberId, card_key: cardKey, url })
+      })
     },
     async deleteExpedient(id) {
       requireAdmin()

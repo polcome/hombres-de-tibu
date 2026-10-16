@@ -27,7 +27,10 @@ export interface Api {
   updateMember(id: string, patch: Partial<Member>): Promise<void>
   inviteCodes(): Promise<Record<string, string>>
   resetMember(id: string): Promise<string>
-  uploadPhoto(memberId: string, file: File): Promise<string>
+  /** Puja la foto base (blob) o la treu (null) */
+  setPhoto(memberId: string, image: Blob | null): Promise<void>
+  /** Foto d'una carta especial concreta; null la treu */
+  setCardPhoto(memberId: string, cardKey: string, image: Blob | null): Promise<void>
   deleteExpedient(id: string): Promise<void>
   deleteComment(id: string): Promise<void>
 }

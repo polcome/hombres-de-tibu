@@ -72,6 +72,12 @@ export interface Voter {
   member_id: string
 }
 
+export interface CardPhoto {
+  member_id: string
+  card_key: string // `${defId}:${mes o any}`
+  url: string
+}
+
 export interface DB {
   members: Member[]
   months: Month[]
@@ -81,6 +87,7 @@ export interface DB {
   comments: Comment[]
   ballots: Ballot[]
   voters: Voter[]
+  cardPhotos: CardPhoto[]
 }
 
 export const EMOJIS = ['😂', '🔥', '💀', '👏', '🤡'] as const

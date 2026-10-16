@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useStore } from '../store'
 import { activeMonth, closedMonths, currentMonthKey, formatDeadline, monthLabel } from '../logic/months'
-import { displayName, fmtTotals, memberById, monthTotals, rating, unlockedCards, winnersOf } from '../logic/stats'
+import { displayName, fmtTotals, memberById, monthTotals, photoFor, rating, unlockedCards, winnersOf } from '../logic/stats'
 import { Avatar } from '../components/Avatar'
 import { FifaCard } from '../components/FifaCard'
 import { Section, WhatsAppButton } from '../components/ui'
@@ -116,6 +116,7 @@ export default function Home() {
                       label={monthLabel(last.id)}
                       title={type === 'mvp' ? 'Tibu of the Month' : 'Riota del Mes'}
                       emoji={type === 'mvp' ? '🏆' : '🤡'}
+                      photo={photoFor(db, m, `${type === 'mvp' ? 'totm' : 'antim'}:${last.id}`)}
                     />
                   </Link>
                 )

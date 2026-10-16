@@ -7,6 +7,8 @@ import { displayName, memberById } from '../logic/stats'
 import { generateActa } from '../logic/acta'
 import { Avatar } from '../components/Avatar'
 import { CopyButton, ErrorMsg, MemberSelect, Section } from '../components/ui'
+import { PhotoControls } from '../components/PhotoControls'
+import { Link } from 'react-router-dom'
 import { appUrl } from './Home'
 
 const toLocalInput = (iso: string | null) => {
@@ -178,19 +180,11 @@ function MemberRow({ m, code, onCode }: { m: Member; code?: string; onCode: (c: 
 
   return (
     <div className="member-row">
-      <label className="avatar-upload" title="Canviar foto">
+      <Link to={`/jugador/${m.slug}`} title="Fitxa i fotos de cartes">
         <Avatar member={m} size={44} />
-        <input
-          type="file"
-          accept="image/*"
-          hidden
-          onChange={(e) => {
-            const f = e.target.files?.[0]
-            if (f) run(() => api.uploadPhoto(m.id, f))
-          }}
-        />
-      </label>
+      </Link>
       <div className="grow stack-sm">
+        <PhotoControls compact url={m.photo_url} onChange={(img) => api.setPhoto(m.id, img)} />
         <div className="row">
           <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nom" />
           <input value={nick} onChange={(e) => setNick(e.target.value)} placeholder="Sobrenom a la carta" />
@@ -244,7 +238,9 @@ function MembersAdmin() {
 
   return (
     <Section title={`👥 Membres (${db.members.length})`}>
-      <p className="muted small">Toca la foto per canviar-la (posa-hi els edits de les cares 😂). Passa a cadascú el seu codi per activar el compte.</p>
+      <p className="muted small">
+        Aquí canvies la foto base (posa-hi els edits de les cares 😂). Les fotos de cada carta especial es posen des de la fitxa del jugador: toca la seva cara. Passa a cadascú el seu codi per activar el compte.
+      </p>
       <div className="stack-sm">
         {db.members.map((m) => (
           <MemberRow key={m.id} m={m} code={codes[m.id]} onCode={(c) => setCodes({ ...codes, [m.id]: c })} />

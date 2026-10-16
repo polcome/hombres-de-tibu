@@ -222,14 +222,25 @@ export function unlockedCards(db: DB): CardUnlock[] {
   return out.sort((a, b) => b.sortKey.localeCompare(a.sortKey))
 }
 
+export const cardKey = (u: Pick<CardUnlock, 'def' | 'sortKey'>) => `${u.def.id}:${u.sortKey}`
+
+/** Foto d'una carta concreta (si n'hi ha) o la foto base del membre */
+export function photoFor(db: DB, member: Member, key?: string) {
+  return (key && db.cardPhotos.find((p) => p.member_id === member.id && p.card_key === key)?.url) || member.photo_url
+}
+
 /** Carta "principal" d'un membre: la millor especial recent o la base */
-export function featuredCard(db: DB, member: Member, unlocks: CardUnlock[]): { variant: CardVariant; label?: string; boost: number; title?: string } {
+export function featuredCard(
+  db: DB,
+  member: Member,
+  unlocks: CardUnlock[],
+): { variant: CardVariant; label?: string; boost: number; title?: string; key?: string } {
   const last = closedMonths(db).at(-1)?.id
   const mine = unlocks.filter((u) => u.memberId === member.id)
   const recent = (id: string) => mine.find((u) => u.def.id === id && (u.sortKey === last || u.sortKey === last?.slice(0, 4)))
   for (const id of ['bdo', 'fang', 'totm', 'antim']) {
     const u = recent(id)
-    if (u) return { variant: u.def.variant, label: u.label, boost: u.def.boost, title: u.def.name }
+    if (u) return { variant: u.def.variant, label: u.label, boost: u.def.boost, title: u.def.name, key: cardKey(u) }
   }
   return { variant: rating(db, member.id).tier, boost: 0 }
 }

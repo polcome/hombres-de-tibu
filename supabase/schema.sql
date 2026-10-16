@@ -267,3 +267,16 @@ create policy "public avatars"      on storage.objects for select using (bucket_
 create policy "admin upload avatar" on storage.objects for insert with check (bucket_id = 'avatars' and is_admin());
 create policy "admin update avatar" on storage.objects for update using (bucket_id = 'avatars' and is_admin());
 create policy "admin delete avatar" on storage.objects for delete using (bucket_id = 'avatars' and is_admin());
+
+-- ---------------------------------------------------------------------
+-- Fotos per carta especial
+-- ---------------------------------------------------------------------
+create table if not exists card_photos (
+  member_id uuid not null references members(id) on delete cascade,
+  card_key  text not null,
+  url       text not null,
+  primary key (member_id, card_key)
+);
+alter table card_photos enable row level security;
+create policy "read card photos"  on card_photos for select using (true);
+create policy "admin card photos" on card_photos for all using (is_admin()) with check (is_admin());

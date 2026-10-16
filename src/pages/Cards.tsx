@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useStore } from '../store'
-import { CARD_DEFS, STAT_LABELS, displayName, featuredCard, memberById, rating, unlockedCards } from '../logic/stats'
+import { CARD_DEFS, STAT_LABELS, cardKey, displayName, featuredCard, memberById, photoFor, rating, unlockedCards } from '../logic/stats'
 import { FifaCard } from '../components/FifaCard'
 import { Section } from '../components/ui'
 
@@ -32,7 +32,7 @@ export default function Cards() {
         <div className="cards-grid">
           {squad.map(({ m, r, f }) => (
             <Link key={m.id} to={`/jugador/${m.slug}`}>
-              <FifaCard member={m} rating={r} variant={f.variant} boost={f.boost} label={f.label} title={f.title} size="sm" />
+              <FifaCard member={m} rating={r} variant={f.variant} boost={f.boost} label={f.label} title={f.title} size="sm" photo={photoFor(db, m, f.key)} />
             </Link>
           ))}
         </div>
@@ -74,6 +74,7 @@ export default function Cards() {
                             title={def.name}
                             emoji={def.emoji}
                             size="sm"
+                            photo={photoFor(db, m, cardKey(u))}
                           />
                         </Link>
                       )
