@@ -23,21 +23,32 @@ export default function Trainings() {
   const [shareable, setShareable] = useState<{ file: File; text: string } | null>(null)
   const fileInput = useRef<HTMLInputElement>(null)
 
+  // Si prems +1 Gym sense foto, s'obre la càmera i en triar-la s'apunta sol
+  const pendingGym = useRef(false)
+  const openPicker = (forGym: boolean) => {
+    pendingGym.current = forGym
+    fileInput.current?.click()
+  }
+
   const pickPhoto = async (f: File) => {
     const blob = await compressImage(f)
     if (photo) URL.revokeObjectURL(photo.url)
-    setPhoto({ blob, url: URL.createObjectURL(blob) })
+    const p = { blob, url: URL.createObjectURL(blob) }
+    setPhoto(p)
+    return p
   }
 
-  const add = async (kind: TrainingKind) => {
+  const add = async (kind: TrainingKind, pic = photo) => {
     if (!me) return
-    const ok = await run(() => api.addTraining({ member_id: me.id, date, kind, count: 1, note: note.trim() || null }, photo?.blob))
+    // Al gym la foto és obligatòria
+    if (kind === 'gym' && !pic) return openPicker(true)
+    const ok = await run(() => api.addTraining({ member_id: me.id, date, kind, count: 1, note: note.trim() || null }, pic?.blob))
     if (ok) {
       const t = yearTotals(db, me.id, year)
       t[kind] += 1
       const text = `${kind === 'gym' ? '💪' : '🏃'} ${displayName(me)} +1 ${kind === 'gym' ? 'gym' : 'fora'}${note.trim() ? ` (${note.trim()})` : ''} · porta ${fmtTotals(t)}`
-      setShareable(photo ? { file: new File([photo.blob], 'entreno.jpg', { type: 'image/jpeg' }), text } : null)
-      if (photo) URL.revokeObjectURL(photo.url)
+      setShareable(pic ? { file: new File([pic.blob], 'entreno.jpg', { type: 'image/jpeg' }), text } : null)
+      if (pic) URL.revokeObjectURL(pic.url)
       setPhoto(null)
       setNote('')
       setFlash(kind === 'gym' ? '💪 +1 al gym!' : '🏃 +1 fora del gym!')
@@ -76,7 +87,7 @@ export default function Trainings() {
                   <div className="stack-sm">
                     <span className="small ok">✓ Foto de prova afegida</span>
                     <div className="row">
-                      <button type="button" className="btn" onClick={() => fileInput.current?.click()}>
+                      <button type="button" className="btn" onClick={() => openPicker(false)}>
                         Canviar
                       </button>
                       <button type="button" className="btn danger" onClick={() => setPhoto(null)}>
@@ -86,8 +97,8 @@ export default function Trainings() {
                   </div>
                 </>
               ) : (
-                <button type="button" className="btn grow" onClick={() => fileInput.current?.click()}>
-                  📷 Afegir foto de prova
+                <button type="button" className="btn grow" onClick={() => openPicker(false)}>
+                  📷 Afegir foto de prova <span className="muted small">(obligatòria al gym)</span>
                 </button>
               )}
               <input
@@ -95,21 +106,27 @@ export default function Trainings() {
                 type="file"
                 accept="image/*"
                 hidden
-                onChange={(e) => {
+                onChange={async (e) => {
                   const f = e.target.files?.[0]
-                  if (f) pickPhoto(f)
                   e.target.value = ''
+                  if (!f) return
+                  const p = await pickPhoto(f)
+                  if (pendingGym.current) {
+                    pendingGym.current = false
+                    add('gym', p)
+                  }
                 }}
               />
             </div>
             <div className="row">
               <button className="btn btn-primary btn-big grow" disabled={busy} onClick={() => add('gym')}>
-                +1 Gym 💪
+                +1 Gym 💪{!photo && ' 📷'}
               </button>
               <button className="btn btn-big grow" disabled={busy} onClick={() => add('fora')}>
                 +1 Fora (…) 🏃
               </button>
             </div>
+            <p className="muted small">💪 Al gym cal foto de prova (si no n'has posat, s'obrirà la càmera). 🏃 Fora del gym és opcional.</p>
             {flash && <div className="flash">{flash}</div>}
             {shareable && (
               <div className="row wrap center">
