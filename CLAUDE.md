@@ -1,0 +1,66 @@
+# Hombres de Tibu — context per a Claude
+
+App web del grup d'amics del gimnàs "Los Hombres de Tibu" (13 membres). Serveix per a la votació mensual de MVP i anti-MVP, el recompte d'entrenos, un dossier d'expedients i cartes tipus FIFA. Tot és comèdia entre amics.
+
+- **Idioma:** tota la UI, els textos i els missatges de commit en **català** (col·loquial i amb humor). Parla en català amb l'usuari.
+- **Admin / propietari:** Come (usuari `come`, GitHub `polcome`). Ell decideix.
+- **Web:** https://polcome.github.io/hombres-de-tibu/
+- **Cost:** ha de ser 100% gratuït. Res de serveis de pagament ni d'APIs d'IA de pagament.
+
+## Stack
+- Vite + React 19 + TypeScript, CSS propi (`src/index.css`, tema fosc). No hi ha cap framework CSS.
+- `react-router-dom` amb **HashRouter** (perquè funcioni a GitHub Pages) i `html-to-image` per descarregar les cartes.
+- Backend: **Supabase** (Postgres + Auth + Storage), pla gratuït, cridat directament des del client amb la clau anon. La seguretat la donen **RLS i funcions RPC** (`supabase/schema.sql`).
+- Deploy: GitHub Actions → GitHub Pages (`.github/workflows/deploy.yml`) a cada push a `main`. Les variables de repo `SUPABASE_URL` i `SUPABASE_ANON_KEY` s'injecten com a `VITE_SUPABASE_*`.
+- Sense aquestes variables, l'app arrenca en **mode demo** (`src/api/demo.ts`): dades d'exemple a localStorage, contrasenya "tibu" per a tothom, i Come és l'admin.
+
+## Estructura
+- `src/api/types.ts`: interfície `Api`. N'hi ha dues implementacions, `supabase.ts` i `demo.ts`, que **s'han de mantenir en paral·lel**.
+- `src/store.tsx`: carrega tota la BD d'un cop (`loadAll`), exposa `useStore()` i `useAction()`, i després de cada acció recarrega les dades.
+- `src/logic/stats.ts`: totals, valoració FIFA (`rating`), cartes especials (`CARD_DEFS`, `unlockedCards`) i `photoFor`. Tot es **calcula al client**.
+- `src/logic/acta.ts`: genera l'acta del mes amb plantilles (sense IA) i el "prompt per a IA" per enganxar a ChatGPT o Claude.
+- `src/logic/months.ts`: utilitats de mesos (`'YYYY-MM'`).
+- `src/pages/*`: Home, Dossier, Vote, Trainings, Cards, Palmares, MonthPage, Player, Admin, Login.
+- `src/components/*`: FifaCard, CardZoom (pop-up de cartes d'assoliment), PhotoEditor (encuadrar), PhotoControls, CameraCapture (càmera dins l'app amb getUserMedia), TrainingItem, ui.
+
+## Decisions de disseny (no les canviïs sense preguntar)
+- **Vot 100% secret:** la taula `ballots` no té votant ni data, i `voters` només guarda qui ha votat. Es vota per la RPC `cast_vote`.
+  - No et pots votar a tu mateix, el MVP i l'anti han de ser persones diferents i cada motiu ha de tenir mínim 15 caràcters.
+  - L'admin veu les paperetes de forma anònima, les pot anul·lar i pot esborrar un votant perquè torni a votar.
+- **Tancar el mes:** ho fa la RPC `close_month`. En cas d'empat guanyen tots. Després s'obre el mes següent.
+- **Comptes:** login amb usuari + contrasenya. L'email és fictici (`<slug>@hombresdetibu.app`) i a Supabase la confirmació d'email està desactivada.
+  - L'alta es fa amb un codi d'activació (`member_secrets`) que valida el trigger `handle_new_user`.
+- **Expedients i comentaris:** anònims, no cal sessió. Es poden signar amb un nom lliure.
+- **Entrenos:** format "gym (fora)".
+  - Hi ha un recompte inicial de 2026 amb `baseline = true`, que compta per a l'any però no per a cap mes.
+  - **Foto obligatòria per a gym** (només ho controla el client) i opcional per a fora. Es pot fer amb la càmera de l'app o triar de la galeria.
+  - Les fotos es comprimeixen a 1080px abans de pujar-les.
+  - Les fotos de prova són **d'una sola visualització** per dispositiu (localStorage). L'autor i l'admin les poden veure sempre.
+  - Validació del grup amb ✅/🧢. Un entreno és "dubtós" amb 3 o més 🧢 i més 🧢 que ✅. Continua comptant fins que l'admin l'esborri.
+- **Cartes FIFA:** la mitjana és 30% ENT + 10% FOR + 20% MVP + 20% COM + 10% VOT + 10% CAR.
+  - Nivells: bronze <65, plata 65–74, or ≥75.
+  - Hi ha 16 cartes especials amb reptes difícils (TOTM, Riota del Mes, Icona, Non Grata, Hat-trick, Pilota d'Or/Fang, Redempció…).
+- **Fotos de membres i cartes:** només l'admin les puja o les treu. N'hi ha una de base i una opcional per a cada carta especial (`card_photos`, clau `defId:mes|any`).
+  - Les cartes base porten al perfil. Les cartes d'assoliment s'obren en gran en un pop-up.
+- **Descartat de moment** (l'usuari ho ha dit): minijocs, porra/Tibucoins, premis, comodins, rol "editor de fotos" i blindar la foto obligatòria a la BD.
+
+## Supabase: scripts ja executats a producció
+1. `supabase/schema.sql`
+2. `supabase/seed.sql`: 13 membres, recompte 2026, mes 2026-10 i Come admin.
+3. `supabase/palmares-2026.sql`: MVPs i antis de gener a setembre de 2026.
+4. `supabase/migracio-fotos-cartes.sql`: taula `card_photos`.
+5. `supabase/migracio-proves-entrenos.sql`: `trainings.photo_url`, `training_votes` i el bucket `proofs`.
+
+Quan un canvi necessiti BD:
+- Crea una **migració nova** `supabase/migracio-*.sql` que sigui idempotent (`if not exists`, `drop policy if exists`).
+- Afegeix-la també a `schema.sql` per a instal·lacions noves.
+- Fes que el client **no peti** si la migració encara no s'ha executat (vegeu com `loadAll` tolera `card_photos` i `training_votes`).
+- Després digues a l'usuari que l'executi a Supabase → SQL Editor. Claude no té accés a la BD de producció.
+
+Correspondència de noms (per al palmarès): Pol Come = `come`, Pol Sainz = `polsy`, Ferran Quintana = `fq`, Ferran Mateu Dos Santos = `ferran`, Arnau Deig = `deig`, Gerard Morales = `gerard`, Eduard Papaseit = `eduard`, Marc Sierra = `marc`, Josep Pareja = `josep`.
+
+## Com treballar-hi
+- `npm install`, `npm run dev` (mode demo) i `npm run build` (inclou `tsc -b`, que ha de passar sense errors ni variables sense usar).
+- Prova els canvis visuals amb Playwright contra `npx vite preview` en mode demo, amb viewport de mòbil (390×844). L'usuari ho fa servir sobretot des del mòbil.
+- Commits petits en català i push a `main` (desplega sol).
+- Mantén l'estil del codi existent: components funcionals, sense punt i coma, cometes simples, text de la UI en català.
