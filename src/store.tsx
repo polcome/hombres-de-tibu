@@ -10,7 +10,7 @@ interface Store {
   reload: () => Promise<void>
 }
 
-const EMPTY: DB = { members: [], months: [], trainings: [], awards: [], expedients: [], comments: [], ballots: [], voters: [], cardPhotos: [] }
+const EMPTY: DB = { members: [], months: [], trainings: [], awards: [], expedients: [], comments: [], ballots: [], voters: [], cardPhotos: [], trainingVotes: [] }
 const Ctx = createContext<Store>({ db: EMPTY, me: null, loading: true, error: null, reload: async () => {} })
 
 export function StoreProvider({ children }: { children: ReactNode }) {

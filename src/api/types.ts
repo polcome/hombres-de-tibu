@@ -9,7 +9,12 @@ export interface Api {
   activate(slug: string, code: string, password: string): Promise<void>
   logout(): Promise<void>
 
-  addTraining(t: Omit<Training, 'id' | 'baseline' | 'note'> & { note?: string | null; baseline?: boolean }): Promise<void>
+  addTraining(
+    t: Omit<Training, 'id' | 'baseline' | 'note' | 'photo_url' | 'created_at'> & { note?: string | null; baseline?: boolean },
+    photo?: Blob | null,
+  ): Promise<void>
+  /** Validar (ok) o marcar com a dubtós (fake) l'entreno d'un altre; null treu el vot */
+  voteTraining(trainingId: string, vote: 'ok' | 'fake' | null): Promise<void>
   deleteTraining(id: string): Promise<void>
   addExpedient(e: Pick<Expedient, 'month_id' | 'target_id' | 'kind' | 'text' | 'author'>): Promise<void>
   addComment(c: { expedient_id: string; author: string | null; text: string }): Promise<void>

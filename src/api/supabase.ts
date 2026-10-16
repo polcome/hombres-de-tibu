@@ -23,16 +23,17 @@ export function createSupabaseApi(url: string, key: string): Api {
     mode: 'supabase',
 
     async loadAll() {
-      const [members, months, trainings, awards, expedients, comments, ballots, voters, cardPhotos] = await Promise.all([
+      const [members, months, trainings, awards, expedients, comments, ballots, voters, cardPhotos, trainingVotes] = await Promise.all([
         sb.from('members').select('id,slug,name,nickname,photo_url,is_admin,active,auth_id').order('name'),
         sb.from('months').select('*').order('id'),
-        sb.from('trainings').select('id,member_id,date,kind,count,baseline,note').order('date'),
+        sb.from('trainings').select('*').order('date'),
         sb.from('awards').select('*'),
         sb.from('expedients').select('*').order('created_at', { ascending: false }),
         sb.from('comments').select('*').order('created_at'),
         sb.from('ballots').select('*'),
         sb.from('voters').select('*'),
         sb.from('card_photos').select('*'),
+        sb.from('training_votes').select('*'),
       ])
       return {
         members: check(members),
@@ -45,6 +46,7 @@ export function createSupabaseApi(url: string, key: string): Api {
         voters: check(voters),
         // Si encara no s'ha executat la migració de fotos, no petem
         cardPhotos: cardPhotos.error ? [] : cardPhotos.data,
+        trainingVotes: trainingVotes.error ? [] : trainingVotes.data,
       } as DB
     },
 
@@ -83,8 +85,20 @@ export function createSupabaseApi(url: string, key: string): Api {
       await sb.auth.signOut()
     },
 
-    async addTraining(t) {
-      check(await sb.from('trainings').insert({ ...t, note: t.note ?? null }))
+    async addTraining(t, photo) {
+      let photo_url: string | undefined
+      if (photo) {
+        const path = `${t.member_id}/${t.date}-${Date.now()}.jpg`
+        check(await sb.storage.from('proofs').upload(path, photo, { contentType: 'image/jpeg' }))
+        photo_url = sb.storage.from('proofs').getPublicUrl(path).data.publicUrl
+      }
+      check(await sb.from('trainings').insert({ ...t, note: t.note ?? null, ...(photo_url ? { photo_url } : {}) }))
+    },
+    async voteTraining(trainingId, vote) {
+      const me = await this.me()
+      if (!me) throw new Error("Has d'iniciar sessió")
+      if (vote) check(await sb.from('training_votes').upsert({ training_id: trainingId, member_id: me, vote }))
+      else check(await sb.from('training_votes').delete().eq('training_id', trainingId).eq('member_id', me))
     },
     async deleteTraining(id) {
       check(await sb.from('trainings').delete().eq('id', id))

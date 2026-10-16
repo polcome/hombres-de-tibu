@@ -28,6 +28,14 @@ export interface Training {
   count: number
   baseline: boolean
   note: string | null
+  photo_url?: string | null
+  created_at?: string
+}
+
+export interface TrainingVote {
+  training_id: string
+  member_id: string
+  vote: 'ok' | 'fake'
 }
 
 export interface Award {
@@ -88,6 +96,7 @@ export interface DB {
   ballots: Ballot[]
   voters: Voter[]
   cardPhotos: CardPhoto[]
+  trainingVotes: TrainingVote[]
 }
 
 export const EMOJIS = ['😂', '🔥', '💀', '👏', '🤡'] as const

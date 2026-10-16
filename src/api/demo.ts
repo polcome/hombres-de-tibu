@@ -34,7 +34,7 @@ function seed(): DB {
     active: true,
   }))
   const by = (s: string) => members.find((m) => m.slug === s)!.id
-  const db: DB = { members, months: [], trainings: [], awards: [], expedients: [], comments: [], ballots: [], voters: [], cardPhotos: [] }
+  const db: DB = { members, months: [], trainings: [], awards: [], expedients: [], comments: [], ballots: [], voters: [], cardPhotos: [], trainingVotes: [] }
 
   BASE.forEach(([slug, , gym, fora]) => {
     db.trainings.push({ id: uid(), member_id: by(slug), date: '2026-10-16', kind: 'gym', count: gym, baseline: true, note: 'Recompte inicial 2026' })
@@ -123,7 +123,7 @@ export function createDemoApi(): Api {
     async loadAll() {
       await tick()
       const db = load()
-      return { ...db, cardPhotos: db.cardPhotos ?? [] }
+      return { ...db, cardPhotos: db.cardPhotos ?? [], trainingVotes: db.trainingVotes ?? [] }
     },
     async me() {
       return meId()
@@ -139,8 +139,18 @@ export function createDemoApi(): Api {
     async logout() {
       localStorage.removeItem(ME)
     },
-    async addTraining(t) {
-      mutate((db) => db.trainings.push({ id: uid(), baseline: false, note: null, ...t }))
+    async addTraining(t, photo) {
+      const photo_url = photo ? await toDataUrl(photo) : null
+      mutate((db) => db.trainings.push({ id: uid(), baseline: false, note: null, ...t, photo_url, created_at: new Date().toISOString() }))
+    },
+    async voteTraining(trainingId, vote) {
+      const me = meId()
+      if (!me) throw new Error("Has d'iniciar sessió")
+      mutate((db) => {
+        if (db.trainings.find((t) => t.id === trainingId)?.member_id === me) throw new Error('No et pots validar a tu mateix 😏')
+        db.trainingVotes = (db.trainingVotes ?? []).filter((v) => !(v.training_id === trainingId && v.member_id === me))
+        if (vote) db.trainingVotes.push({ training_id: trainingId, member_id: me, vote })
+      })
     },
     async deleteTraining(id) {
       mutate((db) => (db.trainings = db.trainings.filter((t) => t.id !== id)))
