@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useStore } from '../store'
-import { CARD_DEFS, STAT_LABELS, cardKey, displayName, featuredCard, memberById, photoFor, rating, unlockedCards } from '../logic/stats'
+import { CARD_DEFS, STAT_LABELS, displayName, featuredCard, photoFor, rating, unlockedCards } from '../logic/stats'
 import { FifaCard } from '../components/FifaCard'
+import { CardZoom, unlockProps } from '../components/CardZoom'
 import { Section } from '../components/ui'
 
 export default function Cards() {
@@ -61,24 +62,11 @@ export default function Cards() {
                   </div>
                 ) : (
                   <div className="cards-row scroll">
-                    {got.map((u) => {
-                      const m = memberById(db, u.memberId)!
-                      return (
-                        <Link key={u.memberId + u.sortKey} to={`/jugador/${m.slug}`}>
-                          <FifaCard
-                            member={m}
-                            rating={rating(db, m.id, u.sortKey.length === 7 ? u.sortKey : undefined)}
-                            variant={def.variant}
-                            boost={def.boost}
-                            label={u.label}
-                            title={def.name}
-                            emoji={def.emoji}
-                            size="sm"
-                            photo={photoFor(db, m, cardKey(u))}
-                          />
-                        </Link>
-                      )
-                    })}
+                    {got.map((u) => (
+                      <CardZoom key={u.memberId + u.sortKey} card={unlockProps(db, u)} def={def}>
+                        <FifaCard {...unlockProps(db, u)} size="sm" />
+                      </CardZoom>
+                    ))}
                   </div>
                 )}
               </Section>

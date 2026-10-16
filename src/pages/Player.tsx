@@ -24,6 +24,7 @@ import {
 } from "../logic/stats";
 import { PhotoControls } from "../components/PhotoControls";
 import { FifaCard } from "../components/FifaCard";
+import { CardZoom, unlockProps } from "../components/CardZoom";
 import { Section } from "../components/ui";
 import { ExpedientItem } from "./Dossier";
 
@@ -201,21 +202,9 @@ export default function Player() {
           <div className="cards-row scroll">
             {mine.map((u) => (
               <div key={u.def.id + u.sortKey} className="card-with-ctl">
-                <FifaCard
-                  member={m}
-                  rating={rating(
-                    db,
-                    m.id,
-                    u.sortKey.length === 7 ? u.sortKey : undefined,
-                  )}
-                  variant={u.def.variant}
-                  boost={u.def.boost}
-                  label={u.label}
-                  title={u.def.name}
-                  emoji={u.def.emoji}
-                  size="sm"
-                  photo={photoFor(db, m, cardKey(u))}
-                />
+                <CardZoom card={unlockProps(db, u)} def={u.def}>
+                  <FifaCard {...unlockProps(db, u)} size="sm" />
+                </CardZoom>
                 {me?.is_admin && (
                   <PhotoControls
                     compact

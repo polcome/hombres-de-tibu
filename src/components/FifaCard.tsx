@@ -11,7 +11,7 @@ interface Props {
   label?: string
   title?: string
   emoji?: string
-  size?: 'sm' | 'md' | 'lg'
+  size?: 'sm' | 'md' | 'lg' | 'xl'
   locked?: boolean
   /** Foto específica d'aquesta carta (si no, la foto base) */
   photo?: string | null

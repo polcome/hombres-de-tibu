@@ -4,6 +4,7 @@ import { activeMonth, closedMonths, currentMonthKey, formatDeadline, monthLabel 
 import { displayName, fmtTotals, memberById, monthTotals, photoFor, rating, unlockedCards, winnersOf } from '../logic/stats'
 import { Avatar } from '../components/Avatar'
 import { FifaCard } from '../components/FifaCard'
+import { CardZoom, unlockProps } from '../components/CardZoom'
 import { Section, WhatsAppButton } from '../components/ui'
 import { ExpedientItem } from './Dossier'
 
@@ -105,14 +106,20 @@ export default function Home() {
             {(['mvp', 'anti'] as const).flatMap((type) =>
               winnersOf(db, last.id)[type].map((a) => {
                 const m = memberById(db, a.member_id)!
-                const def = unlocks.find((u) => u.memberId === a.member_id && u.sortKey === last.id && u.def.id === (type === 'mvp' ? 'totm' : 'antim'))
+                const u = unlocks.find((x) => x.memberId === a.member_id && x.sortKey === last.id && x.def.id === (type === 'mvp' ? 'totm' : 'antim'))
+                if (u)
+                  return (
+                    <CardZoom key={a.id} card={unlockProps(db, u)} def={u.def}>
+                      <FifaCard {...unlockProps(db, u)} />
+                    </CardZoom>
+                  )
                 return (
                   <Link key={a.id} to={`/jugador/${m.slug}`}>
                     <FifaCard
                       member={m}
                       rating={rating(db, m.id, last.id)}
                       variant={type === 'mvp' ? 'totm' : 'anti'}
-                      boost={def?.def.boost ?? 0}
+                      boost={0}
                       label={monthLabel(last.id)}
                       title={type === 'mvp' ? 'Tibu of the Month' : 'Riota del Mes'}
                       emoji={type === 'mvp' ? '🏆' : '🤡'}
