@@ -30,7 +30,7 @@ function seed(): DB {
     name,
     nickname: null,
     photo_url: null,
-    is_admin: slug === 'polsy',
+    is_admin: slug === 'come',
     active: true,
   }))
   const by = (s: string) => members.find((m) => m.slug === s)!.id

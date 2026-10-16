@@ -43,5 +43,5 @@ insert into months (id, status, deadline) values
   ('2026-10', 'active', '2026-11-01 22:00:00+01')
 on conflict (id) do nothing;
 
--- ⚠️ Canvia 'polsy' pel teu usuari per fer-te admin:
-update members set is_admin = true where slug = 'polsy';
+-- Admin: Come
+update members set is_admin = true where slug = 'come';

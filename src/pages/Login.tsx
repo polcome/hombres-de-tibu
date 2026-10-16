@@ -55,7 +55,7 @@ export default function Login() {
       </form>
       <p className="muted small">
         {api.mode === 'demo'
-          ? 'Mode demo: tria qualsevol usuari, contrasenya "tibu". Polsy és l\'admin.'
+          ? 'Mode demo: tria qualsevol usuari, contrasenya "tibu". Come és l\'admin.'
           : 'El primer cop, l\'admin et passa un codi per activar el compte i triar la teva contrasenya. Per escriure expedients no cal entrar.'}
       </p>
     </Section>

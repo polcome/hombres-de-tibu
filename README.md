@@ -18,7 +18,7 @@ App del grup per a la votació mensual de **MVP i anti-MVP**, el **recompte d'en
 ### 1. Supabase
 1. Crea un compte a <https://supabase.com> i un projecte nou (pla Free, regió Europe).
 2. **SQL Editor** → enganxa `supabase/schema.sql` → *Run*.
-3. Obre `supabase/seed.sql`, canvia `'polsy'` a l'última línia pel teu usuari (per ser admin) → *Run*.
+3. Enganxa `supabase/seed.sql` → *Run* (crea els 13 membres, el recompte 2026 i fa admin al Come).
 4. **Authentication → Sign In / Providers → Email**: desactiva **"Confirm email"** (els correus són ficticis, del tipus `josep@hombresdetibu.app`).
 5. **Project Settings → API**: copia la *Project URL* i la clau *anon public*.
 
