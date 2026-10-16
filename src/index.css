@@ -1305,3 +1305,59 @@ textarea:focus {
     transform: translateY(100%);
   }
 }
+
+/* ---------- Càmera ---------- */
+.camera {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: #000;
+  display: flex;
+  flex-direction: column;
+}
+.camera video {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  object-fit: cover;
+}
+.camera video.mirror {
+  transform: scaleX(-1);
+}
+.camera-err {
+  position: absolute;
+  top: 20px;
+  left: 16px;
+  right: 16px;
+}
+.camera-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 20px 16px calc(24px + env(safe-area-inset-bottom));
+  background: #000;
+}
+.camera-btn {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 22px;
+  cursor: pointer;
+}
+.camera-shutter {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  border: 5px solid #fff;
+  background: rgba(255, 255, 255, 0.85);
+  cursor: pointer;
+}
+.camera-shutter:active {
+  transform: scale(0.92);
+}
+.camera-shutter:disabled {
+  opacity: 0.4;
+}

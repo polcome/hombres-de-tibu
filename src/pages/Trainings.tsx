@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
 import { api } from '../api'
@@ -11,6 +11,7 @@ import { Avatar } from '../components/Avatar'
 import { CopyButton, ErrorMsg, Section, WhatsAppButton } from '../components/ui'
 import { TrainingItem } from '../components/TrainingItem'
 import { compressImage } from '../logic/image'
+import { CameraCapture, cameraSupported } from '../components/CameraCapture'
 
 export default function Trainings() {
   const { db, me } = useStore()
@@ -25,6 +26,7 @@ export default function Trainings() {
   const fileInput = useRef<HTMLInputElement>(null)
   const cameraInput = useRef<HTMLInputElement>(null)
   const [chooser, setChooser] = useState(false)
+  const [camera, setCamera] = useState(false)
 
   // Si prems +1 Gym sense foto, s'obre la càmera i en triar-la s'apunta sol
   const pendingGym = useRef(false)
@@ -34,12 +36,20 @@ export default function Trainings() {
   }
   const choose = (src: 'camera' | 'gallery') => {
     setChooser(false)
-    ;(src === 'camera' ? cameraInput : fileInput).current?.click()
+    if (src === 'camera' && cameraSupported()) setCamera(true)
+    else (src === 'camera' ? cameraInput : fileInput).current?.click()
   }
+  // Si la càmera de l'app no està disponible, provem amb la del sistema
+  const cameraFallback = useCallback(() => {
+    setCamera(false)
+    cameraInput.current?.click()
+  }, [])
   const onFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0]
     e.target.value = ''
-    if (!f) return
+    if (f) await applyPhoto(f)
+  }
+  const applyPhoto = async (f: Blob) => {
     const p = await pickPhoto(f)
     if (pendingGym.current) {
       pendingGym.current = false
@@ -47,7 +57,7 @@ export default function Trainings() {
     }
   }
 
-  const pickPhoto = async (f: File) => {
+  const pickPhoto = async (f: Blob) => {
     const blob = await compressImage(f)
     if (photo) URL.revokeObjectURL(photo.url)
     const p = { blob, url: URL.createObjectURL(blob) }
@@ -126,6 +136,16 @@ export default function Trainings() {
                 onChange={onFile}
               />
               <input ref={cameraInput} type="file" accept="image/*" capture="environment" hidden onChange={onFile} />
+              {camera && (
+                <CameraCapture
+                  onCancel={() => setCamera(false)}
+                  onUnavailable={cameraFallback}
+                  onCapture={(b) => {
+                    setCamera(false)
+                    applyPhoto(b)
+                  }}
+                />
+              )}
               {chooser &&
                 createPortal(
                   <div className="modal sheet" onClick={() => setChooser(false)}>
