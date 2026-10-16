@@ -1284,3 +1284,24 @@ textarea:focus {
   color: var(--muted);
   font-size: 13px;
 }
+.modal.sheet {
+  place-items: end center;
+  padding: 0;
+}
+.sheet-box {
+  width: 100%;
+  max-width: 480px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 20px 20px 0 0;
+  padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  animation: sheet-up 0.2s ease;
+}
+@keyframes sheet-up {
+  from {
+    transform: translateY(100%);
+  }
+}

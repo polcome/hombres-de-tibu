@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
 import { api } from '../api'
 import { useAction, useStore } from '../store'
@@ -22,12 +23,28 @@ export default function Trainings() {
   const [photo, setPhoto] = useState<{ blob: Blob; url: string } | null>(null)
   const [shareable, setShareable] = useState<{ file: File; text: string } | null>(null)
   const fileInput = useRef<HTMLInputElement>(null)
+  const cameraInput = useRef<HTMLInputElement>(null)
+  const [chooser, setChooser] = useState(false)
 
   // Si prems +1 Gym sense foto, s'obre la càmera i en triar-la s'apunta sol
   const pendingGym = useRef(false)
   const openPicker = (forGym: boolean) => {
     pendingGym.current = forGym
-    fileInput.current?.click()
+    setChooser(true)
+  }
+  const choose = (src: 'camera' | 'gallery') => {
+    setChooser(false)
+    ;(src === 'camera' ? cameraInput : fileInput).current?.click()
+  }
+  const onFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0]
+    e.target.value = ''
+    if (!f) return
+    const p = await pickPhoto(f)
+    if (pendingGym.current) {
+      pendingGym.current = false
+      add('gym', p)
+    }
   }
 
   const pickPhoto = async (f: File) => {
@@ -106,17 +123,27 @@ export default function Trainings() {
                 type="file"
                 accept="image/*"
                 hidden
-                onChange={async (e) => {
-                  const f = e.target.files?.[0]
-                  e.target.value = ''
-                  if (!f) return
-                  const p = await pickPhoto(f)
-                  if (pendingGym.current) {
-                    pendingGym.current = false
-                    add('gym', p)
-                  }
-                }}
+                onChange={onFile}
               />
+              <input ref={cameraInput} type="file" accept="image/*" capture="environment" hidden onChange={onFile} />
+              {chooser &&
+                createPortal(
+                  <div className="modal sheet" onClick={() => setChooser(false)}>
+                    <div className="sheet-box" onClick={(e) => e.stopPropagation()}>
+                      <div className="muted small center">{pendingGym.current ? 'Foto de prova del gym 💪' : 'Foto de prova'}</div>
+                      <button type="button" className="btn btn-primary btn-big" onClick={() => choose('camera')}>
+                        📸 Fer foto ara
+                      </button>
+                      <button type="button" className="btn btn-big" onClick={() => choose('gallery')}>
+                        🖼️ Triar de la galeria
+                      </button>
+                      <button type="button" className="btn" onClick={() => setChooser(false)}>
+                        Cancel·lar
+                      </button>
+                    </div>
+                  </div>,
+                  document.body,
+                )}
             </div>
             <div className="row">
               <button className="btn btn-primary btn-big grow" disabled={busy} onClick={() => add('gym')}>
@@ -126,7 +153,7 @@ export default function Trainings() {
                 +1 Fora (…) 🏃
               </button>
             </div>
-            <p className="muted small">💪 Al gym cal foto de prova (si no n'has posat, s'obrirà la càmera). 🏃 Fora del gym és opcional.</p>
+            <p className="muted small">💪 Al gym cal foto de prova (si no n'has posat, te la demanarà). 🏃 Fora del gym és opcional.</p>
             {flash && <div className="flash">{flash}</div>}
             {shareable && (
               <div className="row wrap center">
