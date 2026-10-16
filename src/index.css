@@ -1252,3 +1252,35 @@ textarea:focus {
 .reactions button:disabled {
   cursor: default;
 }
+.reactions button.view-once {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-right: auto;
+  font-weight: 600;
+}
+.view-once-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px dashed currentColor;
+  display: inline-grid;
+  place-items: center;
+  font-size: 11px;
+  font-weight: 800;
+}
+.reactions button.view-once.opened {
+  color: var(--muted);
+}
+.reactions button.view-once.opened .view-once-icon {
+  border-style: solid;
+}
+.view-once-hint {
+  position: fixed;
+  bottom: 24px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
+}
