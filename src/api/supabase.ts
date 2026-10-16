@@ -60,6 +60,9 @@ export function createSupabaseApi(url: string, key: string): Api {
       })
       if (error) {
         if (/database error/i.test(error.message)) throw new Error('Codi d\'activació incorrecte o compte ja activat')
+        if (/signups? .*disabled/i.test(error.message))
+          throw new Error('Els registres estan desactivats a Supabase (Authentication → Sign In / Providers → Email). Avisa l\'admin.')
+        if (/already registered/i.test(error.message)) throw new Error('Aquest compte ja està activat: ves a "Entrar"')
         throw new Error(error.message)
       }
       // Si la confirmació d'email està desactivada, ja tenim sessió
