@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { toPng } from 'html-to-image'
 import { api } from '../api'
@@ -7,7 +7,8 @@ import { closedMonths, currentMonthKey, monthLabel, shiftMonth } from '../logic/
 import { STAT_LABELS, awardsOf, cardKey, displayName, featuredCard, fmtTotals, monthTotals, photoFor, rating, unlockedCards, yearTotals } from '../logic/stats'
 import { PhotoControls } from '../components/PhotoControls'
 import { FifaCard } from '../components/FifaCard'
-import { CardZoom, unlockProps } from '../components/CardZoom'
+import { unlockProps } from '../components/CardZoom'
+import { Album, albumProgress } from '../components/Album'
 import { Section } from '../components/ui'
 import { ExpedientItem } from './Dossier'
 
@@ -16,6 +17,7 @@ export default function Player() {
   const { db, me, reload } = useStore()
   const nav = useNavigate()
   const cardRef = useRef<HTMLDivElement>(null)
+  const [album, setAlbum] = useState(false)
   const m = db.members.find((x) => x.slug === slug)
   if (!m) return <p>Jugador no trobat.</p>
 
@@ -26,6 +28,7 @@ export default function Player() {
   const yt = yearTotals(db, m.id, year)
   const { mvp, anti } = awardsOf(db, m.id)
   const mine = unlocks.filter((u) => u.memberId === m.id)
+  const progress = albumProgress(unlocks, m.id)
   const history = closedMonths(db)
     .slice(-6)
     .map((mo) => ({ id: mo.id, ovr: rating(db, m.id, mo.id).overall }))
@@ -152,30 +155,30 @@ export default function Player() {
         <p className="muted small">Lila = gym · Verd = fora. Només compta el que s'apunta a l'app.</p>
       </Section>
 
-      <Section title={`🃏 Cartes especials (${mine.length})`}>
-        {mine.length === 0 ? (
-          <p className="muted">
-            Cap carta especial encara. <Link to="/cartes">Mira com aconseguir-ne</Link>.
-          </p>
-        ) : (
-          <div className="cards-row scroll">
-            {mine.map((u) => (
-              <div key={u.def.id + u.sortKey} className="card-with-ctl">
-                <CardZoom card={unlockProps(db, u)} def={u.def}>
+      <Section title="📖 Àlbum de cromos">
+        <button type="button" className="album-preview" onClick={() => setAlbum(true)}>
+          <div className="album-preview-fan">
+            {mine.length === 0 ? (
+              <div className="album-preview-empty">🔒</div>
+            ) : (
+              mine.slice(0, 3).map((u, i) => (
+                <div key={cardKey(u)} className={`fan-${i}`}>
                   <FifaCard {...unlockProps(db, u)} size="sm" />
-                </CardZoom>
-                {me?.is_admin && (
-                  <PhotoControls
-                    compact
-                    removeLabel="Tornar a la foto base"
-                    url={db.cardPhotos.find((p) => p.member_id === m.id && p.card_key === cardKey(u))?.url}
-                    onChange={(img) => api.setCardPhoto(m.id, cardKey(u), img)}
-                  />
-                )}
-              </div>
-            ))}
+                </div>
+              ))
+            )}
           </div>
-        )}
+          <div className="album-preview-info">
+            <b>
+              {progress.got}/{progress.total} cromos
+            </b>
+            <div className="album-progress-bar">
+              <div style={{ width: `${(progress.got / progress.total) * 100}%` }} />
+            </div>
+            <span className="btn btn-primary">Obrir l'àlbum</span>
+          </div>
+        </button>
+        {album && <Album member={m} unlocks={unlocks} onClose={() => setAlbum(false)} />}
       </Section>
 
       {(mvp.length > 0 || anti.length > 0) && (

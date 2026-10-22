@@ -21,7 +21,7 @@ App web del grup d'amics del gimnàs "Los Hombres de Tibu" (13 membres). Serveix
 - `src/logic/acta.ts`: genera l'acta del mes amb plantilles (sense IA) i el "prompt per a IA" per enganxar a ChatGPT o Claude.
 - `src/logic/months.ts`: utilitats de mesos (`'YYYY-MM'`).
 - `src/pages/*`: Home, Dossier, Vote, Trainings, Cards, Palmares, MonthPage, Player, Admin, Login.
-- `src/components/*`: FifaCard + CardArt (plantilles SVG) + fifa.css, CardZoom (pop-up de cartes d'assoliment), PhotoEditor (encuadrar), PhotoControls, CameraCapture (càmera dins l'app amb getUserMedia), TrainingItem, ui.
+- `src/components/*`: FifaCard + CardArt (plantilles SVG) + fifa.css, CardZoom (pop-up de cartes d'assoliment), Album (àlbum de cromos), PhotoEditor (encuadrar), PhotoControls, CameraCapture (càmera dins l'app amb getUserMedia), TrainingItem, ui.
 
 ## Decisions de disseny (no les canviïs sense preguntar)
 - **Vot 100% secret:** la taula `ballots` no té votant ni data, i `voters` només guarda qui ha votat. Es vota per la RPC `cast_vote`.
@@ -51,6 +51,7 @@ App web del grup d'amics del gimnàs "Los Hombres de Tibu" (13 membres). Serveix
   - **Èxits esportius** (manuals, taula `achievements`): ascens, mitja marató, marató i Hyrox. L'admin els dona des d'Admin a una o diverses persones amb el nom de l'esdeveniment (tots els que hi van tenen la mateixa carta). Sumen a FOR durant 12 mesos (`ACHIEVEMENT_FOR_BONUS`).
 - **Fotos de membres i cartes:** només l'admin les puja o les treu. N'hi ha una de base i una opcional per a cada carta especial (`card_photos`, clau `defId:mes|any`).
   - Les cartes base porten al perfil. Les cartes d'assoliment s'obren en gran en un pop-up.
+- **Àlbum de cromos** (`src/components/Album.tsx`): al perfil hi ha una vista prèvia que obre un àlbum a pantalla completa. La portada té la carta base actual, el progrés (X/40) i un índex. Hi ha una pàgina per família (base + PLUS + ULTRA) i una per als èxits esportius, amb els buits bloquejats. Es passa pàgina lliscant o amb fletxes. L'admin hi posa les fotos de cada carta.
 - **Descartat de moment** (l'usuari ho ha dit): minijocs, porra/Tibucoins, premis, comodins, rol "editor de fotos" i blindar la foto obligatòria a la BD.
 
 ## Supabase: scripts ja executats a producció
