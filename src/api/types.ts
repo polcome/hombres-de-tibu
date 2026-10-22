@@ -1,4 +1,4 @@
-import type { AwardType, DB, Expedient, Member, Month, Training } from '../types'
+import type { AchievementKind, AwardType, DB, Expedient, Member, Month, Training } from '../types'
 
 export interface Api {
   mode: 'supabase' | 'demo'
@@ -36,6 +36,9 @@ export interface Api {
   setPhoto(memberId: string, image: Blob | null): Promise<void>
   /** Foto d'una carta especial concreta; null la treu */
   setCardPhoto(memberId: string, cardKey: string, image: Blob | null): Promise<void>
+  /** Assigna el mateix èxit esportiu a diversos membres */
+  addAchievements(memberIds: string[], a: { kind: AchievementKind; event: string; date: string }): Promise<void>
+  deleteAchievement(id: string): Promise<void>
   deleteExpedient(id: string): Promise<void>
   deleteComment(id: string): Promise<void>
 }

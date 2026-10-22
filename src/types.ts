@@ -86,6 +86,17 @@ export interface CardPhoto {
   url: string
 }
 
+export type AchievementKind = 'ascens' | 'mitja' | 'marato' | 'hyrox'
+
+/** Èxit esportiu assignat per l'admin (carta manual) */
+export interface Achievement {
+  id: string
+  member_id: string
+  kind: AchievementKind
+  event: string // ex: "Mitja Marató de Barcelona"
+  date: string // 'YYYY-MM-DD'
+}
+
 export interface DB {
   members: Member[]
   months: Month[]
@@ -97,6 +108,7 @@ export interface DB {
   voters: Voter[]
   cardPhotos: CardPhoto[]
   trainingVotes: TrainingVote[]
+  achievements: Achievement[]
 }
 
 export const EMOJIS = ['😂', '🔥', '💀', '👏', '🤡'] as const

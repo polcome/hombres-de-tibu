@@ -3,7 +3,7 @@
 import type { Api } from './types'
 import type { DB, Member } from '../types'
 
-const KEY = 'tibu-demo-db-v1'
+const KEY = 'tibu-demo-db-v2'
 const ME = 'tibu-demo-me'
 const uid = () => crypto.randomUUID()
 
@@ -34,30 +34,46 @@ function seed(): DB {
     active: true,
   }))
   const by = (s: string) => members.find((m) => m.slug === s)!.id
-  const db: DB = { members, months: [], trainings: [], awards: [], expedients: [], comments: [], ballots: [], voters: [], cardPhotos: [], trainingVotes: [] }
+  const db: DB = { members, months: [], trainings: [], awards: [], expedients: [], comments: [], ballots: [], voters: [], cardPhotos: [], trainingVotes: [], achievements: [] }
 
   BASE.forEach(([slug, , gym, fora]) => {
     db.trainings.push({ id: uid(), member_id: by(slug), date: '2026-10-16', kind: 'gym', count: gym, baseline: true, note: 'Recompte inicial 2026' })
     if (fora) db.trainings.push({ id: uid(), member_id: by(slug), date: '2026-10-16', kind: 'fora', count: fora, baseline: true, note: 'Recompte inicial 2026' })
   })
 
-  // Mesos d'exemple (inventats!) per veure com queda
-  db.months.push(
-    { id: '2026-08', status: 'closed', deadline: null, acta: null },
-    { id: '2026-09', status: 'closed', deadline: null, acta: null },
-    { id: '2026-10', status: 'active', deadline: '2026-11-01T22:00:00+01:00', acta: null },
-  )
-  db.awards.push(
-    { id: uid(), month_id: '2026-08', type: 'mvp', member_id: by('eduard'), votes: 5 },
-    { id: uid(), month_id: '2026-08', type: 'anti', member_id: by('gerard'), votes: 6 },
-    { id: uid(), month_id: '2026-09', type: 'mvp', member_id: by('deig'), votes: 4 },
-    { id: uid(), month_id: '2026-09', type: 'anti', member_id: by('pena'), votes: 5 },
-  )
+  // Palmarès real 2026 (gener–setembre)
+  const PALMARES: [string, string, string][] = [
+    ['2026-01', 'come', 'gerard'],
+    ['2026-02', 'eduard', 'marc'],
+    ['2026-03', 'deig', 'josep'],
+    ['2026-04', 'josep', 'policho'],
+    ['2026-05', 'deig', 'fq'],
+    ['2026-06', 'polsy', 'fq'],
+    ['2026-07', 'come', 'gerard'],
+    ['2026-08', 'ferran', 'deig'],
+    ['2026-09', 'josep', 'marc'],
+  ]
+  PALMARES.forEach(([month, mvp, anti]) => {
+    db.months.push({ id: month, status: 'closed', deadline: null, acta: null })
+    db.awards.push(
+      { id: uid(), month_id: month, type: 'mvp', member_id: by(mvp), votes: null },
+      { id: uid(), month_id: month, type: 'anti', member_id: by(anti), votes: null },
+    )
+  })
+  db.months.push({ id: '2026-10', status: 'active', deadline: '2026-11-01T22:00:00+01:00', acta: null })
+  // Vots d'exemple (inventats) del setembre
   db.ballots.push(
-    { id: uid(), month_id: '2026-09', mvp_id: by('deig'), mvp_reason: 'Ha fet una ruta de 40km amb bici i encara va venir al gym després', anti_id: by('pena'), anti_reason: 'Va dir que venia dimarts, dijous i divendres i no va venir cap dia', annulled: false },
-    { id: uid(), month_id: '2026-09', mvp_id: by('deig'), mvp_reason: 'Màquina absoluta, 136 entrenos fora del gym aquest any', anti_id: by('pena'), anti_reason: 'Ens va deixar tirats al sopar de grup per anar amb la xurri', annulled: false },
-    { id: uid(), month_id: '2026-09', mvp_id: by('bernat'), mvp_reason: 'Ha organitzat el sopar del grup i ha reservat ell tot', anti_id: by('gerard'), anti_reason: 'Gerard, 16 entrenos en tot l\'any. Sense paraules.', annulled: false },
+    { id: uid(), month_id: '2026-09', mvp_id: by('josep'), mvp_reason: 'Ha anat al gym cada dia i ha portat esmorzar per a tothom', anti_id: by('marc'), anti_reason: 'Va dir que venia dimarts, dijous i divendres i no va venir cap dia', annulled: false },
+    { id: uid(), month_id: '2026-09', mvp_id: by('josep'), mvp_reason: 'Ha organitzat el sopar del grup i ha reservat ell tot', anti_id: by('marc'), anti_reason: 'Ens va deixar tirats al sopar de grup per anar amb la xurri', annulled: false },
   )
+  // Èxits esportius d'exemple (inventats)
+  db.achievements = [
+    { id: uid(), member_id: by('deig'), kind: 'mitja', event: 'Mitja Marató de Barcelona', date: '2026-02-15' },
+    { id: uid(), member_id: by('come'), kind: 'mitja', event: 'Mitja Marató de Barcelona', date: '2026-02-15' },
+    { id: uid(), member_id: by('eduard'), kind: 'hyrox', event: 'Hyrox Barcelona', date: '2026-05-10' },
+    { id: uid(), member_id: by('bernat'), kind: 'ascens', event: 'Ascens a Primera Catalana', date: '2026-06-01' },
+    { id: uid(), member_id: by('marc'), kind: 'marato', event: 'Marató de València', date: '2026-01-12' },
+  ]
 
   const d = (day: number) => `2026-10-${String(day).padStart(2, '0')}`
   for (const [slug, days] of [['eduard', [1, 2, 3, 6, 7, 8]], ['marc', [1, 3, 6, 8]], ['deig', [2, 5]], ['polsy', [6, 7]]] as const) {
@@ -123,7 +139,7 @@ export function createDemoApi(): Api {
     async loadAll() {
       await tick()
       const db = load()
-      return { ...db, cardPhotos: db.cardPhotos ?? [], trainingVotes: db.trainingVotes ?? [] }
+      return { ...db, cardPhotos: db.cardPhotos ?? [], trainingVotes: db.trainingVotes ?? [], achievements: db.achievements ?? [] }
     },
     async me() {
       return meId()
@@ -249,6 +265,17 @@ export function createDemoApi(): Api {
         db.cardPhotos = (db.cardPhotos ?? []).filter((p) => !(p.member_id === memberId && p.card_key === cardKey))
         if (url) db.cardPhotos.push({ member_id: memberId, card_key: cardKey, url })
       })
+    },
+    async addAchievements(memberIds, a) {
+      requireAdmin()
+      mutate((db) => {
+        db.achievements = db.achievements ?? []
+        memberIds.forEach((member_id) => db.achievements.push({ id: uid(), member_id, ...a }))
+      })
+    },
+    async deleteAchievement(id) {
+      requireAdmin()
+      mutate((db) => (db.achievements = (db.achievements ?? []).filter((x) => x.id !== id)))
     },
     async deleteExpedient(id) {
       requireAdmin()

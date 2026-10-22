@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 import { api } from '../api'
 import { useAction, useStore } from '../store'
-import type { AwardType, Member, Month, TrainingKind } from '../types'
+import type { AchievementKind, AwardType, Member, Month, TrainingKind } from '../types'
 import { activeMonth, closedMonths, currentMonthKey, monthLabel, shiftMonth, todayISO } from '../logic/months'
-import { displayName, memberById } from '../logic/stats'
+import { ACHIEVEMENT_FOR_BONUS, CARD_DEFS, displayName, memberById } from '../logic/stats'
 import { generateActa } from '../logic/acta'
 import { Avatar } from '../components/Avatar'
 import { CopyButton, ErrorMsg, MemberSelect, Section } from '../components/ui'
@@ -26,6 +26,7 @@ export default function Admin() {
       <ActaAdmin />
       <MembersAdmin />
       <TrainingAdmin />
+      <AchievementsAdmin />
       <HistoryAdmin />
     </div>
   )
@@ -359,6 +360,103 @@ function HistoryAdmin() {
             </button>
           </div>
         ))}
+      </div>
+    </Section>
+  )
+}
+
+const KINDS: AchievementKind[] = ['ascens', 'mitja', 'marato', 'hyrox']
+const kindDef = (k: AchievementKind) => CARD_DEFS.find((d) => d.id === `exit-${k}`)!
+
+function AchievementsAdmin() {
+  const { db } = useStore()
+  const { run, busy, err } = useAction()
+  const [kind, setKind] = useState<AchievementKind>('mitja')
+  const [event, setEvent] = useState('')
+  const [date, setDate] = useState(todayISO())
+  const [who, setWho] = useState<string[]>([])
+  const toggle = (id: string) => setWho(who.includes(id) ? who.filter((x) => x !== id) : [...who, id])
+
+  // Agrupa per esdeveniment: tots els que hi van tenen la mateixa carta
+  const groups = new Map<string, typeof db.achievements>()
+  for (const a of [...db.achievements].sort((x, y) => y.date.localeCompare(x.date))) {
+    const k = `${a.kind}|${a.event}|${a.date}`
+    groups.set(k, [...(groups.get(k) ?? []), a])
+  }
+
+  return (
+    <Section title="🏅 Èxits esportius">
+      <p className="muted small">
+        Cartes manuals. Tria l'èxit, posa el nom de l'esdeveniment i marca tothom qui l'ha aconseguit: tots tindran la mateixa carta. Pugen FOR durant 12
+        mesos.
+      </p>
+      <div className="form">
+        <div className="toggle wrap">
+          {KINDS.map((k) => (
+            <button key={k} type="button" className={kind === k ? 'on-green' : ''} onClick={() => setKind(k)}>
+              {kindDef(k).emoji} {kindDef(k).name}
+            </button>
+          ))}
+        </div>
+        <p className="muted small">
+          {kindDef(kind).how} +{ACHIEVEMENT_FOR_BONUS[kind]} a FOR.
+        </p>
+        <input
+          placeholder={kind === 'ascens' ? 'Ex: Ascens a Primera Catalana' : kind === 'hyrox' ? 'Ex: Hyrox Barcelona' : 'Ex: Mitja Marató de Barcelona'}
+          value={event}
+          onChange={(e) => setEvent(e.target.value)}
+          maxLength={80}
+        />
+        <input type="date" value={date} max={todayISO()} onChange={(e) => setDate(e.target.value)} />
+        <div className="check-grid">
+          {db.members
+            .filter((m) => m.active)
+            .map((m) => (
+              <label key={m.id} className={`check-chip ${who.includes(m.id) ? 'on' : ''}`}>
+                <input type="checkbox" checked={who.includes(m.id)} onChange={() => toggle(m.id)} />
+                <Avatar member={m} size={22} /> {displayName(m)}
+              </label>
+            ))}
+        </div>
+        <ErrorMsg err={err} />
+        <button
+          className="btn btn-primary"
+          disabled={busy || who.length === 0 || event.trim().length < 2 || !date}
+          onClick={async () => {
+            if (await run(() => api.addAchievements(who, { kind, event: event.trim(), date }))) {
+              setWho([])
+              setEvent('')
+            }
+          }}
+        >
+          Donar carta a {who.length || '…'} {who.length === 1 ? 'persona' : 'persones'}
+        </button>
+      </div>
+
+      <div className="stack-sm mt">
+        {[...groups.values()].map((list) => {
+          const a = list[0]
+          return (
+            <div key={a.id} className="ballot">
+              <div className="row">
+                <b>
+                  {kindDef(a.kind).emoji} {a.event}
+                </b>
+                <span className="muted small ml-auto">{new Date(a.date).toLocaleDateString('ca-ES', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+              </div>
+              <div className="row wrap">
+                {list.map((x) => (
+                  <span key={x.id} className="chip">
+                    {displayName(memberById(db, x.member_id))}
+                    <button className="link danger" onClick={() => confirm('Treure aquesta carta?') && run(() => api.deleteAchievement(x.id))}>
+                      ✕
+                    </button>
+                  </span>
+                ))}
+              </div>
+            </div>
+          )
+        })}
       </div>
     </Section>
   )

@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import { toPng } from 'html-to-image'
 import { FifaCard } from './FifaCard'
 import type { DB } from '../types'
-import { cardKey, displayName, memberById, photoFor, rating, type CardDef, type CardUnlock } from '../logic/stats'
+import { cardKey, displayName, memberById, photoFor, rating, unlockMonth, type CardDef, type CardUnlock } from '../logic/stats'
 
 type CardProps = Omit<ComponentProps<typeof FifaCard>, 'size' | 'ref'>
 
@@ -19,7 +19,7 @@ export function unlockProps(db: DB, u: CardUnlock): CardProps {
   const m = memberById(db, u.memberId)!
   return {
     member: m,
-    rating: rating(db, m.id, u.sortKey.length === 7 ? u.sortKey : undefined),
+    rating: rating(db, m.id, unlockMonth(u)),
     variant: u.def.variant,
     boost: u.def.boost,
     label: u.label,

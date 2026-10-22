@@ -1,4 +1,4 @@
-import type { Award, DB, Member } from '../types'
+import type { AchievementKind, Award, DB, Member } from '../types'
 import { closedMonths, lastDayOf, monthKey, monthLabel, monthsElapsed, shiftMonth, todayISO } from './months'
 
 export interface Totals {
@@ -43,9 +43,6 @@ export function appStartMonth(db: DB) {
   return dates.length ? monthKey(dates[0]) : monthKey(todayISO())
 }
 
-/** Mesos amb votació feta a l'app */
-const votingMonths = (db: DB) => closedMonths(db).filter((m) => db.voters.some((v) => v.month_id === m.id)).map((m) => m.id)
-
 // ---------------------------------------------------------------------------
 // Valoració tipus FIFA
 // ---------------------------------------------------------------------------
@@ -53,22 +50,24 @@ const votingMonths = (db: DB) => closedMonths(db).filter((m) => db.voters.some((
 export interface Rating {
   overall: number
   ent: number // entrenament al gym
-  fora: number // activitat fora del gym
+  fora: number // activitat fora del gym (+ èxits esportius)
   mvp: number // palmarès MVP
   com: number // comportament (antis dels últims 12 mesos)
-  vot: number // participació a les votacions
-  car: number // carisma (mèrits/faltes dels últims 3 mesos)
   tier: 'bronze' | 'silver' | 'gold'
 }
 
 export const STAT_LABELS: [keyof Rating, string, string][] = [
-  ['ent', 'ENT', 'Entrenos al gym (mitjana mensual de l\'any)'],
-  ['fora', 'FOR', 'Entrenos fora del gym (mitjana mensual)'],
+  ['ent', 'ENT', "Entrenos al gym (mitjana mensual de l'any)"],
+  ['fora', 'FOR', 'Entrenos fora del gym (mitjana mensual) + èxits esportius dels últims 12 mesos'],
   ['mvp', 'MVP', 'MVPs guanyats en total'],
   ['com', 'COM', 'Comportament: antis dels últims 12 mesos'],
-  ['vot', 'VOT', 'Participació a les votacions'],
-  ['car', 'CAR', 'Carisma: mèrits i faltes dels últims 3 mesos'],
 ]
+
+/** Pes de cada estadística a la mitjana */
+export const WEIGHTS = { ent: 0.4, fora: 0.1, mvp: 0.25, com: 0.25 }
+
+/** Punts que suma cada èxit esportiu a FOR (durant 12 mesos) */
+export const ACHIEVEMENT_FOR_BONUS: Record<AchievementKind, number> = { ascens: 12, mitja: 12, hyrox: 15, marato: 25 }
 
 /** Valoració d'un membre a final del mes indicat (o avui) */
 export function rating(db: DB, memberId: string, asOfMonth?: string): Rating {
@@ -85,23 +84,17 @@ export function rating(db: DB, memberId: string, asOfMonth?: string): Rating {
   const mvps = aw.filter((a) => a.type === 'mvp').length
   const antis12 = aw.filter((a) => a.type === 'anti' && a.month_id > shiftMonth(asOfM, -12)).length
 
-  const vm = votingMonths(db).filter((m) => m <= asOfM)
-  const voted = vm.filter((m) => db.voters.some((v) => v.month_id === m && v.member_id === memberId)).length
-  const vot = vm.length ? clamp(45 + 54 * (voted / vm.length)) : 70
-
-  const exp = db.expedients.filter((e) => e.target_id === memberId && e.month_id <= asOfM && e.month_id > shiftMonth(asOfM, -3))
-  const merits = exp.filter((e) => e.kind === 'merit').length
-  const faltes = exp.length - merits
+  const exitBonus = db.achievements
+    .filter((a) => a.member_id === memberId && monthKey(a.date) <= asOfM && monthKey(a.date) > shiftMonth(asOfM, -12))
+    .reduce((sum, a) => sum + ACHIEVEMENT_FOR_BONUS[a.kind], 0)
 
   const r = {
     ent: clamp(40 + (t.gym / elapsed) * 3, 30),
-    fora: clamp(35 + (t.fora / elapsed) * 4, 30),
+    fora: clamp(35 + (t.fora / elapsed) * 4 + exitBonus, 30),
     mvp: clamp(55 + 11 * mvps),
     com: clamp(88 - 13 * antis12),
-    vot,
-    car: clamp(65 + 4 * merits - 4 * faltes, 30),
   }
-  const overall = Math.round(0.3 * r.ent + 0.1 * r.fora + 0.2 * r.mvp + 0.2 * r.com + 0.1 * r.vot + 0.1 * r.car)
+  const overall = Math.round(WEIGHTS.ent * r.ent + WEIGHTS.fora * r.fora + WEIGHTS.mvp * r.mvp + WEIGHTS.com * r.com)
   return { ...r, overall, tier: overall >= 75 ? 'gold' : overall >= 65 ? 'silver' : 'bronze' }
 }
 
@@ -109,7 +102,30 @@ export function rating(db: DB, memberId: string, asOfMonth?: string): Rating {
 // Cartes especials (col·leccionables)
 // ---------------------------------------------------------------------------
 
-export type CardVariant = 'gold' | 'silver' | 'bronze' | 'totm' | 'anti' | 'icon' | 'villain' | 'legend' | 'bdo' | 'fang' | 'ach' | 'ghost'
+export type CardVariant =
+  | 'gold'
+  | 'silver'
+  | 'bronze'
+  | 'totm'
+  | 'anti'
+  | 'icon'
+  | 'antiicon'
+  | 'hattrick'
+  | 'bdo'
+  | 'beach'
+  | 'redemption'
+  | 'twoface'
+  | 'gymrat'
+  | 'centurion'
+  | 'offroad'
+  | 'ironman'
+  | 'superman'
+  | 'ghost'
+  | 'ghostking'
+  | 'ascens'
+  | 'mitja'
+  | 'marato'
+  | 'hyrox'
 
 export interface CardDef {
   id: string
@@ -119,33 +135,46 @@ export interface CardDef {
   how: string
   boost: number // punts que suma (o resta) a la mitjana a la carta especial
   rarity: 'Comuna' | 'Rara' | 'Èpica' | 'Llegendària' | 'Maleïda'
+  /** automàtica (es desbloqueja sola) o manual (l'assigna l'admin) */
+  auto: boolean
 }
 
+// Els ids es mantenen encara que canviï el nom: les fotos de cartes hi van lligades
 export const CARD_DEFS: CardDef[] = [
-  { id: 'totm', name: 'Tibu of the Month', emoji: '🏆', variant: 'totm', how: 'Guanya el MVP d\'un mes.', boost: 3, rarity: 'Rara' },
-  { id: 'antim', name: 'Riota del Mes', emoji: '🤡', variant: 'anti', how: 'Guanya l\'anti-MVP d\'un mes.', boost: -3, rarity: 'Maleïda' },
-  { id: 'icona', name: 'Icona', emoji: '👑', variant: 'icon', how: 'Acumula 3 MVPs.', boost: 6, rarity: 'Èpica' },
-  { id: 'nongrata', name: 'Persona Non Grata', emoji: '😈', variant: 'villain', how: 'Acumula 3 antis.', boost: -6, rarity: 'Maleïda' },
-  { id: 'hattrick', name: 'Hat-trick', emoji: '⚡', variant: 'legend', how: '3 MVPs en 3 mesos seguits.', boost: 10, rarity: 'Llegendària' },
-  { id: 'bdo', name: "Pilota d'Or de Tibu", emoji: '🥇', variant: 'bdo', how: 'Més MVPs de l\'any (desempat: menys antis, més entrenos).', boost: 12, rarity: 'Llegendària' },
-  { id: 'fang', name: 'Pilota de Fang', emoji: '💩', variant: 'fang', how: 'Més antis de l\'any.', boost: -10, rarity: 'Maleïda' },
-  { id: 'redempcio', name: 'Redempció', emoji: '😇', variant: 'ach', how: 'Anti un mes i MVP el mes següent.', boost: 4, rarity: 'Èpica' },
-  { id: 'doblecara', name: 'Doble Cara', emoji: '🎭', variant: 'ach', how: 'MVP i anti el mateix any.', boost: 0, rarity: 'Rara' },
-  { id: 'rata', name: 'Rata de Gimnàs', emoji: '🐀', variant: 'ach', how: '200 entrenos al gym en un any.', boost: 5, rarity: 'Èpica' },
-  { id: 'centurio', name: 'Centurió', emoji: '💯', variant: 'ach', how: '100 entrenos al gym en un any.', boost: 2, rarity: 'Comuna' },
-  { id: 'totterreny', name: 'Tot Terreny', emoji: '🚵', variant: 'ach', how: '100 entrenos fora del gym en un any.', boost: 2, rarity: 'Rara' },
-  { id: 'ferro', name: 'Home de Ferro', emoji: '🦾', variant: 'ach', how: '3 mesos seguits amb 12+ entrenos al gym.', boost: 3, rarity: 'Rara' },
-  { id: 'perfecte', name: 'Mes Perfecte', emoji: '🔥', variant: 'ach', how: '20+ entrenos (gym + fora) en un sol mes.', boost: 3, rarity: 'Rara' },
-  { id: 'exemplar', name: 'Ciutadà Exemplar', emoji: '🗳️', variant: 'ach', how: 'Vota 6 mesos seguits sense rebre cap anti.', boost: 3, rarity: 'Èpica' },
-  { id: 'fantasma', name: 'Fantasma', emoji: '👻', variant: 'ghost', how: 'Un mes sencer sense cap entreno.', boost: -5, rarity: 'Maleïda' },
+  { id: 'totm', name: 'Tibu of the Month', emoji: '🏆', variant: 'totm', how: "Guanya el MVP d'un mes.", boost: 3, rarity: 'Rara', auto: true },
+  { id: 'antim', name: 'Riota del Mes', emoji: '🤡', variant: 'anti', how: "Guanya l'anti-MVP d'un mes.", boost: -3, rarity: 'Maleïda', auto: true },
+  { id: 'icona', name: 'Icona', emoji: '👑', variant: 'icon', how: 'Acumula 3 MVPs.', boost: 6, rarity: 'Èpica', auto: true },
+  { id: 'nongrata', name: 'Anti-Icona', emoji: '😈', variant: 'antiicon', how: 'Acumula 3 antis. Persona non grata oficial.', boost: -6, rarity: 'Maleïda', auto: true },
+  { id: 'hattrick', name: 'Hat-trick', emoji: '⚽', variant: 'hattrick', how: '3 MVPs en 3 mesos seguits.', boost: 10, rarity: 'Llegendària', auto: true },
+  { id: 'bdo', name: "Pilota d'Or de Tibu", emoji: '🥇', variant: 'bdo', how: "Més MVPs de l'any (desempat: menys antis, més entrenos).", boost: 12, rarity: 'Llegendària', auto: true },
+  { id: 'fang', name: 'Pilota de Platja', emoji: '🏖️', variant: 'beach', how: "Més antis de l'any.", boost: -10, rarity: 'Maleïda', auto: true },
+  { id: 'redempcio', name: 'Redemption', emoji: '😇', variant: 'redemption', how: 'Anti un mes i MVP el mes següent.', boost: 4, rarity: 'Èpica', auto: true },
+  { id: 'doblecara', name: 'Doble Cara', emoji: '🎭', variant: 'twoface', how: 'MVP i anti el mateix any.', boost: 0, rarity: 'Rara', auto: true },
+  { id: 'rata', name: 'GymRat', emoji: '🐀', variant: 'gymrat', how: '200 entrenos al gym en un any.', boost: 5, rarity: 'Èpica', auto: true },
+  { id: 'centurio', name: 'Centurió', emoji: '🏛️', variant: 'centurion', how: '100 entrenos al gym en un any.', boost: 2, rarity: 'Comuna', auto: true },
+  { id: 'totterreny', name: '4x4', emoji: '🚙', variant: 'offroad', how: '100 entrenos fora del gym en un any.', boost: 2, rarity: 'Rara', auto: true },
+  { id: 'ferro', name: 'IronMan', emoji: '🦾', variant: 'ironman', how: '3 mesos seguits amb 15+ entrenos al gym.', boost: 4, rarity: 'Èpica', auto: true },
+  { id: 'superman', name: 'SuperMan', emoji: '🦸', variant: 'superman', how: '3 mesos seguits amb 20+ entrenos al gym.', boost: 7, rarity: 'Llegendària', auto: true },
+  { id: 'fantasma', name: 'Fantasma', emoji: '👻', variant: 'ghost', how: 'Un mes sencer sense trepitjar el gym.', boost: -4, rarity: 'Maleïda', auto: true },
+  { id: 'reifantasma', name: 'Rei Fantasma', emoji: '👑', variant: 'ghostking', how: 'Un mes sencer sense cap entreno, ni al gym ni fora.', boost: -8, rarity: 'Maleïda', auto: true },
+  // Èxits esportius: manuals, els assigna l'admin
+  { id: 'exit-ascens', name: 'Ascens', emoji: '🏆', variant: 'ascens', how: "Campió de lliga o ascens amb l'equip.", boost: 0, rarity: 'Èpica', auto: false },
+  { id: 'exit-mitja', name: 'Mitja Marató', emoji: '🏃', variant: 'mitja', how: 'Acaba una mitja marató (21,1 km).', boost: 0, rarity: 'Èpica', auto: false },
+  { id: 'exit-marato', name: 'Marató', emoji: '🏅', variant: 'marato', how: 'Acaba una marató (42,2 km).', boost: 0, rarity: 'Llegendària', auto: false },
+  { id: 'exit-hyrox', name: 'Hyrox', emoji: '🏋️', variant: 'hyrox', how: 'Acaba una competició Hyrox.', boost: 0, rarity: 'Èpica', auto: false },
 ]
 
 export interface CardUnlock {
   def: CardDef
   memberId: string
-  label: string // mes o any
-  sortKey: string
+  label: string // mes, any o esdeveniment
+  sortKey: string // 'YYYY', 'YYYY-MM' o 'YYYY-MM-DD'
+  /** Clau per a la foto de la carta (si no, `${def.id}:${sortKey}`) */
+  key?: string
 }
+
+/** Mes de referència d'una carta per calcular-ne la valoració */
+export const unlockMonth = (u: Pick<CardUnlock, 'sortKey'>) => (u.sortKey.length >= 7 ? u.sortKey.slice(0, 7) : undefined)
 
 const consecutive = (ids: string[], n: number) => {
   const s = [...new Set(ids)].sort()
@@ -163,7 +192,6 @@ export function unlockedCards(db: DB): CardUnlock[] {
   const closed = closedMonths(db).map((m) => m.id)
   const years = [...new Set([...db.trainings.map((t) => t.date.slice(0, 4)), ...closed.map((m) => m.slice(0, 4))])].sort()
   const start = appStartMonth(db)
-  const vm = votingMonths(db)
   // Mesos amb entrenaments registrats dia a dia
   const trainingMonths = [...new Set(db.trainings.filter((t) => !t.baseline).map((t) => monthKey(t.date)))].sort()
 
@@ -187,23 +215,18 @@ export function unlockedCards(db: DB): CardUnlock[] {
       if (t.fora >= 100) push('totterreny', m.id, y)
     }
 
-    const ironMonths = trainingMonths.filter((k) => monthTotals(db, m.id, k).gym >= 12)
-    consecutive(ironMonths, 3).forEach((k) => push('ferro', m.id, k))
-    trainingMonths.forEach((k) => {
-      const t = monthTotals(db, m.id, k)
-      if (t.gym + t.fora >= 20) push('perfecte', m.id, k)
-    })
-    closed.filter((k) => k >= start).forEach((k) => {
-      const t = monthTotals(db, m.id, k)
-      if (t.gym + t.fora === 0) push('fantasma', m.id, k)
-    })
+    const gymMonths = (min: number) => trainingMonths.filter((k) => monthTotals(db, m.id, k).gym >= min)
+    consecutive(gymMonths(15), 3).forEach((k) => push('ferro', m.id, k))
+    consecutive(gymMonths(20), 3).forEach((k) => push('superman', m.id, k))
 
-    let streak = 0
-    for (const k of vm) {
-      const ok = db.voters.some((v) => v.month_id === k && v.member_id === m.id) && !antiM.includes(k)
-      streak = ok ? streak + 1 : 0
-      if (streak === 6) push('exemplar', m.id, k)
-    }
+    // Fantasmes: només mesos tancats des que es fa servir l'app
+    closed
+      .filter((k) => k >= start)
+      .forEach((k) => {
+        const t = monthTotals(db, m.id, k)
+        if (t.gym + t.fora === 0) push('reifantasma', m.id, k)
+        else if (t.gym === 0) push('fantasma', m.id, k)
+      })
   }
 
   // Premis anuals: quan el desembre està tancat
@@ -219,10 +242,16 @@ export function unlockedCards(db: DB): CardUnlock[] {
     if (fang?.anti) push('fang', fang.m.id, y)
   }
 
+  // Èxits esportius (manuals)
+  for (const a of db.achievements) {
+    if (!db.members.some((m) => m.id === a.member_id)) continue
+    out.push({ def: def(`exit-${a.kind}`), memberId: a.member_id, sortKey: a.date, label: a.event, key: `exit:${a.id}` })
+  }
+
   return out.sort((a, b) => b.sortKey.localeCompare(a.sortKey))
 }
 
-export const cardKey = (u: Pick<CardUnlock, 'def' | 'sortKey'>) => `${u.def.id}:${u.sortKey}`
+export const cardKey = (u: Pick<CardUnlock, 'def' | 'sortKey' | 'key'>) => u.key ?? `${u.def.id}:${u.sortKey}`
 
 /** Foto d'una carta concreta (si n'hi ha) o la foto base del membre */
 export function photoFor(db: DB, member: Member, key?: string) {

@@ -23,7 +23,7 @@ export function createSupabaseApi(url: string, key: string): Api {
     mode: 'supabase',
 
     async loadAll() {
-      const [members, months, trainings, awards, expedients, comments, ballots, voters, cardPhotos, trainingVotes] = await Promise.all([
+      const [members, months, trainings, awards, expedients, comments, ballots, voters, cardPhotos, trainingVotes, achievements] = await Promise.all([
         sb.from('members').select('id,slug,name,nickname,photo_url,is_admin,active,auth_id').order('name'),
         sb.from('months').select('*').order('id'),
         sb.from('trainings').select('*').order('date'),
@@ -34,6 +34,7 @@ export function createSupabaseApi(url: string, key: string): Api {
         sb.from('voters').select('*'),
         sb.from('card_photos').select('*'),
         sb.from('training_votes').select('*'),
+        sb.from('achievements').select('id,member_id,kind,event,date').order('date'),
       ])
       return {
         members: check(members),
@@ -47,6 +48,7 @@ export function createSupabaseApi(url: string, key: string): Api {
         // Si encara no s'ha executat la migració de fotos, no petem
         cardPhotos: cardPhotos.error ? [] : cardPhotos.data,
         trainingVotes: trainingVotes.error ? [] : trainingVotes.data,
+        achievements: achievements.error ? [] : achievements.data,
       } as DB
     },
 
@@ -166,6 +168,12 @@ export function createSupabaseApi(url: string, key: string): Api {
       }
       const url = await upload(memberId, cardKey.replace(/[^a-z0-9-]/gi, '_'), image)
       check(await sb.from('card_photos').upsert({ member_id: memberId, card_key: cardKey, url }))
+    },
+    async addAchievements(memberIds, a) {
+      check(await sb.from('achievements').insert(memberIds.map((member_id) => ({ member_id, ...a }))))
+    },
+    async deleteAchievement(id) {
+      check(await sb.from('achievements').delete().eq('id', id))
     },
     async deleteExpedient(id) {
       check(await sb.from('expedients').delete().eq('id', id))

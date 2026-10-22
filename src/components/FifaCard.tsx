@@ -2,6 +2,8 @@ import { forwardRef } from 'react'
 import type { Member } from '../types'
 import { STAT_LABELS, displayName, type CardVariant, type Rating } from '../logic/stats'
 import { hue } from './Avatar'
+import { CardArt } from './CardArt'
+import './fifa.css'
 
 interface Props {
   member: Member
@@ -22,14 +24,25 @@ const TAG: Record<CardVariant, string> = {
   silver: 'PLATA',
   bronze: 'BRONZE',
   totm: 'TOTM',
-  anti: 'ANTI',
+  anti: 'RIOTA',
   icon: 'ICONA',
-  villain: 'NON GRATA',
-  legend: 'LLEGENDA',
+  antiicon: 'ANTI-ICONA',
+  hattrick: 'HAT-TRICK',
   bdo: "PILOTA D'OR",
-  fang: 'FANG',
-  ach: 'ASSOLIMENT',
+  beach: 'PLATJA',
+  redemption: 'REDEMPTION',
+  twoface: 'DOBLE CARA',
+  gymrat: 'GYMRAT',
+  centurion: 'CENTURIÓ',
+  offroad: '4x4',
+  ironman: 'IRONMAN',
+  superman: 'SUPERMAN',
   ghost: 'FANTASMA',
+  ghostking: 'REI FANTASMA',
+  ascens: 'ASCENS',
+  mitja: 'MITJA',
+  marato: 'MARATÓ',
+  hyrox: 'HYROX',
 }
 
 export const FifaCard = forwardRef<HTMLDivElement, Props>(function FifaCard(
@@ -41,18 +54,19 @@ export const FifaCard = forwardRef<HTMLDivElement, Props>(function FifaCard(
   const src = photo === undefined ? member.photo_url : photo
   return (
     <div ref={ref} className={`fifa fifa-${variant} fifa-${size} ${locked ? 'fifa-locked' : ''}`}>
-      <div className="fifa-shine" />
-      <div className="fifa-top">
-        <div className="fifa-ovr">{ovr}</div>
-        <div className="fifa-pos">{TAG[variant]}</div>
-        {emoji && <div className="fifa-emoji">{emoji}</div>}
-      </div>
+      <CardArt variant={variant} layer="bg" />
       <div className="fifa-photo">
         {src ? (
           <img src={src} alt={name} crossOrigin="anonymous" />
         ) : (
           <span style={{ background: hue(name) }}>{name.slice(0, 1).toUpperCase()}</span>
         )}
+      </div>
+      <CardArt variant={variant} layer="fg" />
+      <div className="fifa-top">
+        <div className="fifa-ovr">{ovr}</div>
+        <div className="fifa-pos">{TAG[variant]}</div>
+        {emoji && <div className="fifa-emoji">{emoji}</div>}
       </div>
       <div className="fifa-name">{name}</div>
       {title && <div className="fifa-title">{title}</div>}

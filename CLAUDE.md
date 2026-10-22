@@ -21,7 +21,7 @@ App web del grup d'amics del gimnàs "Los Hombres de Tibu" (13 membres). Serveix
 - `src/logic/acta.ts`: genera l'acta del mes amb plantilles (sense IA) i el "prompt per a IA" per enganxar a ChatGPT o Claude.
 - `src/logic/months.ts`: utilitats de mesos (`'YYYY-MM'`).
 - `src/pages/*`: Home, Dossier, Vote, Trainings, Cards, Palmares, MonthPage, Player, Admin, Login.
-- `src/components/*`: FifaCard, CardZoom (pop-up de cartes d'assoliment), PhotoEditor (encuadrar), PhotoControls, CameraCapture (càmera dins l'app amb getUserMedia), TrainingItem, ui.
+- `src/components/*`: FifaCard + CardArt (plantilles SVG) + fifa.css, CardZoom (pop-up de cartes d'assoliment), PhotoEditor (encuadrar), PhotoControls, CameraCapture (càmera dins l'app amb getUserMedia), TrainingItem, ui.
 
 ## Decisions de disseny (no les canviïs sense preguntar)
 - **Vot 100% secret:** la taula `ballots` no té votant ni data, i `voters` només guarda qui ha votat. Es vota per la RPC `cast_vote`.
@@ -37,9 +37,12 @@ App web del grup d'amics del gimnàs "Los Hombres de Tibu" (13 membres). Serveix
   - Les fotos es comprimeixen a 1080px abans de pujar-les.
   - Les fotos de prova són **d'una sola visualització** per dispositiu (localStorage). L'autor i l'admin les poden veure sempre.
   - Validació del grup amb ✅/🧢. Un entreno és "dubtós" amb 3 o més 🧢 i més 🧢 que ✅. Continua comptant fins que l'admin l'esborri.
-- **Cartes FIFA:** la mitjana és 30% ENT + 10% FOR + 20% MVP + 20% COM + 10% VOT + 10% CAR.
+- **Cartes FIFA:** 4 estadístiques. La mitjana és 40% ENT + 25% MVP + 25% COM + 10% FOR (`WEIGHTS` a `stats.ts`). VOT i CAR es van treure.
   - Nivells: bronze <65, plata 65–74, or ≥75.
-  - Hi ha 16 cartes especials amb reptes difícils (TOTM, Riota del Mes, Icona, Non Grata, Hat-trick, Pilota d'Or/Fang, Redempció…).
+  - Les bàsiques (or/plata/bronze) són senzilles. Les especials tenen **disseny propi** fet amb SVG a `src/components/CardArt.tsx` (forma, fons i ornaments segons el concepte: carpa de circ, llorer d'icona, gespa del hat-trick, dorsal de cursa, llençol de fantasma…). Estils de text a `src/components/fifa.css`.
+  - Cartes automàtiques: TOTM, Riota del Mes, Icona (3 MVPs), Anti-Icona (3 antis), Hat-trick (3 MVPs seguits), Pilota d'Or i Pilota de Platja (anuals, quan el desembre està tancat), Redemption, Doble Cara, GymRat (200 gym/any), Centurió (100 gym/any), 4x4 (100 fora/any), IronMan (15+ gym 3 mesos seguits), SuperMan (20+ gym 3 mesos seguits), Fantasma (mes sense gym) i Rei Fantasma (mes sense cap entreno; no dona també Fantasma).
+  - Els ids de `CARD_DEFS` no es canvien encara que canviï el nom (hi van lligades les fotos de cartes).
+  - **Èxits esportius** (manuals, taula `achievements`): ascens, mitja marató, marató i Hyrox. L'admin els dona des d'Admin a una o diverses persones amb el nom de l'esdeveniment (tots els que hi van tenen la mateixa carta). Sumen a FOR durant 12 mesos (`ACHIEVEMENT_FOR_BONUS`).
 - **Fotos de membres i cartes:** només l'admin les puja o les treu. N'hi ha una de base i una opcional per a cada carta especial (`card_photos`, clau `defId:mes|any`).
   - Les cartes base porten al perfil. Les cartes d'assoliment s'obren en gran en un pop-up.
 - **Descartat de moment** (l'usuari ho ha dit): minijocs, porra/Tibucoins, premis, comodins, rol "editor de fotos" i blindar la foto obligatòria a la BD.
@@ -50,6 +53,7 @@ App web del grup d'amics del gimnàs "Los Hombres de Tibu" (13 membres). Serveix
 3. `supabase/palmares-2026.sql`: MVPs i antis de gener a setembre de 2026.
 4. `supabase/migracio-fotos-cartes.sql`: taula `card_photos`.
 5. `supabase/migracio-proves-entrenos.sql`: `trainings.photo_url`, `training_votes` i el bucket `proofs`.
+6. `supabase/migracio-exits-esportius.sql`: taula `achievements` (⚠️ pendent de confirmar que l'usuari l'ha executat).
 
 Quan un canvi necessiti BD:
 - Crea una **migració nova** `supabase/migracio-*.sql` que sigui idempotent (`if not exists`, `drop policy if exists`).

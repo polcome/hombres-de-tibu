@@ -1,0 +1,347 @@
+/* ============================================================
+   Cartes tipus FIFA. La forma i el fons els dibuixa CardArt (SVG
+   200×286); aquí només hi ha la disposició del text i els colors.
+   ============================================================ */
+
+.fifa {
+  --w: 200px;
+  --ink: #3a2a00;
+  --shadow: rgba(255, 255, 255, 0.35);
+  position: relative;
+  width: var(--w);
+  aspect-ratio: 200 / 286;
+  color: var(--ink);
+  font-family: 'Barlow Condensed', 'Arial Narrow', system-ui, sans-serif;
+  font-size: calc(var(--w) * 0.06);
+  filter: drop-shadow(0 calc(var(--w) * 0.03) calc(var(--w) * 0.05) rgba(0, 0, 0, 0.45));
+  isolation: isolate;
+  user-select: none;
+}
+.fifa-sm {
+  --w: 150px;
+}
+.fifa-lg {
+  --w: 270px;
+}
+.fifa-xl {
+  --w: min(320px, 78vw);
+}
+
+.fifa-art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+.fifa-art-bg {
+  z-index: 0;
+}
+.fifa-art-fg {
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* Foto: x 62–162, y 32–132 del SVG */
+.fifa-photo {
+  position: absolute;
+  z-index: 1;
+  left: 31%;
+  top: 11.2%;
+  width: 50%;
+  height: 35%;
+}
+.fifa-photo img,
+.fifa-photo span {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50% 50% 10% 10%;
+  display: grid;
+  place-items: center;
+  font-size: calc(var(--w) * 0.24);
+  font-weight: 800;
+  color: #fff;
+  -webkit-mask-image: linear-gradient(to bottom, #000 72%, transparent);
+  mask-image: linear-gradient(to bottom, #000 72%, transparent);
+}
+
+.fifa-top {
+  position: absolute;
+  z-index: 3;
+  left: 8%;
+  top: 12%;
+  width: 22%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 0.9;
+  text-shadow: 0 1px 2px var(--shadow);
+}
+.fifa-ovr {
+  font-size: calc(var(--w) * 0.21);
+  font-weight: 800;
+}
+.fifa-pos {
+  font-size: calc(var(--w) * 0.046);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-align: center;
+  margin-top: calc(var(--w) * 0.01);
+}
+.fifa-emoji {
+  font-size: calc(var(--w) * 0.11);
+  margin-top: calc(var(--w) * 0.02);
+  text-shadow: none;
+}
+
+.fifa-name,
+.fifa-title,
+.fifa-stats,
+.fifa-label {
+  position: absolute;
+  z-index: 3;
+  left: 8%;
+  right: 8%;
+  text-align: center;
+  text-shadow: 0 1px 2px var(--shadow);
+}
+.fifa-name {
+  top: 47%;
+  font-weight: 800;
+  font-size: calc(var(--w) * 0.11);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  line-height: 1.1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.fifa-name::after {
+  content: '';
+  display: block;
+  width: 64%;
+  height: 1px;
+  margin: calc(var(--w) * 0.008) auto 0;
+  background: currentColor;
+  opacity: 0.6;
+}
+.fifa-title {
+  top: 56.5%;
+  font-size: calc(var(--w) * 0.05);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.fifa-stats {
+  top: 62%;
+  left: 18%;
+  right: 18%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: calc(var(--w) * 0.06);
+  row-gap: calc(var(--w) * 0.006);
+  font-size: calc(var(--w) * 0.068);
+  font-weight: 600;
+  text-align: left;
+}
+.fifa-stats b {
+  font-weight: 800;
+  display: inline-block;
+  width: 1.5em;
+}
+.fifa-label {
+  bottom: 12%;
+  left: 14%;
+  right: 14%;
+  font-size: calc(var(--w) * 0.044);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  line-height: 1.15;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.fifa-locked {
+  filter: grayscale(1) brightness(0.4);
+}
+
+/* ---------- Colors de text per disseny ---------- */
+.fifa-gold {
+  --ink: #3a2a00;
+}
+.fifa-silver {
+  --ink: #1f2933;
+}
+.fifa-bronze {
+  --ink: #2e1606;
+}
+.fifa-totm {
+  --ink: #f5c84c;
+  --shadow: rgba(0, 0, 0, 0.6);
+}
+.fifa-anti {
+  --ink: #fff1c2;
+  --shadow: rgba(0, 0, 0, 0.9);
+}
+.fifa-anti .fifa-top {
+  text-shadow: 0 0 4px #000, 0 1px 2px #000;
+}
+.fifa-anti .fifa-photo img {
+  filter: saturate(1.3) contrast(1.05);
+}
+.fifa-icon {
+  --ink: #5a4300;
+  --shadow: rgba(255, 255, 255, 0.8);
+}
+.fifa-icon .fifa-name,
+.fifa-icon .fifa-pos,
+.fifa-icon .fifa-title {
+  font-family: Georgia, 'Times New Roman', serif;
+  letter-spacing: 0.06em;
+}
+.fifa-antiicon {
+  --ink: #ff5470;
+  --shadow: rgba(0, 0, 0, 0.8);
+}
+.fifa-antiicon .fifa-photo img {
+  filter: grayscale(0.4) contrast(1.15) sepia(0.2) hue-rotate(-20deg);
+}
+.fifa-hattrick {
+  --ink: #fff;
+  --shadow: rgba(0, 0, 0, 0.7);
+}
+.fifa-hattrick .fifa-ovr,
+.fifa-hattrick .fifa-title {
+  color: #ffe14d;
+}
+.fifa-bdo {
+  --ink: #3a2500;
+  --shadow: rgba(255, 246, 200, 0.8);
+}
+.fifa-beach {
+  --ink: #0b2a4a;
+  --shadow: rgba(255, 255, 255, 0.8);
+}
+.fifa-redemption {
+  --ink: #2a1a55;
+  --shadow: rgba(255, 255, 255, 0.7);
+}
+.fifa-redemption .fifa-name,
+.fifa-redemption .fifa-title,
+.fifa-redemption .fifa-stats,
+.fifa-redemption .fifa-label {
+  color: #fff;
+  --shadow: rgba(0, 0, 0, 0.6);
+}
+.fifa-twoface {
+  --ink: #fff;
+  --shadow: rgba(0, 0, 0, 0.85);
+}
+.fifa-gymrat {
+  --ink: #9cff57;
+  --shadow: rgba(0, 0, 0, 0.8);
+}
+.fifa-centurion {
+  --ink: #f3d27a;
+  --shadow: rgba(0, 0, 0, 0.6);
+}
+.fifa-centurion .fifa-name,
+.fifa-centurion .fifa-pos {
+  font-family: Georgia, 'Times New Roman', serif;
+  letter-spacing: 0.1em;
+}
+.fifa-offroad {
+  --ink: #f4ecd0;
+  --shadow: rgba(0, 0, 0, 0.7);
+}
+.fifa-ironman {
+  --ink: #ffd34d;
+  --shadow: rgba(0, 0, 0, 0.7);
+}
+.fifa-superman {
+  --ink: #ffe14d;
+  --shadow: rgba(0, 0, 0, 0.75);
+}
+.fifa-ghost {
+  --ink: #2b3245;
+  --shadow: rgba(255, 255, 255, 0.6);
+  filter: drop-shadow(0 6px 14px rgba(120, 140, 200, 0.45));
+}
+.fifa-ghost .fifa-photo,
+.fifa-ghostking .fifa-photo {
+  opacity: 0.55;
+}
+.fifa-ghost .fifa-photo img,
+.fifa-ghost .fifa-photo span {
+  filter: grayscale(1);
+}
+.fifa-ghostking {
+  --ink: #b7ffb0;
+  --shadow: rgba(0, 0, 0, 0.8);
+}
+.fifa-ghostking .fifa-photo img,
+.fifa-ghostking .fifa-photo span {
+  filter: grayscale(1) sepia(1) hue-rotate(70deg) saturate(2);
+}
+.fifa-ascens {
+  --ink: #f5c84c;
+  --shadow: rgba(0, 0, 0, 0.7);
+}
+.fifa-mitja {
+  --ink: #1d1d1d;
+  --shadow: rgba(255, 255, 255, 0.8);
+}
+.fifa-marato {
+  --ink: #10204d;
+  --shadow: rgba(255, 255, 255, 0.8);
+}
+.fifa-mitja .fifa-label,
+.fifa-marato .fifa-label {
+  color: #fff;
+  --shadow: rgba(0, 0, 0, 0.4);
+  bottom: 3.5%;
+}
+.fifa-hyrox {
+  --ink: #ffd600;
+  --shadow: rgba(0, 0, 0, 0.9);
+}
+.fifa-hyrox .fifa-label {
+  bottom: 11%;
+}
+
+/* Brillantor que passa per sobre de les llegendàries */
+.fifa-bdo::after,
+.fifa-hattrick::after,
+.fifa-superman::after,
+.fifa-marato::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  background: linear-gradient(115deg, transparent 35%, rgba(255, 255, 255, 0.35) 48%, transparent 60%);
+  background-size: 250% 100%;
+  animation: fifa-shine 4s ease-in-out infinite;
+  -webkit-mask-image: linear-gradient(#000, #000);
+  clip-path: polygon(50% 1%, 97% 6%, 97% 86%, 50% 99%, 3% 86%, 3% 6%);
+}
+.fifa-marato::after {
+  clip-path: inset(2% 2% 2% 2% round 4%);
+}
+@keyframes fifa-shine {
+  0%,
+  60% {
+    background-position: 120% 0;
+  }
+  100% {
+    background-position: -120% 0;
+  }
+}
