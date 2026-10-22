@@ -1,6 +1,6 @@
 import { forwardRef } from 'react'
 import type { Member } from '../types'
-import { STAT_LABELS, displayName, type CardVariant, type Rating } from '../logic/stats'
+import { STAT_LABELS, displayName, type CardLevel, type CardVariant, type Rating } from '../logic/stats'
 import { hue } from './Avatar'
 import { CardArt } from './CardArt'
 import './fifa.css'
@@ -17,6 +17,8 @@ interface Props {
   locked?: boolean
   /** Foto específica d'aquesta carta (si no, la foto base) */
   photo?: string | null
+  /** Versió PLUS o ULTRA */
+  level?: CardLevel
 }
 
 const TAG: Record<CardVariant, string> = {
@@ -48,15 +50,15 @@ const TAG: Record<CardVariant, string> = {
 }
 
 export const FifaCard = forwardRef<HTMLDivElement, Props>(function FifaCard(
-  { member, rating, variant, boost = 0, label, title, emoji, size = 'md', locked, photo },
+  { member, rating, variant, boost = 0, label, title, emoji, size = 'md', locked, photo, level },
   ref,
 ) {
   const ovr = Math.max(1, Math.min(99, rating.overall + boost))
   const name = displayName(member)
   const src = photo === undefined ? member.photo_url : photo
   return (
-    <div ref={ref} className={`fifa fifa-${variant} fifa-${size} ${locked ? 'fifa-locked' : ''}`}>
-      <CardArt variant={variant} layer="bg" />
+    <div ref={ref} className={`fifa fifa-${variant} fifa-${size} ${level ? `fifa-${level}` : ''} ${locked ? 'fifa-locked' : ''}`}>
+      <CardArt variant={variant} layer="bg" level={level} />
       <div className="fifa-photo">
         {src ? (
           <img src={src} alt={name} crossOrigin="anonymous" />
@@ -64,7 +66,7 @@ export const FifaCard = forwardRef<HTMLDivElement, Props>(function FifaCard(
           <span style={{ background: hue(name) }}>{name.slice(0, 1).toUpperCase()}</span>
         )}
       </div>
-      <CardArt variant={variant} layer="fg" />
+      <CardArt variant={variant} layer="fg" level={level} />
       <div className="fifa-top">
         <div className="fifa-ovr">{ovr}</div>
         <div className="fifa-pos">{TAG[variant]}</div>

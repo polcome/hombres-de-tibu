@@ -178,6 +178,8 @@ export type CardVariant =
   | 'marato'
   | 'hyrox'
 
+export type CardLevel = 'plus' | 'ultra'
+
 export interface CardDef {
   id: string
   name: string
@@ -185,13 +187,15 @@ export interface CardDef {
   variant: CardVariant
   how: string
   boost: number // punts que suma (o resta) a la mitjana a la carta especial
-  rarity: 'Comuna' | 'Rara' | 'Èpica' | 'Llegendària' | 'Maleïda'
+  rarity: 'Comuna' | 'Rara' | 'Èpica' | 'Llegendària' | 'Mítica' | 'Maleïda'
   /** automàtica (es desbloqueja sola) o manual (l'assigna l'admin) */
   auto: boolean
+  /** Versions més difícils d'una carta: comparteixen disseny i `family` */
+  level?: CardLevel
+  family?: string
 }
 
-// Els ids es mantenen encara que canviï el nom: les fotos de cartes hi van lligades
-export const CARD_DEFS: CardDef[] = [
+const BASE_DEFS: CardDef[] = [
   { id: 'totm', name: 'Tibu of the Month', emoji: '🏆', variant: 'totm', how: "Guanya el MVP d'un mes.", boost: 3, rarity: 'Rara', auto: true },
   { id: 'antim', name: 'Riota del Mes', emoji: '🤡', variant: 'anti', how: "Guanya l'anti-MVP d'un mes.", boost: -3, rarity: 'Maleïda', auto: true },
   { id: 'icona', name: 'Icona', emoji: '👑', variant: 'icon', how: 'Acumula 3 MVPs.', boost: 6, rarity: 'Èpica', auto: true },
@@ -215,6 +219,42 @@ export const CARD_DEFS: CardDef[] = [
   { id: 'exit-hyrox', name: 'Hyrox', emoji: '🏋️', variant: 'hyrox', how: 'Acaba una competició Hyrox.', boost: 0, rarity: 'Èpica', auto: false },
 ]
 
+/** Llindars de les versions PLUS i ULTRA (el que compta depèn de la carta) */
+export const LEVEL_RULES: Record<string, { plus: [number, string, number]; ultra: [number, string, number] }> = {
+  icona: { plus: [6, 'Acumula 6 MVPs.', 9], ultra: [10, 'Acumula 10 MVPs.', 13] },
+  nongrata: { plus: [6, 'Acumula 6 antis.', -9], ultra: [10, 'Acumula 10 antis.', -13] },
+  hattrick: { plus: [4, '4 MVPs en 4 mesos seguits.', 13], ultra: [5, '5 MVPs en 5 mesos seguits.', 16] },
+  doblecara: { plus: [2, '2 MVPs i 2 antis el mateix any.', 0], ultra: [3, '3 MVPs i 3 antis el mateix any.', 0] },
+  rata: { plus: [225, '225 entrenos al gym en un any.', 7], ultra: [250, '250 entrenos al gym en un any.', 10] },
+  totterreny: { plus: [150, '150 entrenos fora del gym en un any.', 4], ultra: [200, '200 entrenos fora del gym en un any.', 6] },
+  ferro: { plus: [5, '5 mesos seguits amb 15+ entrenos al gym.', 6], ultra: [8, '8 mesos seguits amb 15+ entrenos al gym.', 9] },
+  superman: { plus: [5, '5 mesos seguits amb 20+ entrenos al gym.', 10], ultra: [8, '8 mesos seguits amb 20+ entrenos al gym.', 14] },
+  fantasma: { plus: [2, '2 mesos seguits sense trepitjar el gym.', -6], ultra: [3, '3 mesos seguits sense trepitjar el gym.', -9] },
+  reifantasma: { plus: [2, '2 mesos seguits sense cap entreno.', -11], ultra: [3, '3 mesos seguits sense cap entreno.', -15] },
+}
+
+const BASE_RULE: Record<string, number> = { icona: 3, nongrata: 3, hattrick: 3, doblecara: 1, rata: 200, totterreny: 100, ferro: 3, superman: 3, fantasma: 1, reifantasma: 1 }
+
+// Els ids es mantenen encara que canviï el nom: les fotos de cartes hi van lligades
+export const CARD_DEFS: CardDef[] = BASE_DEFS.flatMap((d) => {
+  const rules = LEVEL_RULES[d.id]
+  if (!rules) return [d]
+  const cursed = d.rarity === 'Maleïda'
+  return [
+    { ...d, family: d.id },
+    ...(['plus', 'ultra'] as const).map((level) => ({
+      ...d,
+      id: `${d.id}-${level}`,
+      name: `${d.name} ${level.toUpperCase()}`,
+      how: rules[level][1],
+      boost: rules[level][2],
+      rarity: cursed ? ('Maleïda' as const) : level === 'plus' ? ('Llegendària' as const) : ('Mítica' as const),
+      level,
+      family: d.id,
+    })),
+  ]
+})
+
 export interface CardUnlock {
   def: CardDef
   memberId: string
@@ -224,13 +264,26 @@ export interface CardUnlock {
   key?: string
 }
 
-/** Mes de referència d'una carta per calcular-ne la valoració */
-export const unlockMonth = (u: Pick<CardUnlock, 'sortKey'>) => (u.sortKey.length >= 7 ? u.sortKey.slice(0, 7) : undefined)
+/**
+ * Mes amb què es calcula la valoració d'una carta: el de la carta (queda "congelada").
+ * Les anuals, o les d'abans que hi hagi dades a l'app, fan servir la valoració actual.
+ */
+export function unlockMonth(db: DB, u: Pick<CardUnlock, 'sortKey'>) {
+  if (u.sortKey.length < 7) return undefined
+  const firstYear = db.trainings.reduce((y, t) => (t.date.slice(0, 4) < y ? t.date.slice(0, 4) : y), '9999')
+  if (u.sortKey.slice(0, 4) < firstYear) return undefined
+  return u.sortKey.slice(0, 7)
+}
 
-const consecutive = (ids: string[], n: number) => {
+/** Mesos on s'arriba a una ratxa de n mesos seguits (una carta per cada n mesos de ratxa) */
+const streakHits = (ids: string[], n: number) => {
   const s = [...new Set(ids)].sort()
   const hits: string[] = []
-  for (let i = 0; i + n - 1 < s.length; i++) if (s[i + n - 1] === shiftMonth(s[i], n - 1)) hits.push(s[i + n - 1])
+  let run = 0
+  s.forEach((k, i) => {
+    run = i > 0 && k === shiftMonth(s[i - 1], 1) ? run + 1 : 1
+    if (run % n === 0) hits.push(k)
+  })
   return hits
 }
 
@@ -239,6 +292,12 @@ export function unlockedCards(db: DB): CardUnlock[] {
   const def = (id: string) => CARD_DEFS.find((d) => d.id === id)!
   const push = (id: string, memberId: string, key: string, label?: string) =>
     out.push({ def: def(id), memberId, sortKey: key, label: label ?? (key.length === 7 ? monthLabel(key) : key) })
+  /** Base, PLUS i ULTRA d'una família: `need` dona el llindar de cada nivell */
+  const levels = (family: string, fn: (need: number, id: string) => void) => {
+    fn(BASE_RULE[family], family)
+    fn(LEVEL_RULES[family].plus[0], `${family}-plus`)
+    fn(LEVEL_RULES[family].ultra[0], `${family}-ultra`)
+  }
 
   const closed = closedMonths(db).map((m) => m.id)
   const years = [...new Set([...db.trainings.map((t) => t.date.slice(0, 4)), ...closed.map((m) => m.slice(0, 4))])].sort()
@@ -253,31 +312,39 @@ export function unlockedCards(db: DB): CardUnlock[] {
 
     mvp.forEach((a) => push('totm', m.id, a.month_id))
     anti.forEach((a) => push('antim', m.id, a.month_id))
-    if (mvp.length >= 3) push('icona', m.id, mvp[2].month_id)
-    if (anti.length >= 3) push('nongrata', m.id, anti[2].month_id)
-    consecutive(mvpM, 3).forEach((k) => push('hattrick', m.id, k))
+    levels('icona', (n, id) => mvp.length >= n && push(id, m.id, mvp[n - 1].month_id))
+    levels('nongrata', (n, id) => anti.length >= n && push(id, m.id, anti[n - 1].month_id))
+    levels('hattrick', (n, id) => streakHits(mvpM, n).forEach((k) => push(id, m.id, k)))
     antiM.filter((k) => mvpM.includes(shiftMonth(k, 1))).forEach((k) => push('redempcio', m.id, shiftMonth(k, 1)))
 
     for (const y of years) {
-      if (mvpM.some((k) => k.startsWith(y)) && antiM.some((k) => k.startsWith(y))) push('doblecara', m.id, y)
+      const mvpY = mvpM.filter((k) => k.startsWith(y)).length
+      const antiY = antiM.filter((k) => k.startsWith(y)).length
+      levels('doblecara', (n, id) => mvpY >= n && antiY >= n && push(id, m.id, y))
       const t = yearTotals(db, m.id, Number(y))
-      if (t.gym >= 200) push('rata', m.id, y)
+      levels('rata', (n, id) => t.gym >= n && push(id, m.id, y))
       if (t.gym >= 100) push('centurio', m.id, y)
-      if (t.fora >= 100) push('totterreny', m.id, y)
+      levels('totterreny', (n, id) => t.fora >= n && push(id, m.id, y))
     }
 
     const gymMonths = (min: number) => trainingMonths.filter((k) => monthTotals(db, m.id, k).gym >= min)
-    consecutive(gymMonths(15), 3).forEach((k) => push('ferro', m.id, k))
-    consecutive(gymMonths(20), 3).forEach((k) => push('superman', m.id, k))
+    levels('ferro', (n, id) => streakHits(gymMonths(15), n).forEach((k) => push(id, m.id, k)))
+    levels('superman', (n, id) => streakHits(gymMonths(20), n).forEach((k) => push(id, m.id, k)))
 
-    // Fantasmes: només mesos tancats des que es fa servir l'app
-    closed
-      .filter((k) => k >= start)
-      .forEach((k) => {
-        const t = monthTotals(db, m.id, k)
-        if (t.gym + t.fora === 0) push('reifantasma', m.id, k)
-        else if (t.gym === 0) push('fantasma', m.id, k)
-      })
+    // Fantasmes: només mesos tancats des que es fa servir l'app. Si la ratxa és de Rei, no compta com a Fantasma.
+    const ghostable = closed.filter((k) => k >= start)
+    const noGym = ghostable.filter((k) => monthTotals(db, m.id, k).gym === 0)
+    const nothing = ghostable.filter((k) => {
+      const t = monthTotals(db, m.id, k)
+      return t.gym + t.fora === 0
+    })
+    levels('reifantasma', (n, id) => streakHits(nothing, n).forEach((k) => push(id, m.id, k)))
+    levels('fantasma', (n, id) => {
+      const king = new Set(streakHits(nothing, n))
+      streakHits(noGym, n)
+        .filter((k) => !king.has(k))
+        .forEach((k) => push(id, m.id, k))
+    })
   }
 
   // Premis anuals: quan el desembre està tancat

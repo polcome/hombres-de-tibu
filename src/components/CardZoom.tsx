@@ -19,7 +19,8 @@ export function unlockProps(db: DB, u: CardUnlock): CardProps {
   const m = memberById(db, u.memberId)!
   return {
     member: m,
-    rating: rating(db, m.id, unlockMonth(u)),
+    rating: rating(db, m.id, unlockMonth(db, u)),
+    level: u.def.level,
     variant: u.def.variant,
     boost: u.def.boost,
     label: u.label,

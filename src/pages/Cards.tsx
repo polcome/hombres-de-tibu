@@ -64,7 +64,7 @@ export default function Cards() {
         <div className="stack">
           <p className="muted small center">Toca una carta per veure-la en gran.</p>
           {[
-            { title: '⚙️ Automàtiques', sub: "Es desbloquegen soles quan es compleix el repte.", defs: CARD_DEFS.filter((d) => d.auto) },
+            { title: '⚙️ Automàtiques', sub: "Es desbloquegen soles quan es compleix el repte.", defs: CARD_DEFS.filter((d) => d.auto && !d.level) },
             { title: '🏅 Èxits esportius', sub: "Manuals: l'admin les dona a qui ho aconsegueix. Pugen FOR durant 12 mesos.", defs: CARD_DEFS.filter((d) => !d.auto) },
           ].map((group) => (
             <div key={group.title} className="stack">
@@ -73,7 +73,7 @@ export default function Cards() {
                 <p className="muted small">{group.sub}</p>
               </div>
               {group.defs.map((def) => {
-                const got = unlocks.filter((u) => u.def.id === def.id)
+                const tiers = CARD_DEFS.filter((d) => d.id === def.id || (def.family && d.family === def.family && d.level))
                 return (
                   <Section
                     key={def.id}
@@ -87,18 +87,43 @@ export default function Cards() {
                       {def.how} {def.boost !== 0 && <b>({def.boost > 0 ? '+' : ''}{def.boost} a la mitjana)</b>}
                       {!def.auto && <b> (+{ACHIEVEMENT_FOR_BONUS[def.id.replace('exit-', '') as AchievementKind]} a FOR)</b>}
                     </p>
+                    {tiers.length > 1 && (
+                      <div className="level-rules small">
+                        {tiers
+                          .filter((t) => t.level)
+                          .map((t) => (
+                            <div key={t.id} className={`level-rule level-${t.level}`}>
+                              <b>{t.level === 'plus' ? '★ PLUS' : '🔥 ULTRA'}</b> {t.how}
+                              {t.boost !== 0 && ` (${t.boost > 0 ? '+' : ''}${t.boost})`}
+                            </div>
+                          ))}
+                      </div>
+                    )}
                     <div className="cards-row scroll">
-                      {got.length === 0 && (
-                        <div className="locked-preview">
-                          <FifaCard member={MYSTERY} rating={MYSTERY_RATING} variant={def.variant} title={def.name} emoji={def.emoji} size="sm" photo={null} />
-                          <span className="locked-badge">🔒 Ningú l'ha aconseguit</span>
-                        </div>
-                      )}
-                      {got.map((u) => (
-                        <CardZoom key={cardKey(u) + u.memberId} card={unlockProps(db, u)} def={def}>
-                          <FifaCard {...unlockProps(db, u)} size="sm" />
-                        </CardZoom>
-                      ))}
+                      {tiers.flatMap((t) => {
+                        const got = unlocks.filter((u) => u.def.id === t.id)
+                        if (got.length === 0)
+                          return [
+                            <div key={t.id} className="locked-preview">
+                              <FifaCard
+                                member={MYSTERY}
+                                rating={MYSTERY_RATING}
+                                variant={t.variant}
+                                level={t.level}
+                                title={t.name}
+                                emoji={t.emoji}
+                                size="sm"
+                                photo={null}
+                              />
+                              <span className="locked-badge">🔒 {t.level ? t.level.toUpperCase() : "Ningú l'ha aconseguit"}</span>
+                            </div>,
+                          ]
+                        return got.map((u) => (
+                          <CardZoom key={cardKey(u) + u.memberId} card={unlockProps(db, u)} def={t}>
+                            <FifaCard {...unlockProps(db, u)} size="sm" />
+                          </CardZoom>
+                        ))
+                      })}
                     </div>
                   </Section>
                 )

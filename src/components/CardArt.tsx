@@ -1,5 +1,5 @@
 import { useId, type ReactNode } from 'react'
-import type { CardVariant } from '../logic/stats'
+import type { CardLevel, CardVariant } from '../logic/stats'
 
 /*
  * Plantilles de les cartes. Cada disseny és un SVG (viewBox 200×286) que fa de
@@ -864,10 +864,130 @@ const pins = () => (
   </g>
 )
 
-export function CardArt({ variant, layer }: { variant: CardVariant; layer: 'bg' | 'fg' }) {
+/** Afegits de les versions PLUS (marc cromat i gemmes) i ULTRA (aura de foc, llamps i marc irisat) */
+const LEVEL_BG: Record<CardLevel, (c: Ctx) => ReactNode> = {
+  plus: (c) => (
+    <>
+      <defs>
+        <linearGradient id={c.id('chrome')} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#ffffff" />
+          <stop offset="0.3" stopColor="#b9a8ff" />
+          <stop offset="0.55" stopColor="#5b3df5" />
+          <stop offset="0.8" stopColor="#d6ccff" />
+          <stop offset="1" stopColor="#ffffff" />
+        </linearGradient>
+        <clipPath id={c.id('lclip')}>
+          <path d={c.shape} />
+        </clipPath>
+      </defs>
+      <g clipPath={c.url('lclip')}>
+        <path d={c.shape} fill="none" stroke="#7b5cff" strokeWidth="16" opacity="0.25" />
+        {[
+          [24, 92],
+          [176, 196],
+          [30, 214],
+          [170, 108],
+        ].map(([x, y], i) => star(x, y, 2.4, '#e6dcff', `p${i}`))}
+      </g>
+      <path d={c.shape} fill="none" stroke={c.url('chrome')} strokeWidth="5" />
+      {/* gemmes laterals */}
+      {[7, 193].map((x) => (
+        <path key={x} d={`M${x} 132 L${x + 5} 140 L${x} 148 L${x - 5} 140 Z`} fill="#8f73ff" stroke="#fff" strokeWidth="1.2" />
+      ))}
+    </>
+  ),
+  ultra: (c) => (
+    <>
+      <defs>
+        <linearGradient id={c.id('iris')} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#ff3b3b" />
+          <stop offset="0.25" stopColor="#ffb300" />
+          <stop offset="0.5" stopColor="#fff6c7" />
+          <stop offset="0.75" stopColor="#ff6a00" />
+          <stop offset="1" stopColor="#c2003a" />
+          <animateTransform attributeName="gradientTransform" type="rotate" from="0 0.5 0.5" to="360 0.5 0.5" dur="6s" repeatCount="indefinite" />
+        </linearGradient>
+        <linearGradient id={c.id('fire')} x1="0" y1="1" x2="0" y2="0">
+          <stop offset="0" stopColor="#ff2a00" stopOpacity="0.95" />
+          <stop offset="0.5" stopColor="#ff8a00" stopOpacity="0.7" />
+          <stop offset="1" stopColor="#ffd000" stopOpacity="0" />
+        </linearGradient>
+        <radialGradient id={c.id('vig')} cx="0.5" cy="0.45" r="0.75">
+          <stop offset="0.55" stopColor="#000" stopOpacity="0" />
+          <stop offset="1" stopColor="#1a0000" stopOpacity="0.55" />
+        </radialGradient>
+        <clipPath id={c.id('lclip')}>
+          <path d={c.shape} />
+        </clipPath>
+      </defs>
+      <g clipPath={c.url('lclip')}>
+        <rect width={W} height={H} fill={c.url('vig')} />
+        {/* flames que pugen de baix */}
+        <path
+          transform="translate(0 125) scale(1 0.57)"
+          d="M0 290 L0 236 Q12 214 10 196 Q26 214 28 232 Q36 204 50 186 Q54 214 64 226 Q74 200 70 176 Q92 204 92 230 Q104 210 112 190 Q122 214 120 234 Q136 206 148 188 Q150 216 158 226 Q170 204 178 192 Q182 220 190 230 Q198 214 200 204 L200 290 Z"
+          fill={c.url('fire')}
+        />
+        {/* llamps */}
+        <path d="M14 30 L30 64 L22 66 L38 104" stroke="#ffd84d" strokeWidth="1.6" fill="none" opacity="0.8" />
+        <path d="M188 150 L172 178 L180 180 L164 214" stroke="#ffd84d" strokeWidth="1.6" fill="none" opacity="0.8" />
+        {/* espurnes */}
+        {[
+          [40, 170],
+          [70, 150],
+          [150, 160],
+          [168, 130],
+          [100, 176],
+          [124, 148],
+        ].map(([x, y], i) => (
+          <circle key={i} cx={x} cy={y} r={1 + (i % 2)} fill="#ffcf4d" opacity="0.9" />
+        ))}
+      </g>
+      <path d={c.shape} fill="none" stroke={c.url('iris')} strokeWidth="6" />
+      <path d={c.inner} fill="none" stroke="#ffcf4d" strokeWidth="1" opacity="0.7" />
+    </>
+  ),
+}
+
+/** Cinta de dalt amb el nivell */
+const LEVEL_FG: Record<CardLevel, (c: Ctx) => ReactNode> = {
+  plus: (c) => (
+    <g>
+      <defs>
+        <linearGradient id={c.id('rib')} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#9b84ff" />
+          <stop offset="1" stopColor="#4a2fd6" />
+        </linearGradient>
+      </defs>
+      <path d="M70 0 H130 L137 9 L130 18 H70 L63 9 Z" fill={c.url('rib')} stroke="#fff" strokeWidth="1.2" />
+      <text x="100" y="13.2" textAnchor="middle" fontSize="10" fontWeight="800" fill="#fff" letterSpacing="2" fontFamily="'Barlow Condensed', sans-serif">
+        ★ PLUS ★
+      </text>
+    </g>
+  ),
+  ultra: (c) => (
+    <g>
+      <defs>
+        <linearGradient id={c.id('rib')} x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stopColor="#3a0000" />
+          <stop offset="0.5" stopColor="#120000" />
+          <stop offset="1" stopColor="#3a0000" />
+        </linearGradient>
+      </defs>
+      <path d="M58 0 H142 L152 10 L142 20 H58 L48 10 Z" fill={c.url('rib')} stroke="#ffb300" strokeWidth="1.6" />
+      <path d="M44 4 L50 10 L44 16 M156 4 L150 10 L156 16" stroke="#ff6a00" strokeWidth="2" fill="none" />
+      <text x="100" y="14.5" textAnchor="middle" fontSize="11" fontWeight="800" fill="#ffcf4d" letterSpacing="3" fontFamily="'Barlow Condensed', sans-serif">
+        🔥 ULTRA 🔥
+      </text>
+    </g>
+  ),
+}
+
+export function CardArt({ variant, layer, level }: { variant: CardVariant; layer: 'bg' | 'fg'; level?: CardLevel }) {
   const uid = useId().replace(/[^a-zA-Z0-9]/g, '')
   const draw = layer === 'bg' ? BG[variant] : FG[variant]
-  if (!draw) return null
+  const extra = level ? (layer === 'bg' ? LEVEL_BG : LEVEL_FG)[level] : undefined
+  if (!draw && !extra) return null
   const shape = SHAPE_OF[variant] ?? 'shield'
   const inner = shape === 'icon' ? SHAPES.iconIn : shape === 'plate' ? SHAPES.plateIn : shape === 'shield' ? SHAPES.shieldIn : SHAPES[shape]
   const ctx: Ctx = {
@@ -878,7 +998,8 @@ export function CardArt({ variant, layer }: { variant: CardVariant; layer: 'bg' 
   }
   return (
     <svg className={`fifa-art fifa-art-${layer}`} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" aria-hidden="true">
-      {draw(ctx)}
+      {draw?.(ctx)}
+      {extra?.(ctx)}
     </svg>
   )
 }

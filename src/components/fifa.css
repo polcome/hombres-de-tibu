@@ -173,6 +173,21 @@
   overflow: hidden;
 }
 
+.fifa-plus {
+  filter: drop-shadow(0 0 calc(var(--w) * 0.04) rgba(140, 110, 255, 0.75)) drop-shadow(0 calc(var(--w) * 0.03) calc(var(--w) * 0.05) rgba(0, 0, 0, 0.45));
+}
+.fifa-ultra {
+  animation: fifa-ultra-glow 2.4s ease-in-out infinite;
+}
+@keyframes fifa-ultra-glow {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 calc(var(--w) * 0.04) rgba(255, 90, 0, 0.7)) drop-shadow(0 calc(var(--w) * 0.03) calc(var(--w) * 0.05) rgba(0, 0, 0, 0.5));
+  }
+  50% {
+    filter: drop-shadow(0 0 calc(var(--w) * 0.09) rgba(255, 170, 0, 0.95)) drop-shadow(0 calc(var(--w) * 0.03) calc(var(--w) * 0.05) rgba(0, 0, 0, 0.5));
+  }
+}
 .fifa-locked {
   filter: grayscale(1) brightness(0.4);
 }
