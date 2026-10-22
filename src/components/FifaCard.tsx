@@ -28,7 +28,7 @@ const TAG: Record<CardVariant, string> = {
   silver: 'PLATA',
   bronze: 'BRONZE',
   totm: 'TOTM',
-  anti: 'RIOTA',
+  anti: 'ANTI-MVP',
   icon: 'ICONA',
   antiicon: 'ANTI-ICONA',
   hattrick: 'HAT-TRICK',

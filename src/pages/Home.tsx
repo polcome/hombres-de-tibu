@@ -121,7 +121,7 @@ export default function Home() {
                       variant={type === 'mvp' ? 'totm' : 'anti'}
                       boost={0}
                       label={monthLabel(last.id)}
-                      title={type === 'mvp' ? 'Tibu of the Month' : 'Riota del Mes'}
+                      title={type === 'mvp' ? 'Tibu of the Month' : 'Anti-MVP del mes'}
                       emoji={type === 'mvp' ? '🏆' : '🤡'}
                       photo={photoFor(db, m, `${type === 'mvp' ? 'totm' : 'antim'}:${last.id}`)}
                     />

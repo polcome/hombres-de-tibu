@@ -197,7 +197,7 @@ export interface CardDef {
 
 const BASE_DEFS: CardDef[] = [
   { id: 'totm', name: 'Tibu of the Month', emoji: '🏆', variant: 'totm', how: "Guanya el MVP d'un mes.", boost: 3, rarity: 'Rara', auto: true },
-  { id: 'antim', name: 'Riota del Mes', emoji: '🤡', variant: 'anti', how: "Guanya l'anti-MVP d'un mes.", boost: -3, rarity: 'Maleïda', auto: true },
+  { id: 'antim', name: 'Anti-MVP', emoji: '🤡', variant: 'anti', how: "Guanya l'anti-MVP d'un mes.", boost: -3, rarity: 'Maleïda', auto: true },
   { id: 'icona', name: 'Icona', emoji: '👑', variant: 'icon', how: 'Acumula 3 MVPs.', boost: 6, rarity: 'Èpica', auto: true },
   { id: 'nongrata', name: 'Anti-Icona', emoji: '😈', variant: 'antiicon', how: 'Acumula 3 antis. Persona non grata oficial.', boost: -6, rarity: 'Maleïda', auto: true },
   { id: 'hattrick', name: 'Hat-trick', emoji: '⚽', variant: 'hattrick', how: '3 MVPs en 3 mesos seguits.', boost: 10, rarity: 'Llegendària', auto: true },

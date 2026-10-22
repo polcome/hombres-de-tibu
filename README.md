@@ -11,7 +11,7 @@ App del grup per a la votació mensual de **MVP i anti-MVP**, el **recompte d'en
 - 📁 **Dossier**: qualsevol pot obrir expedients (mèrits o faltes) sense iniciar sessió, signats o com a xivato anònim. Té reaccions i comentaris.
 - 🏋️ **Entrenos**: +1 gym o +1 fora del gym. Rànquings, gràfiques i el recompte en el format de sempre per copiar al WhatsApp.
 - 📜 **Acta automàtica**: es genera sola en tancar el mes a partir dels motius. També hi ha un botó per copiar un prompt per a ChatGPT o Claude.
-- 🃏 **Cartes FIFA**: la mitjana evoluciona amb els entrenos, MVPs, antis, la participació i el dossier. Hi ha 16 cartes especials desbloquejables: TOTM, Riota del Mes, Icona, Persona Non Grata, Hat-trick, Pilota d'Or, Pilota de Fang…
+- 🃏 **Cartes FIFA**: 5 estadístiques (ENT, CON, MVP, COM, FOR) i 5 nivells (bronze, plata, plata brillant, or, or brillant). Cartes especials amb disseny propi i versions PLUS i ULTRA: TOTM, Anti-MVP, Icona, Anti-Icona, Hat-trick, Pilota d'Or, Pilota de Platja, GymRat, IronMan, SuperMan… i Èxits Esportius manuals. Cada perfil té un àlbum de cromos.
 
 ## Posada en marxa (uns 15 minuts)
 
