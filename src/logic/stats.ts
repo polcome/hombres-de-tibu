@@ -53,18 +53,32 @@ export interface Rating {
   fora: number // activitat fora del gym (+ èxits esportius)
   mvp: number // palmarès MVP
   com: number // comportament (antis dels últims 12 mesos)
-  tier: 'bronze' | 'silver' | 'gold'
+  con: number // constància: setmanes amb 2+ entrenos
+  tier: Tier
 }
+
+export type Tier = 'bronze' | 'silver' | 'silvershiny' | 'gold' | 'goldshiny'
+
+/** Nivell de la carta base segons la mitjana */
+export const TIERS: [Tier, number, string][] = [
+  ['goldshiny', 80, 'Or brillant'],
+  ['gold', 75, 'Or'],
+  ['silvershiny', 70, 'Plata brillant'],
+  ['silver', 65, 'Plata'],
+  ['bronze', 0, 'Bronze'],
+]
+export const tierOf = (overall: number): Tier => TIERS.find(([, min]) => overall >= min)![0]
 
 export const STAT_LABELS: [keyof Rating, string, string][] = [
   ['ent', 'ENT', "Entrenos al gym (mitjana mensual de l'any)"],
   ['fora', 'FOR', 'Entrenos fora del gym (mitjana mensual) + èxits esportius dels últims 12 mesos'],
   ['mvp', 'MVP', 'MVPs guanyats en total'],
   ['com', 'COM', 'Comportament: antis dels últims 12 mesos'],
+  ['con', 'CON', 'Constància: % de setmanes amb 2+ entrenos (últimes 12 setmanes)'],
 ]
 
 /** Pes de cada estadística a la mitjana */
-export const WEIGHTS = { ent: 0.4, fora: 0.1, mvp: 0.25, com: 0.25 }
+export const WEIGHTS = { ent: 0.35, fora: 0.1, mvp: 0.2, com: 0.2, con: 0.15 }
 
 /** Punts que suma cada èxit esportiu a FOR (durant 12 mesos) */
 export const ACHIEVEMENT_FOR_BONUS: Record<AchievementKind, number> = { ascens: 12, mitja: 12, hyrox: 15, marato: 25 }
@@ -93,9 +107,43 @@ export function rating(db: DB, memberId: string, asOfMonth?: string): Rating {
     fora: clamp(35 + (t.fora / elapsed) * 4 + exitBonus, 30),
     mvp: clamp(55 + 11 * mvps),
     com: clamp(88 - 13 * antis12),
+    con: consistency(db, memberId, asOf),
   }
-  const overall = Math.round(WEIGHTS.ent * r.ent + WEIGHTS.fora * r.fora + WEIGHTS.mvp * r.mvp + WEIGHTS.com * r.com)
-  return { ...r, overall, tier: overall >= 75 ? 'gold' : overall >= 65 ? 'silver' : 'bronze' }
+  const overall = Math.round(WEIGHTS.ent * r.ent + WEIGHTS.fora * r.fora + WEIGHTS.mvp * r.mvp + WEIGHTS.com * r.com + WEIGHTS.con * r.con)
+  return { ...r, overall, tier: tierOf(overall) }
+}
+
+const isoDate = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+/** Dilluns de la setmana d'una data */
+function weekStart(iso: string) {
+  const d = new Date(`${iso}T12:00:00`)
+  d.setDate(d.getDate() - ((d.getDay() + 6) % 7))
+  return isoDate(d)
+}
+const addDays = (iso: string, n: number) => {
+  const d = new Date(`${iso}T12:00:00`)
+  d.setDate(d.getDate() + n)
+  return isoDate(d)
+}
+
+/**
+ * Constància: % de setmanes senceres (de les últimes 12, i des que es fa servir l'app)
+ * amb 2 o més entrenos (gym o fora). Sense setmanes encara: 70.
+ */
+export function consistency(db: DB, memberId: string, asOf: string) {
+  const logged = db.trainings.filter((t) => !t.baseline)
+  if (!logged.length) return 70
+  const first = weekStart(logged.reduce((m, t) => (t.date < m ? t.date : m), logged[0].date))
+  const end = weekStart(addDays(asOf, 1)) // la setmana en curs no compta fins que acaba
+  let from = addDays(end, -7 * 12)
+  if (from < first) from = first
+  const weeks: string[] = []
+  for (let w = from; w < end; w = addDays(w, 7)) weeks.push(w)
+  if (!weeks.length) return 70
+  const perWeek = new Map<string, number>()
+  for (const t of logged) if (t.member_id === memberId) perWeek.set(weekStart(t.date), (perWeek.get(weekStart(t.date)) ?? 0) + t.count)
+  const good = weeks.filter((w) => (perWeek.get(w) ?? 0) >= 2).length
+  return clamp(40 + 59 * (good / weeks.length))
 }
 
 // ---------------------------------------------------------------------------
@@ -103,9 +151,7 @@ export function rating(db: DB, memberId: string, asOfMonth?: string): Rating {
 // ---------------------------------------------------------------------------
 
 export type CardVariant =
-  | 'gold'
-  | 'silver'
-  | 'bronze'
+  | Tier
   | 'totm'
   | 'anti'
   | 'icon'

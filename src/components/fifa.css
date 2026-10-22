@@ -149,6 +149,10 @@
   font-weight: 600;
   text-align: left;
 }
+.fifa-stats > div:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+  justify-self: center;
+}
 .fifa-stats b {
   font-weight: 800;
   display: inline-block;
@@ -177,8 +181,13 @@
 .fifa-gold {
   --ink: #3a2a00;
 }
-.fifa-silver {
+.fifa-silver,
+.fifa-silvershiny {
   --ink: #1f2933;
+}
+.fifa-goldshiny {
+  --ink: #3a2a00;
+  --shadow: rgba(255, 255, 255, 0.7);
 }
 .fifa-bronze {
   --ink: #2e1606;
@@ -319,6 +328,8 @@
 
 /* Brillantor que passa per sobre de les llegendàries */
 .fifa-bdo::after,
+.fifa-goldshiny::after,
+.fifa-silvershiny::after,
 .fifa-hattrick::after,
 .fifa-superman::after,
 .fifa-marato::after {

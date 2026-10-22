@@ -116,6 +116,8 @@ const BG: Record<CardVariant, (c: Ctx) => ReactNode> = {
   // ---------- Bàsiques: senzilles ----------
   gold: (c) => base(c, '#fbe9a1', '#d4a53a', '#9c7317'),
   silver: (c) => base(c, '#f4f6f9', '#b9c1ca', '#7d8792'),
+  goldshiny: (c) => shiny(c, '#fff4c2', '#f0c03a', '#a87a12', '#fff'),
+  silvershiny: (c) => shiny(c, '#ffffff', '#cfd6de', '#7f8a96', '#dff6ff'),
   bronze: (c) => base(c, '#f0c49b', '#b8743f', '#7c461f'),
 
   // ---------- MVP del mes ----------
@@ -140,9 +142,6 @@ const BG: Record<CardVariant, (c: Ctx) => ReactNode> = {
       {STARS.map(([x, y, r], i) => star(x, y, r, '#f5c84c', i))}
       <path d={c.inner} fill="none" stroke="#f5c84c" strokeWidth="2.5" />
       <path d={c.shape} fill="none" stroke="#fff3c4" strokeWidth="1" opacity="0.6" />
-      <text x="100" y="244" textAnchor="middle" fontSize="38" fontWeight="900" fill="#f5c84c" opacity="0.08" letterSpacing="4">
-        TOTM
-      </text>
     </>
   ),
 
@@ -757,6 +756,39 @@ function base(c: Ctx, light: string, mid: string, dark: string) {
       <path d={c.shape} fill={c.url('g')} />
       <path d={c.shape} fill={c.url('p')} />
       <path d={c.inner} fill="none" stroke={dark} strokeWidth="1.2" opacity="0.5" />
+    </>
+  )
+}
+
+/** Bàsiques brillants: com les normals però amb reflex hologràfic i espurnes */
+function shiny(c: Ctx, light: string, mid: string, dark: string, spark: string) {
+  return (
+    <>
+      <defs>
+        <linearGradient id={c.id('g')} x1="0" y1="0" x2="0.5" y2="1">
+          <stop offset="0" stopColor={light} />
+          <stop offset="0.5" stopColor={mid} />
+          <stop offset="1" stopColor={dark} />
+        </linearGradient>
+        <linearGradient id={c.id('holo')} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#ff9de2" stopOpacity="0.35" />
+          <stop offset="0.35" stopColor="#9de7ff" stopOpacity="0.3" />
+          <stop offset="0.65" stopColor="#c3ff9d" stopOpacity="0.25" />
+          <stop offset="1" stopColor="#ffe29d" stopOpacity="0.35" />
+        </linearGradient>
+        <clipPath id={c.id('clip')}>
+          <path d={c.shape} />
+        </clipPath>
+      </defs>
+      <path d={c.shape} fill={c.url('g')} />
+      <path d={c.shape} fill={c.url('holo')} style={{ mixBlendMode: 'overlay' }} />
+      <g clipPath={c.url('clip')}>
+        {rays(112, 82, 28, '#fff', 0.16)}
+        <path d="M-20 70 L220 10 L220 40 L-20 100 Z" fill="#fff" opacity="0.18" />
+      </g>
+      {STARS.map(([x, y, r], i) => star(x, y, r * 0.9, spark, i))}
+      <path d={c.shape} fill="none" stroke="#fff" strokeWidth="2.5" opacity="0.9" />
+      <path d={c.inner} fill="none" stroke={dark} strokeWidth="1.4" opacity="0.6" />
     </>
   )
 }

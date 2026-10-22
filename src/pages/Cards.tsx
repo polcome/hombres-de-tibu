@@ -12,13 +12,17 @@ import {
   photoFor,
   rating,
   unlockedCards,
+  TIERS,
   type Rating,
+  type Tier,
 } from '../logic/stats'
 import type { AchievementKind, Member } from '../types'
 
+const TIER_ICON: Record<Tier, string> = { bronze: '🥉', silver: '🥈', silvershiny: '✨🥈', gold: '🥇', goldshiny: '✨🥇' }
+
 // Carta "misteriosa" per ensenyar el disseny de les que ningú té
 const MYSTERY: Member = { id: 'mystery', slug: 'mystery', name: '???', nickname: null, photo_url: null, is_admin: false, active: true }
-const MYSTERY_RATING: Rating = { overall: 0, ent: 0, fora: 0, mvp: 0, com: 0, tier: 'bronze' }
+const MYSTERY_RATING: Rating = { overall: 0, ent: 0, fora: 0, mvp: 0, com: 0, con: 0, tier: 'bronze' }
 import { FifaCard } from '../components/FifaCard'
 import { CardZoom, unlockProps } from '../components/CardZoom'
 import { Section } from '../components/ui'
@@ -106,7 +110,7 @@ export default function Cards() {
 
       {tab === 'how' && (
         <Section title="Com es calcula la mitjana">
-          <p>Cada carta té 4 estadístiques (de 20 a 99) que s'actualitzen soles cada mes:</p>
+          <p>Cada carta té 5 estadístiques (de 20 a 99) que s'actualitzen soles:</p>
           <ul className="how">
             {STAT_LABELS.map(([k, l, d]) => (
               <li key={k}>
@@ -115,12 +119,14 @@ export default function Cards() {
             ))}
           </ul>
           <p>
-            <b>Mitjana</b> = 40% ENT + 10% FOR + 25% MVP + 25% COM. El que més pesa és anar al gym.
+            <b>Mitjana</b> = 35% ENT + 15% CON + 20% MVP + 20% COM + 10% FOR. El que més pesa és anar al gym, i anar-hi sovint.
           </p>
           <ul className="how">
-            <li>🥉 Bronze: menys de 65</li>
-            <li>🥈 Plata: de 65 a 74</li>
-            <li>🥇 Or: 75 o més</li>
+            {[...TIERS].reverse().map(([t, min], i, arr) => (
+              <li key={t}>
+                {TIER_ICON[t]} {TIERS.find(([x]) => x === t)![2]}: {i === 0 ? `menys de ${arr[1][1]}` : i === arr.length - 1 ? `${min} o més` : `de ${min} a ${arr[i + 1][1] - 1}`}
+              </li>
+            ))}
           </ul>
           <p>
             Les <b>cartes especials</b> es desbloquegen complint reptes i sumen (o resten) punts a la mitjana. Els <b>èxits esportius</b> (mitja, marató,

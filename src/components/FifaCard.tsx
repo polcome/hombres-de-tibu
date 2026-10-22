@@ -20,7 +20,9 @@ interface Props {
 }
 
 const TAG: Record<CardVariant, string> = {
+  goldshiny: 'OR ✦',
   gold: 'OR',
+  silvershiny: 'PLATA ✦',
   silver: 'PLATA',
   bronze: 'BRONZE',
   totm: 'TOTM',

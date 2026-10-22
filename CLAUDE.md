@@ -37,9 +37,10 @@ App web del grup d'amics del gimnàs "Los Hombres de Tibu" (13 membres). Serveix
   - Les fotos es comprimeixen a 1080px abans de pujar-les.
   - Les fotos de prova són **d'una sola visualització** per dispositiu (localStorage). L'autor i l'admin les poden veure sempre.
   - Validació del grup amb ✅/🧢. Un entreno és "dubtós" amb 3 o més 🧢 i més 🧢 que ✅. Continua comptant fins que l'admin l'esborri.
-- **Cartes FIFA:** 4 estadístiques. La mitjana és 40% ENT + 25% MVP + 25% COM + 10% FOR (`WEIGHTS` a `stats.ts`). VOT i CAR es van treure.
-  - Nivells: bronze <65, plata 65–74, or ≥75.
-  - Les bàsiques (or/plata/bronze) són senzilles. Les especials tenen **disseny propi** fet amb SVG a `src/components/CardArt.tsx` (forma, fons i ornaments segons el concepte: carpa de circ, llorer d'icona, gespa del hat-trick, dorsal de cursa, llençol de fantasma…). Estils de text a `src/components/fifa.css`.
+- **Cartes FIFA:** 5 estadístiques. La mitjana és 35% ENT + 15% CON + 20% MVP + 20% COM + 10% FOR (`WEIGHTS` a `stats.ts`). VOT i CAR es van treure.
+  - CON (constància) = % de setmanes senceres amb 2+ entrenos (gym o fora), de les últimes 12 i només des que es registren entrenos a l'app. Sense cap setmana sencera encara: 70.
+  - Nivells (`TIERS`): bronze <65, plata 65–69, plata brillant 70–74, or 75–79, or brillant ≥80.
+  - Les bàsiques (bronze, plata, or i les seves versions brillants) són senzilles; les brillants porten reflex hologràfic i espurnes. Les especials tenen **disseny propi** fet amb SVG a `src/components/CardArt.tsx` (forma, fons i ornaments segons el concepte: carpa de circ, llorer d'icona, gespa del hat-trick, dorsal de cursa, llençol de fantasma…). Estils de text a `src/components/fifa.css`.
   - Cartes automàtiques: TOTM, Riota del Mes, Icona (3 MVPs), Anti-Icona (3 antis), Hat-trick (3 MVPs seguits), Pilota d'Or i Pilota de Platja (anuals, quan el desembre està tancat), Redemption, Doble Cara, GymRat (200 gym/any), Centurió (100 gym/any), 4x4 (100 fora/any), IronMan (15+ gym 3 mesos seguits), SuperMan (20+ gym 3 mesos seguits), Fantasma (mes sense gym) i Rei Fantasma (mes sense cap entreno; no dona també Fantasma).
   - Els ids de `CARD_DEFS` no es canvien encara que canviï el nom (hi van lligades les fotos de cartes).
   - **Èxits esportius** (manuals, taula `achievements`): ascens, mitja marató, marató i Hyrox. L'admin els dona des d'Admin a una o diverses persones amb el nom de l'esdeveniment (tots els que hi van tenen la mateixa carta). Sumen a FOR durant 12 mesos (`ACHIEVEMENT_FOR_BONUS`).
