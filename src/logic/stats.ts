@@ -74,7 +74,7 @@ export const STAT_LABELS: [keyof Rating, string, string][] = [
   ['fora', 'FOR', 'Entrenos fora del gym (mitjana mensual) + èxits esportius dels últims 12 mesos'],
   ['mvp', 'MVP', 'MVPs guanyats en total'],
   ['com', 'COM', 'Comportament: antis dels últims 12 mesos'],
-  ['con', 'CON', 'Constància: % de setmanes amb 2+ entrenos (últimes 12 setmanes)'],
+  ['con', 'CON', 'Constància: setmanes amb 2+ entrenos. Progressiva: com més setmanes complertes, més alta pot arribar'],
 ]
 
 /** Pes de cada estadística a la mitjana */
@@ -126,16 +126,20 @@ const addDays = (iso: string, n: number) => {
   return isoDate(d)
 }
 
+/** Setmanes "virtuals" al 50% que s'afegeixen a la constància: amb poques setmanes no es pot tenir una nota alta */
+const CON_PRIOR_WEEKS = 12
+
 /**
- * Constància: % de setmanes senceres (de les últimes 12, i des que es fa servir l'app)
- * amb 2 o més entrenos (gym o fora). Sense setmanes encara: 70.
+ * Constància: setmanes senceres (de l'últim any, i des que es fa servir l'app) amb 2 o més
+ * entrenos (gym o fora). És progressiva: es compta com si hi hagués 12 setmanes més a mitges,
+ * així un 3/3 val menys que un 30/30. Sense setmanes encara: 70.
  */
 export function consistency(db: DB, memberId: string, asOf: string) {
   const logged = db.trainings.filter((t) => !t.baseline)
   if (!logged.length) return 70
   const first = weekStart(logged.reduce((m, t) => (t.date < m ? t.date : m), logged[0].date))
   const end = weekStart(addDays(asOf, 1)) // la setmana en curs no compta fins que acaba
-  let from = addDays(end, -7 * 12)
+  let from = addDays(end, -7 * 52)
   if (from < first) from = first
   const weeks: string[] = []
   for (let w = from; w < end; w = addDays(w, 7)) weeks.push(w)
@@ -143,7 +147,8 @@ export function consistency(db: DB, memberId: string, asOf: string) {
   const perWeek = new Map<string, number>()
   for (const t of logged) if (t.member_id === memberId) perWeek.set(weekStart(t.date), (perWeek.get(weekStart(t.date)) ?? 0) + t.count)
   const good = weeks.filter((w) => (perWeek.get(w) ?? 0) >= 2).length
-  return clamp(40 + 59 * (good / weeks.length))
+  const pct = (good + CON_PRIOR_WEEKS / 2) / (weeks.length + CON_PRIOR_WEEKS)
+  return clamp(40 + 59 * pct)
 }
 
 // ---------------------------------------------------------------------------

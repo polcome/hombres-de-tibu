@@ -132,6 +132,9 @@ export default function Cards() {
             Les <b>cartes especials</b> es desbloquegen complint reptes i sumen (o resten) punts a la mitjana. Els <b>èxits esportius</b> (mitja, marató,
             Hyrox, ascens) els dona l'admin i pugen molt l'estadística FOR durant 12 mesos.
           </p>
+          <p className="muted small">
+            <b>CON</b> és progressiva: per tenir-la alta cal mantenir-ho moltes setmanes. Ex: 3 de 3 setmanes bones → 75; 10 de 10 → 83; 30 de 30 → 91. I un 2 de 3 (71) no val el mateix que un 20 de 30 (77).
+          </p>
           <p className="muted small">Líder actual: {squad[0] ? `${displayName(squad[0].m)} (${squad[0].r.overall + squad[0].f.boost})` : '-'}</p>
         </Section>
       )}
