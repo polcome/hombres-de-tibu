@@ -30,7 +30,9 @@ App web del grup d'amics del gimnàs "Los Hombres de Tibu" (13 membres). Serveix
 - **Tancar el mes:** ho fa la RPC `close_month`. En cas d'empat guanyen tots. Després s'obre el mes següent.
 - **Comptes:** login amb usuari + contrasenya. L'email és fictici (`<slug>@hombresdetibu.app`) i a Supabase la confirmació d'email està desactivada.
   - L'alta es fa amb un codi d'activació (`member_secrets`) que valida el trigger `handle_new_user`.
-- **Expedients i comentaris:** anònims, no cal sessió. Es poden signar amb un nom lliure.
+- **Expedients:** cal sessió per publicar-los (RPC `post_expedient`), però el text surt anònim o signat amb un nom lliure. **Màxim 2 al dia per usuari** (dia de Madrid). La taula `expedient_posts` guarda qui i quin dia, però no quin expedient, perquè el xivato continuï sent anònim.
+- **Reaccions:** cal sessió, i només **una per usuari i expedient** (`expedient_reactions`; tocar la mateixa la treu, tocar-ne una altra la canvia). El jsonb `expedients.reactions` és llegat (es va posar a zero).
+- **Comentaris:** il·limitats, anònims i sense sessió.
 - **Entrenos:** format "gym (fora)".
   - Hi ha un recompte inicial de 2026 amb `baseline = true`, que compta per a l'any però no per a cap mes.
   - **Foto obligatòria per a gym** (només ho controla el client) i opcional per a fora. Es pot fer amb la càmera de l'app o triar de la galeria.
@@ -57,7 +59,8 @@ App web del grup d'amics del gimnàs "Los Hombres de Tibu" (13 membres). Serveix
 3. `supabase/palmares-2026.sql`: MVPs i antis de gener a setembre de 2026.
 4. `supabase/migracio-fotos-cartes.sql`: taula `card_photos`.
 5. `supabase/migracio-proves-entrenos.sql`: `trainings.photo_url`, `training_votes` i el bucket `proofs`.
-6. `supabase/migracio-exits-esportius.sql`: taula `achievements` (⚠️ pendent de confirmar que l'usuari l'ha executat).
+6. `supabase/migracio-exits-esportius.sql`: taula `achievements`.
+7. `supabase/migracio-limits-dossier.sql`: límit de 2 expedients/dia i 1 reacció per usuari (⚠️ pendent de confirmar que l'usuari l'ha executat).
 
 Quan un canvi necessiti BD:
 - Crea una **migració nova** `supabase/migracio-*.sql` que sigui idempotent (`if not exists`, `drop policy if exists`).
@@ -71,4 +74,4 @@ Correspondència de noms (per al palmarès): Pol Come = `come`, Pol Sainz = `pol
 - `npm install`, `npm run dev` (mode demo) i `npm run build` (inclou `tsc -b`, que ha de passar sense errors ni variables sense usar).
 - Prova els canvis visuals amb Playwright contra `npx vite preview` en mode demo, amb viewport de mòbil (390×844). L'usuari ho fa servir sobretot des del mòbil.
 - Commits petits en català i push a `main` (desplega sol).
-- Mantén l'estil del codi existent: components funcionals, sense punt i coma, cometes simples, text de la UI en català.
+- Mantén l'estil del codi existent: components funcionals, sense punt i coma, cometes simples, text de la UI en català. Hi ha `.prettierrc` amb aquest estil (no formatis fitxers que no toques).

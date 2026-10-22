@@ -23,7 +23,7 @@ export function createSupabaseApi(url: string, key: string): Api {
     mode: 'supabase',
 
     async loadAll() {
-      const [members, months, trainings, awards, expedients, comments, ballots, voters, cardPhotos, trainingVotes, achievements] = await Promise.all([
+      const [members, months, trainings, awards, expedients, comments, ballots, voters, cardPhotos, trainingVotes, achievements, reactions, posts] = await Promise.all([
         sb.from('members').select('id,slug,name,nickname,photo_url,is_admin,active,auth_id').order('name'),
         sb.from('months').select('*').order('id'),
         sb.from('trainings').select('*').order('date'),
@@ -35,6 +35,8 @@ export function createSupabaseApi(url: string, key: string): Api {
         sb.from('card_photos').select('*'),
         sb.from('training_votes').select('*'),
         sb.from('achievements').select('id,member_id,kind,event,date').order('date'),
+        sb.from('expedient_reactions').select('*'),
+        sb.from('expedient_posts').select('day'), // RLS: només les pròpies
       ])
       return {
         members: check(members),
@@ -49,6 +51,8 @@ export function createSupabaseApi(url: string, key: string): Api {
         cardPhotos: cardPhotos.error ? [] : cardPhotos.data,
         trainingVotes: trainingVotes.error ? [] : trainingVotes.data,
         achievements: achievements.error ? [] : achievements.data,
+        expedientReactions: reactions.error ? [] : reactions.data,
+        myPostDays: posts.error ? [] : (posts.data as { day: string }[]).map((p) => p.day),
       } as DB
     },
 
@@ -106,7 +110,10 @@ export function createSupabaseApi(url: string, key: string): Api {
       check(await sb.from('trainings').delete().eq('id', id))
     },
     async addExpedient(e) {
-      check(await sb.from('expedients').insert(e))
+      const r = await sb.rpc('post_expedient', { p_month: e.month_id, p_target: e.target_id, p_kind: e.kind, p_text: e.text, p_author: e.author })
+      // Si encara no s'ha executat la migració del límit, es publica com abans
+      if (r.error && /could not find the function/i.test(r.error.message)) check(await sb.from('expedients').insert(e))
+      else check(r)
     },
     async addComment(c) {
       check(await sb.from('comments').insert(c))

@@ -97,6 +97,13 @@ export interface Achievement {
   date: string // 'YYYY-MM-DD'
 }
 
+/** Una reacció per usuari i expedient */
+export interface ExpedientReaction {
+  expedient_id: string
+  member_id: string
+  emoji: string
+}
+
 export interface DB {
   members: Member[]
   months: Month[]
@@ -109,6 +116,9 @@ export interface DB {
   cardPhotos: CardPhoto[]
   trainingVotes: TrainingVote[]
   achievements: Achievement[]
+  expedientReactions: ExpedientReaction[]
+  /** Dies (YYYY-MM-DD) en què l'usuari amb sessió ha publicat expedients (un per publicació) */
+  myPostDays: string[]
 }
 
 export const EMOJIS = ['😂', '🔥', '💀', '👏', '🤡'] as const

@@ -3,7 +3,7 @@
 import type { Api } from './types'
 import type { DB, Member } from '../types'
 
-const KEY = 'tibu-demo-db-v2'
+const KEY = 'tibu-demo-db-v3'
 const ME = 'tibu-demo-me'
 const uid = () => crypto.randomUUID()
 
@@ -34,7 +34,7 @@ function seed(): DB {
     active: true,
   }))
   const by = (s: string) => members.find((m) => m.slug === s)!.id
-  const db: DB = { members, months: [], trainings: [], awards: [], expedients: [], comments: [], ballots: [], voters: [], cardPhotos: [], trainingVotes: [], achievements: [] }
+  const db: DB = { members, months: [], trainings: [], awards: [], expedients: [], comments: [], ballots: [], voters: [], cardPhotos: [], trainingVotes: [], achievements: [], expedientReactions: [], myPostDays: [] }
 
   BASE.forEach(([slug, , gym, fora]) => {
     db.trainings.push({ id: uid(), member_id: by(slug), date: '2026-10-16', kind: 'gym', count: gym, baseline: true, note: 'Recompte inicial 2026' })
@@ -83,9 +83,9 @@ function seed(): DB {
 
   const e1 = uid()
   db.expedients.push(
-    { id: e1, month_id: '2026-10', target_id: by('josep'), kind: 'falta', text: 'Ha dit que el pit es entrena dilluns i dimecres. Gravíssim.', author: null, reactions: { '😂': 4, '🤡': 2 }, created_at: '2026-10-08T19:22:00Z' },
-    { id: uid(), month_id: '2026-10', target_id: by('bernat'), kind: 'merit', text: 'Ens ha portat a tots a casa després del sopar sense queixar-se', author: 'Marc', reactions: { '👏': 3 }, created_at: '2026-10-10T23:40:00Z' },
-    { id: uid(), month_id: '2026-10', target_id: by('pena'), kind: 'falta', text: 'Ha tornat a fer bolo dimarts. Ja en van 3 seguits.', author: 'Eduard', reactions: { '💀': 5 }, created_at: '2026-10-14T20:05:00Z' },
+    { id: e1, month_id: '2026-10', target_id: by('josep'), kind: 'falta', text: 'Ha dit que el pit es entrena dilluns i dimecres. Gravíssim.', author: null, reactions: {}, created_at: '2026-10-08T19:22:00Z' },
+    { id: uid(), month_id: '2026-10', target_id: by('bernat'), kind: 'merit', text: 'Ens ha portat a tots a casa després del sopar sense queixar-se', author: 'Marc', reactions: {}, created_at: '2026-10-10T23:40:00Z' },
+    { id: uid(), month_id: '2026-10', target_id: by('pena'), kind: 'falta', text: 'Ha tornat a fer bolo dimarts. Ja en van 3 seguits.', author: 'Eduard', reactions: {}, created_at: '2026-10-14T20:05:00Z' },
   )
   db.comments.push({ id: uid(), expedient_id: e1, author: 'Josep', text: 'Fake news, era espatlla', created_at: '2026-10-08T19:40:00Z' })
   return db
@@ -139,7 +139,15 @@ export function createDemoApi(): Api {
     async loadAll() {
       await tick()
       const db = load()
-      return { ...db, cardPhotos: db.cardPhotos ?? [], trainingVotes: db.trainingVotes ?? [], achievements: db.achievements ?? [] }
+      const posts = (db as DB & { posts?: { member_id: string; day: string }[] }).posts ?? []
+      return {
+        ...db,
+        cardPhotos: db.cardPhotos ?? [],
+        trainingVotes: db.trainingVotes ?? [],
+        achievements: db.achievements ?? [],
+        expedientReactions: db.expedientReactions ?? [],
+        myPostDays: posts.filter((p) => p.member_id === meId()).map((p) => p.day),
+      }
     },
     async me() {
       return meId()
@@ -172,15 +180,28 @@ export function createDemoApi(): Api {
       mutate((db) => (db.trainings = db.trainings.filter((t) => t.id !== id)))
     },
     async addExpedient(e) {
-      mutate((db) => db.expedients.unshift({ ...e, id: uid(), reactions: {}, created_at: new Date().toISOString() }))
+      const me = meId()
+      if (!me) throw new Error("Has d'entrar per publicar (continuarà sent anònim)")
+      const today = new Date().toLocaleDateString('sv-SE')
+      mutate((db) => {
+        const d = db as DB & { posts?: { member_id: string; day: string }[] }
+        d.posts = d.posts ?? []
+        if (d.posts.filter((p) => p.member_id === me && p.day === today).length >= 2) throw new Error('Ja has publicat 2 expedients avui. Torna demà 😉')
+        d.posts.push({ member_id: me, day: today })
+        db.expedients.unshift({ ...e, id: uid(), reactions: {}, created_at: new Date().toISOString() })
+      })
     },
     async addComment(c) {
       mutate((db) => db.comments.push({ ...c, id: uid(), created_at: new Date().toISOString() }))
     },
     async react(id, emoji) {
+      const me = meId()
+      if (!me) throw new Error("Has d'entrar per reaccionar")
       mutate((db) => {
-        const e = db.expedients.find((x) => x.id === id)
-        if (e) e.reactions[emoji] = (e.reactions[emoji] ?? 0) + 1
+        db.expedientReactions = db.expedientReactions ?? []
+        const cur = db.expedientReactions.find((r) => r.expedient_id === id && r.member_id === me)
+        db.expedientReactions = db.expedientReactions.filter((r) => r !== cur)
+        if (cur?.emoji !== emoji) db.expedientReactions.push({ expedient_id: id, member_id: me, emoji })
       })
     },
     async castVote(monthId, mvpId, mvpReason, antiId, antiReason) {

@@ -3,10 +3,19 @@ import { Link } from 'react-router-dom'
 import { api } from '../api'
 import { useAction, useStore } from '../store'
 import { EMOJIS, type Expedient } from '../types'
-import { currentMonthKey, monthLabel, timeAgo } from '../logic/months'
+import { currentMonthKey, monthLabel, timeAgo, todayISO } from '../logic/months'
 import { displayName, memberById } from '../logic/stats'
 import { Avatar } from '../components/Avatar'
 import { ErrorMsg, MemberSelect, Section } from '../components/ui'
+
+export const MAX_POSTS_PER_DAY = 2
+
+/** Recompte de reaccions: les antigues (jsonb) + una per usuari */
+function reactionCounts(e: Expedient, list: { expedient_id: string; emoji: string }[]) {
+  const counts: Record<string, number> = { ...e.reactions }
+  for (const r of list) if (r.expedient_id === e.id) counts[r.emoji] = (counts[r.emoji] ?? 0) + 1
+  return counts
+}
 
 export function ExpedientItem({ e, compact }: { e: Expedient; compact?: boolean }) {
   const { db, me } = useStore()
@@ -16,6 +25,8 @@ export function ExpedientItem({ e, compact }: { e: Expedient; compact?: boolean 
   const [author, setAuthor] = useState('')
   const target = memberById(db, e.target_id)
   const comments = db.comments.filter((c) => c.expedient_id === e.id)
+  const counts = reactionCounts(e, db.expedientReactions)
+  const mine = db.expedientReactions.find((r) => r.expedient_id === e.id && r.member_id === me?.id)?.emoji
 
   return (
     <article className={`exp exp-${e.kind}`}>
@@ -24,7 +35,13 @@ export function ExpedientItem({ e, compact }: { e: Expedient; compact?: boolean 
         <div>
           <div>
             <span className={`tag tag-${e.kind}`}>{e.kind === 'merit' ? '🟢 MÈRIT' : '🔴 FALTA'}</span>{' '}
-            {target ? <Link to={`/jugador/${target.slug}`}><b>{displayName(target)}</b></Link> : <b>¿?</b>}
+            {target ? (
+              <Link to={`/jugador/${target.slug}`}>
+                <b>{displayName(target)}</b>
+              </Link>
+            ) : (
+              <b>¿?</b>
+            )}
           </div>
           <div className="muted small">
             {e.author ? `per ${e.author}` : '🕵️ xivato anònim'} · {timeAgo(e.created_at)}
@@ -41,8 +58,14 @@ export function ExpedientItem({ e, compact }: { e: Expedient; compact?: boolean 
         <>
           <div className="reactions">
             {EMOJIS.map((em) => (
-              <button key={em} disabled={busy} onClick={() => run(() => api.react(e.id, em))}>
-                {em} {e.reactions[em] ? <b>{e.reactions[em]}</b> : null}
+              <button
+                key={em}
+                disabled={busy || !me}
+                className={mine === em ? 'on' : ''}
+                title={me ? (mine === em ? 'Treure la reacció' : 'Reaccionar') : 'Entra per reaccionar'}
+                onClick={() => run(() => api.react(e.id, em))}
+              >
+                {em} {counts[em] ? <b>{counts[em]}</b> : null}
               </button>
             ))}
             <button className="ml-auto" onClick={() => setOpen(!open)}>
@@ -66,7 +89,16 @@ export function ExpedientItem({ e, compact }: { e: Expedient; compact?: boolean 
                 onSubmit={async (ev) => {
                   ev.preventDefault()
                   if (!text.trim()) return
-                  if (await run(() => api.addComment({ expedient_id: e.id, author: author.trim() || null, text: text.trim() }))) setText('')
+                  if (
+                    await run(() =>
+                      api.addComment({
+                        expedient_id: e.id,
+                        author: author.trim() || null,
+                        text: text.trim(),
+                      }),
+                    )
+                  )
+                    setText('')
                 }}
               >
                 <input placeholder="Nom (opcional)" value={author} onChange={(x) => setAuthor(x.target.value)} maxLength={40} style={{ maxWidth: 120 }} />
@@ -96,58 +128,87 @@ export default function Dossier() {
   const [who, setWho] = useState('')
 
   const list = db.expedients.filter((e) => e.month_id === month && (!who || e.target_id === who))
+  const left = Math.max(0, MAX_POSTS_PER_DAY - db.myPostDays.filter((d) => d === todayISO()).length)
 
   return (
     <div className="stack">
       <Section title="📁 Obrir expedient">
         <p className="muted small">
-          Ha passat alguna cosa? Apunta-ho ara i no a final de mes. No cal entrar a l'app: pots signar-ho o fer de xivato anònim.
+          Ha passat alguna cosa? Apunta-ho ara i no a final de mes. Pots signar-ho o fer de xivato anònim: ningú, ni l'admin, pot saber qui l'ha escrit.
         </p>
-        <form
-          className="form"
-          onSubmit={async (ev) => {
-            ev.preventDefault()
-            const ok = await run(() =>
-              api.addExpedient({ month_id: currentMonthKey(), target_id: target, kind, text: text.trim(), author: author.trim() || null }),
-            )
-            if (ok) {
-              setText('')
-              setTarget('')
-              setDone(true)
-              setMonth(currentMonthKey())
-              setTimeout(() => setDone(false), 2500)
-            }
-          }}
-        >
-          <div className="toggle">
-            <button type="button" className={kind === 'merit' ? 'on-green' : ''} onClick={() => setKind('merit')}>
-              🟢 Mèrit
-            </button>
-            <button type="button" className={kind === 'falta' ? 'on-red' : ''} onClick={() => setKind('falta')}>
-              🔴 Falta
-            </button>
+        {!me ? (
+          <div className="stack-sm">
+            <p>Per evitar spam, cal haver entrat per publicar (màxim {MAX_POSTS_PER_DAY} expedients al dia). Continuarà sortint anònim si vols.</p>
+            <Link to="/login" className="btn btn-primary">
+              Entrar
+            </Link>
           </div>
-          <MemberSelect members={db.members} value={target} onChange={setTarget} placeholder="Qui és l'acusat/a?" />
-          <textarea
-            placeholder={kind === 'merit' ? 'Què ha fet de bo? Ex: ha portat esmorzar per a tothom' : "Què ha fet? Ex: ha dit que venia i ens ha deixat tirats"}
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            maxLength={1000}
-            rows={3}
-          />
-          <div className="row">
-            <input placeholder="Signat per… (buit = anònim)" value={author} onChange={(e) => setAuthor(e.target.value)} maxLength={40} />
-            {me && !author && (
-              <button type="button" className="btn" onClick={() => setAuthor(displayName(me))}>
-                Signar
+        ) : (
+          <form
+            className="form"
+            onSubmit={async (ev) => {
+              ev.preventDefault()
+              const ok = await run(() =>
+                api.addExpedient({
+                  month_id: currentMonthKey(),
+                  target_id: target,
+                  kind,
+                  text: text.trim(),
+                  author: author.trim() || null,
+                }),
+              )
+              if (ok) {
+                setText('')
+                setTarget('')
+                setDone(true)
+                setMonth(currentMonthKey())
+                setTimeout(() => setDone(false), 2500)
+              }
+            }}
+          >
+            <div className="toggle">
+              <button type="button" className={kind === 'merit' ? 'on-green' : ''} onClick={() => setKind('merit')}>
+                🟢 Mèrit
               </button>
-            )}
-          </div>
-          <ErrorMsg err={err} />
-          <button className="btn btn-primary" disabled={busy || !target || text.trim().length < 3}>
-            {done ? '✅ Expedient obert!' : author.trim() ? `Publicar com a ${author.trim()}` : 'Publicar anònimament 🕵️'}
-          </button>
-        </form>
+              <button type="button" className={kind === 'falta' ? 'on-red' : ''} onClick={() => setKind('falta')}>
+                🔴 Falta
+              </button>
+            </div>
+            <MemberSelect members={db.members} value={target} onChange={setTarget} placeholder="Qui és l'acusat/a?" />
+            <textarea
+              placeholder={
+                kind === 'merit' ? 'Què ha fet de bo? Ex: ha portat esmorzar per a tothom' : 'Què ha fet? Ex: ha dit que venia i ens ha deixat tirats'
+              }
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              maxLength={1000}
+              rows={3}
+            />
+            <div className="row">
+              <input placeholder="Signat per… (buit = anònim)" value={author} onChange={(e) => setAuthor(e.target.value)} maxLength={40} />
+              {me && !author && (
+                <button type="button" className="btn" onClick={() => setAuthor(displayName(me))}>
+                  Signar
+                </button>
+              )}
+            </div>
+            <ErrorMsg err={err} />
+            <button className="btn btn-primary" disabled={busy || !target || text.trim().length < 3 || left === 0}>
+              {done
+                ? '✅ Expedient obert!'
+                : left === 0
+                  ? 'Ja has publicat 2 avui'
+                  : author.trim()
+                    ? `Publicar com a ${author.trim()}`
+                    : 'Publicar anònimament 🕵️'}
+            </button>
+            <p className="muted small center">
+              {left === 0
+                ? "Has arribat al límit d'avui. Demà més! (Comentar sí que pots sempre.)"
+                : `Et queden ${left} publicaci${left === 1 ? 'ó' : 'ons'} avui.`}
+            </p>
+          </form>
+        )}
       </Section>
 
       <Section
