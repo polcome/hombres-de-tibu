@@ -70,8 +70,8 @@ export const TIERS: [Tier, number, string][] = [
 export const tierOf = (overall: number): Tier => TIERS.find(([, min]) => overall >= min)![0]
 
 export const STAT_LABELS: [keyof Rating, string, string][] = [
-  ['ent', 'ENT', "Entrenos al gym (mitjana mensual de l'any)"],
-  ['fora', 'FOR', "Entrenos fora del gym (mitjana mensual de l'any) + èxits esportius de l'any"],
+  ['ent', 'ENT', "Entrenos al gym acumulats de l'any (236 = 99)"],
+  ['fora', 'FOR', "Entrenos fora del gym acumulats de l'any (192 = 99) + èxits esportius de l'any"],
   ['mvp', 'MVP', "MVPs guanyats aquest any"],
   ['com', 'COM', "Comportament: antis rebuts aquest any"],
   ['con', 'CON', "Constància: setmanes de l'any amb 2+ entrenos. Progressiva: com més setmanes complertes, més alta pot arribar"],
@@ -88,11 +88,15 @@ export function rating(db: DB, memberId: string, asOfMonth?: string): Rating {
   const asOf = asOfMonth ? lastDayOf(asOfMonth) : todayISO()
   const asOfM = monthKey(asOf)
   const year = Number(asOf.slice(0, 4))
-  const t = yearTotals(db, memberId, year, asOf)
-
-  // Si hi ha recompte inicial, cobreix fins a la seva data
-  const baseDates = db.trainings.filter((x) => x.baseline && x.member_id === memberId && x.date.startsWith(String(year))).map((x) => x.date)
-  const elapsed = Math.max(1, monthsElapsed(asOf), ...baseDates.map(monthsElapsed))
+  // Entrenos acumulats de l'any fins a la data. El recompte inicial cobreix de l'1 de gener fins a la seva
+  // data: per a una data anterior se'n compta només la part proporcional.
+  const t = { gym: 0, fora: 0 }
+  for (const x of db.trainings) {
+    if (x.member_id !== memberId || !x.date.startsWith(String(year))) continue
+    if (!x.baseline) {
+      if (x.date <= asOf) t[x.kind] += x.count
+    } else t[x.kind] += x.count * Math.min(1, monthsElapsed(asOf) / monthsElapsed(x.date))
+  }
 
   const aw = db.awards.filter((a) => a.member_id === memberId && a.month_id <= asOfM && a.month_id.startsWith(String(year)))
   const mvps = aw.filter((a) => a.type === 'mvp').length
@@ -103,8 +107,9 @@ export function rating(db: DB, memberId: string, asOfMonth?: string): Rating {
     .reduce((sum, a) => sum + ACHIEVEMENT_FOR_BONUS[a.kind], 0)
 
   const r = {
-    ent: clamp(40 + (t.gym / elapsed) * 3, 30),
-    fora: clamp(35 + (t.fora / elapsed) * 4 + exitBonus, 30),
+    // Es van omplint durant l'any: 236 de gym o 192 fora = 99
+    ent: clamp(40 + t.gym / 4, 30),
+    fora: clamp(35 + t.fora / 3 + exitBonus, 30),
     mvp: clamp(55 + 11 * mvps),
     com: clamp(88 - 13 * antis),
     con: consistency(db, memberId, asOf),

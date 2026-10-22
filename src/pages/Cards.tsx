@@ -142,24 +142,26 @@ export default function Cards() {
           </Section>
 
           <Section title="💪 ENT · Entrenos al gym (35%)">
-            <pre className="formula">ENT = 40 + (entrenos de gym de l'any ÷ mesos transcorreguts) × 3</pre>
+            <pre className="formula">ENT = 40 + entrenos de gym de l'any ÷ 4</pre>
             <ul className="how">
-              <li>Inclou el recompte inicial i tot el que s'apunta a l'app.</li>
               <li>
-                Els mesos compten amb decimals: el 22 d'octubre són 9 + 22/31 = <b>9,71</b>. Mai menys d'1 (al gener no surts disparat).
+                Es va <b>omplint durant tot l'any</b>, com una barra de progrés: cada entreno de gym suma +0,25. Un mes fort (24 entrenos) suma uns +6.
               </li>
-              <li>Mínim 30, màxim 99. El 99 arriba amb uns <b>20 entrenos de gym al mes</b>.</li>
+              <li>
+                El 99 arriba amb <b>236 entrenos de gym</b> a l'any (uns 20 al mes de gener a desembre). Per tenir-la alta cal ser constant, no fer un mes bèstia.
+              </li>
+              <li>Inclou el recompte inicial i tot el que s'apunta a l'app. L'1 de gener torna a 40.</li>
             </ul>
           </Section>
 
           <Section title="🏃 FOR · Entrenos fora del gym (10%)">
-            <pre className="formula">FOR = 35 + (entrenos fora de l'any ÷ mesos transcorreguts) × 4 + bonus d'èxits</pre>
+            <pre className="formula">FOR = 35 + entrenos fora de l'any ÷ 3 + bonus d'èxits</pre>
             <ul className="how">
+              <li>També s'omple durant l'any: el 99 arriba amb 192 entrenos fora.</li>
               <li>
                 Bonus d'èxits esportius de l'any: Ascens +{ACHIEVEMENT_FOR_BONUS.ascens}, Mitja +{ACHIEVEMENT_FOR_BONUS.mitja}, Hyrox +{ACHIEVEMENT_FOR_BONUS.hyrox},
                 Marató +{ACHIEVEMENT_FOR_BONUS.marato}. Se sumen entre ells.
               </li>
-              <li>Mínim 30, màxim 99. Sense èxits, el 99 arriba amb uns 16 entrenos fora al mes.</li>
             </ul>
           </Section>
 

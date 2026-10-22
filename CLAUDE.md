@@ -40,7 +40,7 @@ App web del grup d'amics del gimnàs "Los Hombres de Tibu" (13 membres). Serveix
   - Les fotos de prova són **d'una sola visualització** per dispositiu (localStorage). L'autor i l'admin les poden veure sempre.
   - Validació del grup amb ✅/🧢. Un entreno és "dubtós" amb 3 o més 🧢 i més 🧢 que ✅. Continua comptant fins que l'admin l'esborri.
 - **Cartes FIFA:** 5 estadístiques. La mitjana és 35% ENT + 15% CON + 20% MVP + 20% COM + 10% FOR (`WEIGHTS` a `stats.ts`). VOT i CAR es van treure.
-  - **Tot és per any natural:** ENT/FOR (mitjana mensual de l'any), MVP = 55 + 11·MVPs de l'any, COM = 88 − 13·antis de l'any, bonus d'èxits de l'any, CON amb les setmanes que comencen dins l'any. L'1 de gener tothom torna a zero. Les cartes guanyades es queden.
+  - **Tot és per any natural:** ENT = 40 + gym de l'any ÷ 4 i FOR = 35 + fora de l'any ÷ 3 (+ bonus), acumulatius: s'omplen durant l'any (el recompte inicial es prorrateja per a dates anteriors a la seva), MVP = 55 + 11·MVPs de l'any, COM = 88 − 13·antis de l'any, bonus d'èxits de l'any, CON amb les setmanes que comencen dins l'any. L'1 de gener tothom torna a zero. Les cartes guanyades es queden.
   - CON (constància): setmanes senceres de l'any amb 2+ entrenos (gym o fora), només des que es registren entrenos a l'app. **Progressiva**: pct = (bones + 6) / (setmanes + 12) (`CON_PRIOR_WEEKS`), així un 3/3 val menys que un 30/30. Sense setmanes: 70.
   - L'explicació completa de les fórmules és a Cartes → Com funciona (`Cards.tsx`): si canvies una fórmula, actualitza-la també allà.
   - Nivells (`TIERS`): bronze <65, plata 65–69, plata brillant 70–74, or 75–79, or brillant ≥80.
