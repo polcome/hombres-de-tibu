@@ -17,3 +17,6 @@ drop policy if exists "read achievements" on achievements;
 drop policy if exists "admin achievements" on achievements;
 create policy "read achievements"  on achievements for select using (true);
 create policy "admin achievements" on achievements for all using (is_admin()) with check (is_admin());
+
+-- Que l'API vegi la taula nova a l'instant
+notify pgrst, 'reload schema';
