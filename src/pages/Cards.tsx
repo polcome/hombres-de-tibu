@@ -4,8 +4,6 @@ import { useStore } from '../store'
 import {
   ACHIEVEMENT_FOR_BONUS,
   CARD_DEFS,
-  STAT_LABELS,
-  WEIGHTS,
   cardKey,
   displayName,
   featuredCard,
@@ -65,7 +63,7 @@ export default function Cards() {
           <p className="muted small center">Toca una carta per veure-la en gran.</p>
           {[
             { title: '⚙️ Automàtiques', sub: "Es desbloquegen soles quan es compleix el repte.", defs: CARD_DEFS.filter((d) => d.auto && !d.level) },
-            { title: '🏅 Èxits esportius', sub: "Manuals: l'admin les dona a qui ho aconsegueix. Pugen FOR durant 12 mesos.", defs: CARD_DEFS.filter((d) => !d.auto) },
+            { title: '🏅 Èxits esportius', sub: "Manuals: l'admin les dona a qui ho aconsegueix. Pugen FOR durant l'any de l'èxit.", defs: CARD_DEFS.filter((d) => !d.auto) },
           ].map((group) => (
             <div key={group.title} className="stack">
               <div className="group-head">
@@ -134,34 +132,150 @@ export default function Cards() {
       )}
 
       {tab === 'how' && (
-        <Section title="Com es calcula la mitjana">
-          <p>Cada carta té 5 estadístiques (de 20 a 99) que s'actualitzen soles:</p>
-          <ul className="how">
-            {STAT_LABELS.map(([k, l, d]) => (
-              <li key={k}>
-                <b>{l}</b> ({Math.round(WEIGHTS[k as keyof typeof WEIGHTS] * 100)}%) · {d}
+        <div className="stack how-page">
+          <Section title="📅 Tot és per any natural">
+            <p>
+              Totes les estadístiques es calculen <b>de l'1 de gener al 31 de desembre</b>. El dia 1 de gener tothom torna a començar de zero: entrenos, MVPs,
+              antis, constància i èxits. Les cartes especials que ja tens es queden a l'àlbum per sempre.
+            </p>
+            <p className="muted small">Cada estadística va de 20 a 99 i s'arrodoneix a l'enter.</p>
+          </Section>
+
+          <Section title="💪 ENT · Entrenos al gym (35%)">
+            <pre className="formula">ENT = 40 + (entrenos de gym de l'any ÷ mesos transcorreguts) × 3</pre>
+            <ul className="how">
+              <li>Inclou el recompte inicial i tot el que s'apunta a l'app.</li>
+              <li>
+                Els mesos compten amb decimals: el 22 d'octubre són 9 + 22/31 = <b>9,71</b>. Mai menys d'1 (al gener no surts disparat).
               </li>
-            ))}
-          </ul>
-          <p>
-            <b>Mitjana</b> = 35% ENT + 15% CON + 20% MVP + 20% COM + 10% FOR. El que més pesa és anar al gym, i anar-hi sovint.
-          </p>
-          <ul className="how">
-            {[...TIERS].reverse().map(([t, min], i, arr) => (
-              <li key={t}>
-                {TIER_ICON[t]} {TIERS.find(([x]) => x === t)![2]}: {i === 0 ? `menys de ${arr[1][1]}` : i === arr.length - 1 ? `${min} o més` : `de ${min} a ${arr[i + 1][1] - 1}`}
+              <li>Mínim 30, màxim 99. El 99 arriba amb uns <b>20 entrenos de gym al mes</b>.</li>
+            </ul>
+          </Section>
+
+          <Section title="🏃 FOR · Entrenos fora del gym (10%)">
+            <pre className="formula">FOR = 35 + (entrenos fora de l'any ÷ mesos transcorreguts) × 4 + bonus d'èxits</pre>
+            <ul className="how">
+              <li>
+                Bonus d'èxits esportius de l'any: Ascens +{ACHIEVEMENT_FOR_BONUS.ascens}, Mitja +{ACHIEVEMENT_FOR_BONUS.mitja}, Hyrox +{ACHIEVEMENT_FOR_BONUS.hyrox},
+                Marató +{ACHIEVEMENT_FOR_BONUS.marato}. Se sumen entre ells.
               </li>
-            ))}
-          </ul>
-          <p>
-            Les <b>cartes especials</b> es desbloquegen complint reptes i sumen (o resten) punts a la mitjana. Els <b>èxits esportius</b> (mitja, marató,
-            Hyrox, ascens) els dona l'admin i pugen molt l'estadística FOR durant 12 mesos.
-          </p>
-          <p className="muted small">
-            <b>CON</b> és progressiva: per tenir-la alta cal mantenir-ho moltes setmanes. Ex: 3 de 3 setmanes bones → 75; 10 de 10 → 83; 30 de 30 → 91. I un 2 de 3 (71) no val el mateix que un 20 de 30 (77).
-          </p>
-          <p className="muted small">Líder actual: {squad[0] ? `${displayName(squad[0].m)} (${squad[0].r.overall + squad[0].f.boost})` : '-'}</p>
-        </Section>
+              <li>Mínim 30, màxim 99. Sense èxits, el 99 arriba amb uns 16 entrenos fora al mes.</li>
+            </ul>
+          </Section>
+
+          <Section title="🏆 MVP · Palmarès de l'any (20%)">
+            <pre className="formula">MVP = 55 + 11 × MVPs de l'any</pre>
+            <table className="table small center-cells">
+              <tbody>
+                <tr>
+                  <th>MVPs</th>
+                  <td>0</td>
+                  <td>1</td>
+                  <td>2</td>
+                  <td>3</td>
+                  <td>4+</td>
+                </tr>
+                <tr>
+                  <th>MVP</th>
+                  <td>55</td>
+                  <td>66</td>
+                  <td>77</td>
+                  <td>88</td>
+                  <td>99</td>
+                </tr>
+              </tbody>
+            </table>
+          </Section>
+
+          <Section title="😇 COM · Comportament (20%)">
+            <pre className="formula">COM = 88 − 13 × antis de l'any</pre>
+            <table className="table small center-cells">
+              <tbody>
+                <tr>
+                  <th>Antis</th>
+                  <td>0</td>
+                  <td>1</td>
+                  <td>2</td>
+                  <td>3</td>
+                  <td>4</td>
+                  <td>5+</td>
+                </tr>
+                <tr>
+                  <th>COM</th>
+                  <td>88</td>
+                  <td>75</td>
+                  <td>62</td>
+                  <td>49</td>
+                  <td>36</td>
+                  <td>20</td>
+                </tr>
+              </tbody>
+            </table>
+            <p className="muted small">Sense cap anti el màxim és 88: ningú és perfecte.</p>
+          </Section>
+
+          <Section title="📈 CON · Constància (15%)">
+            <pre className="formula">CON = 40 + 59 × (setmanes bones + 6) ÷ (setmanes totals + 12)</pre>
+            <ul className="how">
+              <li>
+                <b>Setmana bona:</b> de dilluns a diumenge amb <b>2 entrenos o més</b> (gym o fora).
+              </li>
+              <li>
+                <b>Setmanes totals:</b> les setmanes senceres de l'any (des que es fa servir l'app). La setmana en curs no compta fins que acaba.
+              </li>
+              <li>
+                El <b>+6 / +12</b> la fa progressiva: és com començar amb 12 setmanes virtuals a mitges. Amb poques setmanes no es pot tenir nota alta.
+              </li>
+              <li>Sense cap setmana sencera encara: 70.</li>
+            </ul>
+            <table className="table small center-cells">
+              <tbody>
+                <tr>
+                  <th>Bones/totals</th>
+                  <td>2/3</td>
+                  <td>3/3</td>
+                  <td>10/10</td>
+                  <td>20/30</td>
+                  <td>30/30</td>
+                  <td>0/10</td>
+                </tr>
+                <tr>
+                  <th>CON</th>
+                  <td>71</td>
+                  <td>75</td>
+                  <td>83</td>
+                  <td>77</td>
+                  <td>91</td>
+                  <td>56</td>
+                </tr>
+              </tbody>
+            </table>
+          </Section>
+
+          <Section title="⭐ Mitjana total">
+            <pre className="formula">MITJANA = 0,35·ENT + 0,15·CON + 0,20·MVP + 0,20·COM + 0,10·FOR</pre>
+            <p className="muted small">El gym (ENT + CON) pesa el 50%.</p>
+            <ul className="how">
+              {[...TIERS].reverse().map(([t, min], i, arr) => (
+                <li key={t}>
+                  {TIER_ICON[t]} {TIERS.find(([x]) => x === t)![2]}:{' '}
+                  {i === 0 ? `menys de ${arr[1][1]}` : i === arr.length - 1 ? `${min} o més` : `de ${min} a ${arr[i + 1][1] - 1}`}
+                </li>
+              ))}
+            </ul>
+          </Section>
+
+          <Section title="🃏 Cartes especials">
+            <pre className="formula">Mitjana de la carta = mitjana a final del mes de la carta + bonus de la carta</pre>
+            <ul className="how">
+              <li>El bonus depèn de la carta (TOTM +3, Icona +6, Pilota d'Or +12, Anti-MVP −3…). Sempre entre 1 i 99.</li>
+              <li>Les cartes anuals i les d'abans que hi hagi dades a l'app fan servir la mitjana d'avui.</li>
+              <li>Les 5 estadístiques de la carta no porten bonus: només el número gran.</li>
+            </ul>
+          </Section>
+
+          <p className="muted small center">Líder actual: {squad[0] ? `${displayName(squad[0].m)} (${squad[0].r.overall + squad[0].f.boost})` : '-'}</p>
+        </div>
       )}
     </div>
   )

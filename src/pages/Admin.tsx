@@ -387,8 +387,7 @@ function AchievementsAdmin() {
   return (
     <Section title="🏅 Èxits esportius">
       <p className="muted small">
-        Cartes manuals. Tria l'èxit, posa el nom de l'esdeveniment i marca tothom qui l'ha aconseguit: tots tindran la mateixa carta. Pugen FOR durant 12
-        mesos.
+        Cartes manuals. Tria l'èxit, posa el nom de l'esdeveniment i marca tothom qui l'ha aconseguit: tots tindran la mateixa carta. Pugen FOR durant l'any de l'èxit.
       </p>
       <div className="form">
         <div className="toggle wrap">

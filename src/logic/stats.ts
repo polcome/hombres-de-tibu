@@ -52,7 +52,7 @@ export interface Rating {
   ent: number // entrenament al gym
   fora: number // activitat fora del gym (+ èxits esportius)
   mvp: number // palmarès MVP
-  com: number // comportament (antis dels últims 12 mesos)
+  com: number // comportament (antis de l'any)
   con: number // constància: setmanes amb 2+ entrenos
   tier: Tier
 }
@@ -71,19 +71,19 @@ export const tierOf = (overall: number): Tier => TIERS.find(([, min]) => overall
 
 export const STAT_LABELS: [keyof Rating, string, string][] = [
   ['ent', 'ENT', "Entrenos al gym (mitjana mensual de l'any)"],
-  ['fora', 'FOR', 'Entrenos fora del gym (mitjana mensual) + èxits esportius dels últims 12 mesos'],
-  ['mvp', 'MVP', 'MVPs guanyats en total'],
-  ['com', 'COM', 'Comportament: antis dels últims 12 mesos'],
-  ['con', 'CON', 'Constància: setmanes amb 2+ entrenos. Progressiva: com més setmanes complertes, més alta pot arribar'],
+  ['fora', 'FOR', "Entrenos fora del gym (mitjana mensual de l'any) + èxits esportius de l'any"],
+  ['mvp', 'MVP', "MVPs guanyats aquest any"],
+  ['com', 'COM', "Comportament: antis rebuts aquest any"],
+  ['con', 'CON', "Constància: setmanes de l'any amb 2+ entrenos. Progressiva: com més setmanes complertes, més alta pot arribar"],
 ]
 
 /** Pes de cada estadística a la mitjana */
 export const WEIGHTS = { ent: 0.35, fora: 0.1, mvp: 0.2, com: 0.2, con: 0.15 }
 
-/** Punts que suma cada èxit esportiu a FOR (durant 12 mesos) */
+/** Punts que suma cada èxit esportiu a FOR (l'any natural de l'èxit) */
 export const ACHIEVEMENT_FOR_BONUS: Record<AchievementKind, number> = { ascens: 12, mitja: 12, hyrox: 15, marato: 25 }
 
-/** Valoració d'un membre a final del mes indicat (o avui) */
+/** Valoració d'un membre a final del mes indicat (o avui). Tot es compta dins l'any natural: l'1 de gener es torna a començar. */
 export function rating(db: DB, memberId: string, asOfMonth?: string): Rating {
   const asOf = asOfMonth ? lastDayOf(asOfMonth) : todayISO()
   const asOfM = monthKey(asOf)
@@ -94,19 +94,19 @@ export function rating(db: DB, memberId: string, asOfMonth?: string): Rating {
   const baseDates = db.trainings.filter((x) => x.baseline && x.member_id === memberId && x.date.startsWith(String(year))).map((x) => x.date)
   const elapsed = Math.max(1, monthsElapsed(asOf), ...baseDates.map(monthsElapsed))
 
-  const aw = db.awards.filter((a) => a.member_id === memberId && a.month_id <= asOfM)
+  const aw = db.awards.filter((a) => a.member_id === memberId && a.month_id <= asOfM && a.month_id.startsWith(String(year)))
   const mvps = aw.filter((a) => a.type === 'mvp').length
-  const antis12 = aw.filter((a) => a.type === 'anti' && a.month_id > shiftMonth(asOfM, -12)).length
+  const antis = aw.filter((a) => a.type === 'anti').length
 
   const exitBonus = db.achievements
-    .filter((a) => a.member_id === memberId && monthKey(a.date) <= asOfM && monthKey(a.date) > shiftMonth(asOfM, -12))
+    .filter((a) => a.member_id === memberId && a.date <= asOf && a.date.startsWith(String(year)))
     .reduce((sum, a) => sum + ACHIEVEMENT_FOR_BONUS[a.kind], 0)
 
   const r = {
     ent: clamp(40 + (t.gym / elapsed) * 3, 30),
     fora: clamp(35 + (t.fora / elapsed) * 4 + exitBonus, 30),
     mvp: clamp(55 + 11 * mvps),
-    com: clamp(88 - 13 * antis12),
+    com: clamp(88 - 13 * antis),
     con: consistency(db, memberId, asOf),
   }
   const overall = Math.round(WEIGHTS.ent * r.ent + WEIGHTS.fora * r.fora + WEIGHTS.mvp * r.mvp + WEIGHTS.com * r.com + WEIGHTS.con * r.con)
@@ -130,16 +130,18 @@ const addDays = (iso: string, n: number) => {
 const CON_PRIOR_WEEKS = 12
 
 /**
- * Constància: setmanes senceres (de l'últim any, i des que es fa servir l'app) amb 2 o més
- * entrenos (gym o fora). És progressiva: es compta com si hi hagués 12 setmanes més a mitges,
- * així un 3/3 val menys que un 30/30. Sense setmanes encara: 70.
+ * Constància: setmanes senceres de l'any (que comencen dins l'any, i des que es fa servir l'app)
+ * amb 2 o més entrenos (gym o fora). És progressiva: es compta com si hi hagués 12 setmanes més
+ * a mitges, així un 3/3 val menys que un 30/30. Sense setmanes encara: 70.
  */
 export function consistency(db: DB, memberId: string, asOf: string) {
   const logged = db.trainings.filter((t) => !t.baseline)
   if (!logged.length) return 70
   const first = weekStart(logged.reduce((m, t) => (t.date < m ? t.date : m), logged[0].date))
   const end = weekStart(addDays(asOf, 1)) // la setmana en curs no compta fins que acaba
-  let from = addDays(end, -7 * 52)
+  // Primera setmana que comença dins l'any
+  let from = weekStart(`${asOf.slice(0, 4)}-01-01`)
+  if (from < `${asOf.slice(0, 4)}-01-01`) from = addDays(from, 7)
   if (from < first) from = first
   const weeks: string[] = []
   for (let w = from; w < end; w = addDays(w, 7)) weeks.push(w)

@@ -1555,3 +1555,26 @@ textarea:focus {
 .album-slots.single .album-stack > * {
   flex: 0 0 calc(50% - 5px);
 }
+.formula {
+  margin: 0 0 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--bg2);
+  border: 1px solid var(--line);
+  font-family: ui-monospace, Menlo, monospace;
+  font-size: 13px;
+  white-space: pre-wrap;
+  color: #d9ccff;
+}
+.how-page .panel p {
+  margin: 0 0 8px;
+}
+.center-cells td,
+.center-cells th {
+  text-align: center;
+  padding: 6px 4px;
+}
+.center-cells th {
+  text-align: left;
+  color: var(--muted);
+}
