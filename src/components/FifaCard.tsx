@@ -13,7 +13,7 @@ interface Props {
   label?: string
   title?: string
   emoji?: string
-  size?: 'sm' | 'md' | 'lg' | 'xl'
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl'
   locked?: boolean
   /** Foto específica d'aquesta carta (si no, la foto base) */
   photo?: string | null
@@ -77,7 +77,7 @@ export const FifaCard = forwardRef<HTMLDivElement, Props>(function FifaCard(
       <div className="fifa-stats">
         {STAT_LABELS.map(([k, l]) => (
           <div key={k}>
-            <b>{rating[k] as number}</b> {l}
+            <b>{boost ? Math.max(1, Math.min(99, (rating[k] as number) + boost)) : (rating[k] as number)}</b> {l}
           </div>
         ))}
       </div>

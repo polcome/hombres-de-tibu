@@ -50,10 +50,10 @@ export function appStartMonth(db: DB) {
 export interface Rating {
   overall: number
   ent: number // entrenament al gym
-  fora: number // activitat fora del gym (+ èxits esportius)
+  fora: number // activitat fora del gym (+ èxits esportius com a entrenos virtuals)
   mvp: number // palmarès MVP
   com: number // comportament (antis de l'any)
-  con: number // constància: setmanes amb 2+ entrenos
+  con: number // constància: setmanes amb 3+ entrenos al gym
   tier: Tier
 }
 
@@ -71,16 +71,16 @@ export const tierOf = (overall: number): Tier => TIERS.find(([, min]) => overall
 
 export const STAT_LABELS: [keyof Rating, string, string][] = [
   ['ent', 'ENT', "Entrenos al gym acumulats de l'any (236 = 99)"],
-  ['fora', 'FOR', "Entrenos fora del gym acumulats de l'any (192 = 99) + èxits esportius de l'any"],
+  ['fora', 'FOR', "Entrenos fora del gym acumulats de l'any (192 = 99). Cada èxit esportiu hi suma entrenos virtuals"],
   ['mvp', 'MVP', "MVPs guanyats aquest any"],
   ['com', 'COM', "Comportament: antis rebuts aquest any"],
-  ['con', 'CON', "Constància: setmanes de l'any amb 2+ entrenos. Progressiva: com més setmanes complertes, més alta pot arribar"],
+  ['con', 'CON', "Constància: setmanes de l'any amb 3+ entrenos al gym. Compta el % i també quantes en portes"],
 ]
 
 /** Pes de cada estadística a la mitjana */
 export const WEIGHTS = { ent: 0.35, fora: 0.1, mvp: 0.2, com: 0.2, con: 0.15 }
 
-/** Punts que suma cada èxit esportiu a FOR (l'any natural de l'èxit) */
+/** Entrenos fora virtuals que suma cada èxit esportiu per calcular FOR (l'any natural de l'èxit) */
 export const ACHIEVEMENT_FOR_BONUS: Record<AchievementKind, number> = { ascens: 12, mitja: 12, hyrox: 15, marato: 25 }
 
 /** Valoració d'un membre a final del mes indicat (o avui). Tot es compta dins l'any natural: l'1 de gener es torna a començar. */
@@ -102,15 +102,15 @@ export function rating(db: DB, memberId: string, asOfMonth?: string): Rating {
   const mvps = aw.filter((a) => a.type === 'mvp').length
   const antis = aw.filter((a) => a.type === 'anti').length
 
-  const exitBonus = db.achievements
+  const exitTrainings = db.achievements
     .filter((a) => a.member_id === memberId && a.date <= asOf && a.date.startsWith(String(year)))
     .reduce((sum, a) => sum + ACHIEVEMENT_FOR_BONUS[a.kind], 0)
 
   const r = {
     // Es van omplint durant l'any: 236 de gym o 192 fora = 99
     ent: clamp(40 + t.gym / 4, 30),
-    fora: clamp(35 + t.fora / 3 + exitBonus, 30),
-    mvp: clamp(55 + 11 * mvps),
+    fora: clamp(35 + (t.fora + exitTrainings) / 3, 30),
+    mvp: clamp(63 + 9 * mvps),
     com: clamp(88 - 13 * antis),
     con: consistency(db, memberId, asOf),
   }
@@ -131,13 +131,15 @@ const addDays = (iso: string, n: number) => {
   return isoDate(d)
 }
 
-/** Setmanes "virtuals" al 50% que s'afegeixen a la constància: amb poques setmanes no es pot tenir una nota alta */
-const CON_PRIOR_WEEKS = 12
+/** Entrenos al gym que fan bona una setmana */
+export const CON_WEEK_GYM = 3
+/** Setmanes bones que valen el màxim de la part acumulada (un any) */
+export const CON_FULL_WEEKS = 52
 
 /**
  * Constància: setmanes senceres de l'any (que comencen dins l'any, i des que es fa servir l'app)
- * amb 2 o més entrenos (gym o fora). És progressiva: es compta com si hi hagués 12 setmanes més
- * a mitges, així un 3/3 val menys que un 30/30. Sense setmanes encara: 70.
+ * amb 3 o més entrenos al gym. Meitat percentatge de setmanes bones i meitat setmanes bones
+ * acumulades (52 = el màxim), així un 2/2 val menys que un 15/15 i creix de forma lineal. Sense setmanes encara: 70.
  */
 export function consistency(db: DB, memberId: string, asOf: string) {
   const logged = db.trainings.filter((t) => !t.baseline)
@@ -152,10 +154,10 @@ export function consistency(db: DB, memberId: string, asOf: string) {
   for (let w = from; w < end; w = addDays(w, 7)) weeks.push(w)
   if (!weeks.length) return 70
   const perWeek = new Map<string, number>()
-  for (const t of logged) if (t.member_id === memberId) perWeek.set(weekStart(t.date), (perWeek.get(weekStart(t.date)) ?? 0) + t.count)
-  const good = weeks.filter((w) => (perWeek.get(w) ?? 0) >= 2).length
-  const pct = (good + CON_PRIOR_WEEKS / 2) / (weeks.length + CON_PRIOR_WEEKS)
-  return clamp(40 + 59 * pct)
+  for (const t of logged) if (t.member_id === memberId && t.kind === 'gym') perWeek.set(weekStart(t.date), (perWeek.get(weekStart(t.date)) ?? 0) + t.count)
+  const good = weeks.filter((w) => (perWeek.get(w) ?? 0) >= CON_WEEK_GYM).length
+  const score = 0.5 * (good / weeks.length) + 0.5 * Math.min(1, good / CON_FULL_WEEKS)
+  return clamp(40 + 59 * score)
 }
 
 // ---------------------------------------------------------------------------
@@ -193,7 +195,7 @@ export interface CardDef {
   emoji: string
   variant: CardVariant
   how: string
-  boost: number // punts que suma (o resta) a la mitjana a la carta especial
+  boost: number // punts que suma (o resta) a la mitjana i a cada estadística a la carta especial
   rarity: 'Comuna' | 'Rara' | 'Èpica' | 'Llegendària' | 'Mítica' | 'Maleïda'
   /** automàtica (es desbloqueja sola) o manual (l'assigna l'admin) */
   auto: boolean
@@ -220,10 +222,10 @@ const BASE_DEFS: CardDef[] = [
   { id: 'fantasma', name: 'Fantasma', emoji: '👻', variant: 'ghost', how: 'Un mes sencer sense trepitjar el gym.', boost: -4, rarity: 'Maleïda', auto: true },
   { id: 'reifantasma', name: 'Rei Fantasma', emoji: '👑', variant: 'ghostking', how: 'Un mes sencer sense cap entreno, ni al gym ni fora.', boost: -8, rarity: 'Maleïda', auto: true },
   // Èxits esportius: manuals, els assigna l'admin
-  { id: 'exit-ascens', name: 'Ascens', emoji: '🏆', variant: 'ascens', how: "Campió de lliga o ascens amb l'equip.", boost: 0, rarity: 'Èpica', auto: false },
-  { id: 'exit-mitja', name: 'Mitja Marató', emoji: '🏃', variant: 'mitja', how: 'Acaba una mitja marató (21,1 km).', boost: 0, rarity: 'Èpica', auto: false },
-  { id: 'exit-marato', name: 'Marató', emoji: '🏅', variant: 'marato', how: 'Acaba una marató (42,2 km).', boost: 0, rarity: 'Llegendària', auto: false },
-  { id: 'exit-hyrox', name: 'Hyrox', emoji: '🏋️', variant: 'hyrox', how: 'Acaba una competició Hyrox.', boost: 0, rarity: 'Èpica', auto: false },
+  { id: 'exit-ascens', name: 'Ascens', emoji: '🏆', variant: 'ascens', how: "Campió de lliga o ascens amb l'equip.", boost: 3, rarity: 'Èpica', auto: false },
+  { id: 'exit-mitja', name: 'Mitja Marató', emoji: '🏃', variant: 'mitja', how: 'Acaba una mitja marató (21,1 km).', boost: 3, rarity: 'Èpica', auto: false },
+  { id: 'exit-marato', name: 'Marató', emoji: '🏅', variant: 'marato', how: 'Acaba una marató (42,2 km).', boost: 6, rarity: 'Llegendària', auto: false },
+  { id: 'exit-hyrox', name: 'Hyrox', emoji: '🏋️', variant: 'hyrox', how: 'Acaba una competició Hyrox.', boost: 4, rarity: 'Èpica', auto: false },
 ]
 
 /** Llindars de les versions PLUS i ULTRA (el que compta depèn de la carta) */

@@ -398,7 +398,7 @@ function AchievementsAdmin() {
           ))}
         </div>
         <p className="muted small">
-          {kindDef(kind).how} +{ACHIEVEMENT_FOR_BONUS[kind]} a FOR.
+          {kindDef(kind).how} Suma +{ACHIEVEMENT_FOR_BONUS[kind]} entrenos fora virtuals a FOR.
         </p>
         <input
           placeholder={kind === 'ascens' ? 'Ex: Ascens a Primera Catalana' : kind === 'hyrox' ? 'Ex: Hyrox Barcelona' : 'Ex: Mitja Marató de Barcelona'}

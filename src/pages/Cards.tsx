@@ -63,7 +63,7 @@ export default function Cards() {
           <p className="muted small center">Toca una carta per veure-la en gran.</p>
           {[
             { title: '⚙️ Automàtiques', sub: "Es desbloquegen soles quan es compleix el repte.", defs: CARD_DEFS.filter((d) => d.auto && !d.level) },
-            { title: '🏅 Èxits esportius', sub: "Manuals: l'admin les dona a qui ho aconsegueix. Pugen FOR durant l'any de l'èxit.", defs: CARD_DEFS.filter((d) => !d.auto) },
+            { title: '🏅 Èxits esportius', sub: "Manuals: l'admin les dona a qui ho aconsegueix. Sumen entrenos fora virtuals a FOR durant l'any de l'èxit.", defs: CARD_DEFS.filter((d) => !d.auto) },
           ].map((group) => (
             <div key={group.title} className="stack">
               <div className="group-head">
@@ -83,7 +83,7 @@ export default function Cards() {
                   >
                     <p className="muted small">
                       {def.how} {def.boost !== 0 && <b>({def.boost > 0 ? '+' : ''}{def.boost} a la mitjana)</b>}
-                      {!def.auto && <b> (+{ACHIEVEMENT_FOR_BONUS[def.id.replace('exit-', '') as AchievementKind]} a FOR)</b>}
+                      {!def.auto && <b> (+{ACHIEVEMENT_FOR_BONUS[def.id.replace('exit-', '') as AchievementKind]} entrenos fora per a FOR)</b>}
                     </p>
                     {tiers.length > 1 && (
                       <div className="level-rules small">
@@ -97,7 +97,7 @@ export default function Cards() {
                           ))}
                       </div>
                     )}
-                    <div className="cards-row scroll">
+                    <div className="cards-row mini">
                       {tiers.flatMap((t) => {
                         const got = unlocks.filter((u) => u.def.id === t.id)
                         if (got.length === 0)
@@ -110,7 +110,7 @@ export default function Cards() {
                                 level={t.level}
                                 title={t.name}
                                 emoji={t.emoji}
-                                size="sm"
+                                size="xs"
                                 photo={null}
                               />
                               <span className="locked-badge">🔒 {t.level ? t.level.toUpperCase() : "Ningú l'ha aconseguit"}</span>
@@ -118,7 +118,7 @@ export default function Cards() {
                           ]
                         return got.map((u) => (
                           <CardZoom key={cardKey(u) + u.memberId} card={unlockProps(db, u)} def={t}>
-                            <FifaCard {...unlockProps(db, u)} size="sm" />
+                            <FifaCard {...unlockProps(db, u)} size="xs" />
                           </CardZoom>
                         ))
                       })}
@@ -155,18 +155,20 @@ export default function Cards() {
           </Section>
 
           <Section title="🏃 FOR · Entrenos fora del gym (10%)">
-            <pre className="formula">FOR = 35 + entrenos fora de l'any ÷ 3 + bonus d'èxits</pre>
+            <pre className="formula">FOR = 35 + (entrenos fora de l'any + entrenos d'èxits) ÷ 3</pre>
             <ul className="how">
               <li>També s'omple durant l'any: el 99 arriba amb 192 entrenos fora.</li>
               <li>
-                Bonus d'èxits esportius de l'any: Ascens +{ACHIEVEMENT_FOR_BONUS.ascens}, Mitja +{ACHIEVEMENT_FOR_BONUS.mitja}, Hyrox +{ACHIEVEMENT_FOR_BONUS.hyrox},
-                Marató +{ACHIEVEMENT_FOR_BONUS.marato}. Se sumen entre ells.
+                Cada èxit esportiu de l'any compta com a entrenos fora <b>virtuals</b> (només per al càlcul, al recompte d'entrenos no hi surten): Ascens +
+                {ACHIEVEMENT_FOR_BONUS.ascens}, Mitja +{ACHIEVEMENT_FOR_BONUS.mitja}, Hyrox +{ACHIEVEMENT_FOR_BONUS.hyrox}, Marató +{ACHIEVEMENT_FOR_BONUS.marato}.
+                Se sumen entre ells.
               </li>
+              <li>Exemple: 100 entrenos fora + una marató = 125 per al càlcul → FOR = 35 + 125 ÷ 3 = 77.</li>
             </ul>
           </Section>
 
           <Section title="🏆 MVP · Palmarès de l'any (20%)">
-            <pre className="formula">MVP = 55 + 11 × MVPs de l'any</pre>
+            <pre className="formula">MVP = 63 + 9 × MVPs de l'any</pre>
             <table className="table small center-cells">
               <tbody>
                 <tr>
@@ -179,10 +181,10 @@ export default function Cards() {
                 </tr>
                 <tr>
                   <th>MVP</th>
-                  <td>55</td>
-                  <td>66</td>
-                  <td>77</td>
-                  <td>88</td>
+                  <td>63</td>
+                  <td>72</td>
+                  <td>81</td>
+                  <td>90</td>
                   <td>99</td>
                 </tr>
               </tbody>
@@ -217,16 +219,17 @@ export default function Cards() {
           </Section>
 
           <Section title="📈 CON · Constància (15%)">
-            <pre className="formula">CON = 40 + 59 × (setmanes bones + 6) ÷ (setmanes totals + 12)</pre>
+            <pre className="formula">CON = 40 + 59 × (½ · bones ÷ totals + ½ · bones ÷ 52)</pre>
             <ul className="how">
               <li>
-                <b>Setmana bona:</b> de dilluns a diumenge amb <b>2 entrenos o més</b> (gym o fora).
+                <b>Setmana bona:</b> de dilluns a diumenge amb <b>3 entrenos al gym o més</b> (els de fora no compten).
               </li>
               <li>
                 <b>Setmanes totals:</b> les setmanes senceres de l'any (des que es fa servir l'app). La setmana en curs no compta fins que acaba.
               </li>
               <li>
-                El <b>+6 / +12</b> la fa progressiva: és com començar amb 12 setmanes virtuals a mitges. Amb poques setmanes no es pot tenir nota alta.
+                <b>Meitat percentatge, meitat acumulat:</b> la primera part premia no fallar setmanes; la segona creix igual amb cada setmana bona i arriba al
+                màxim amb 52. Així un 2/2 val menys que un 15/15, i un 53/53 arriba a 99.
               </li>
               <li>Sense cap setmana sencera encara: 70.</li>
             </ul>
@@ -234,21 +237,21 @@ export default function Cards() {
               <tbody>
                 <tr>
                   <th>Bones/totals</th>
-                  <td>2/3</td>
-                  <td>3/3</td>
-                  <td>10/10</td>
-                  <td>20/30</td>
-                  <td>30/30</td>
-                  <td>0/10</td>
+                  <td>2/2</td>
+                  <td>15/15</td>
+                  <td>26/26</td>
+                  <td>26/52</td>
+                  <td>40/52</td>
+                  <td>52/52</td>
                 </tr>
                 <tr>
                   <th>CON</th>
                   <td>71</td>
-                  <td>75</td>
-                  <td>83</td>
-                  <td>77</td>
-                  <td>91</td>
-                  <td>56</td>
+                  <td>78</td>
+                  <td>84</td>
+                  <td>70</td>
+                  <td>85</td>
+                  <td>99</td>
                 </tr>
               </tbody>
             </table>
@@ -268,11 +271,18 @@ export default function Cards() {
           </Section>
 
           <Section title="🃏 Cartes especials">
-            <pre className="formula">Mitjana de la carta = mitjana a final del mes de la carta + bonus de la carta</pre>
+            <pre className="formula">Carta especial = valors a final del mes de la carta + bonus de la carta</pre>
             <ul className="how">
-              <li>El bonus depèn de la carta (TOTM +3, Icona +6, Pilota d'Or +12, Anti-MVP −3…). Sempre entre 1 i 99.</li>
-              <li>Les cartes anuals i les d'abans que hi hagi dades a l'app fan servir la mitjana d'avui.</li>
-              <li>Les 5 estadístiques de la carta no porten bonus: només el número gran.</li>
+              <li>
+                El bonus depèn de la carta (TOTM +3, Icona +6, Pilota d'Or +12, Anti-MVP −3…) i se suma a la mitjana <b>i a cada una de les 5 estadístiques</b>{' '}
+                d'aquella carta. Sempre entre 1 i 99.
+              </li>
+              <li>La carta base no canvia mai: sempre reflecteix la realitat.</li>
+              <li>
+                Excepció: els <b>èxits esportius</b> tenen la seva carta amb bonus (Ascens i Mitja +3, Hyrox +4, Marató +6) i, a més, sumen entrenos fora virtuals
+                que sí que pugen FOR a la carta base.
+              </li>
+              <li>Les cartes anuals i les d'abans que hi hagi dades a l'app fan servir la valoració d'avui.</li>
             </ul>
           </Section>
 

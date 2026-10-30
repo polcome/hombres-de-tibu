@@ -81,7 +81,7 @@ function CardModal({ card, def, onClose }: { card: CardProps; def?: CardDef; onC
             </div>
             <div className="muted small">
               {def.how}
-              {def.boost !== 0 && ` ${def.boost > 0 ? '+' : ''}${def.boost} a la mitjana.`}
+              {def.boost !== 0 && ` ${def.boost > 0 ? '+' : ''}${def.boost} a la mitjana i a cada estadística.`}
             </div>
             <div className="small">
               Aconseguida per <b>{displayName(card.member)}</b>

@@ -17,6 +17,9 @@
   isolation: isolate;
   user-select: none;
 }
+.fifa-xs {
+  --w: clamp(92px, 26vw, 128px);
+}
 .fifa-sm {
   --w: 150px;
 }

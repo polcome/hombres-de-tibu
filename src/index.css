@@ -800,6 +800,18 @@ textarea:focus {
 .cards-row.scroll > * {
   flex-shrink: 0;
 }
+/* Col·lecció: cartes petites per veure tota la família d'un cop */
+.cards-row.mini {
+  gap: 8px;
+}
+.cards-row.mini .locked-badge {
+  font-size: 9px;
+  padding: 4px 7px;
+  white-space: normal;
+  text-align: center;
+  width: max-content;
+  max-width: 90%;
+}
 .cards-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
