@@ -6,7 +6,7 @@ import { activeMonth, closedMonths, currentMonthKey, monthLabel, shiftMonth, tod
 import { ACHIEVEMENT_FOR_BONUS, CARD_DEFS, displayName, memberById } from '../logic/stats'
 import { aiPrompt, generateActa } from '../logic/acta'
 import { Avatar } from '../components/Avatar'
-import { CopyButton, ErrorMsg, MemberSelect, Section } from '../components/ui'
+import { CopyButton, ErrorMsg, MemberSelect, Section, WhatsAppButton } from '../components/ui'
 import { PhotoControls } from '../components/PhotoControls'
 import { Link } from 'react-router-dom'
 import { appUrl } from './Home'
@@ -188,6 +188,15 @@ function ActaAdmin() {
         </button>
       </div>
       <ErrorMsg err={err} />
+      <p className="muted small">
+        L'acta desada ja és pública a la pàgina del mes (Inici → Veure acta, o Palmarès). Per passar-la al grup:
+      </p>
+      <div className="row wrap">
+        <Link to={`/mes/${id}`} className="btn">
+          📜 Veure acta publicada
+        </Link>
+        <WhatsAppButton text={`${month?.acta?.trim() || text}\n\n👉 ${appUrl()}#/mes/${id}`}>Enviar al grup</WhatsAppButton>
+      </div>
     </Section>
   )
 }

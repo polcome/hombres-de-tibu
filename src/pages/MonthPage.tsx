@@ -3,6 +3,7 @@ import { useStore } from '../store'
 import { monthLabel } from '../logic/months'
 import { displayName, memberById } from '../logic/stats'
 import { aiPrompt, generateActa } from '../logic/acta'
+import { appUrl } from './Home'
 import { CopyButton, Section, WhatsAppButton } from '../components/ui'
 
 export default function MonthPage() {
@@ -27,7 +28,7 @@ export default function MonthPage() {
         <pre className="acta">{acta}</pre>
         <div className="row wrap">
           <CopyButton text={acta}>📋 Copiar acta</CopyButton>
-          <WhatsAppButton text={acta}>Enviar al grup</WhatsAppButton>
+          <WhatsAppButton text={`${acta}\n\n👉 ${appUrl()}#/mes/${id}`}>Enviar al grup</WhatsAppButton>
           <CopyButton text={aiPrompt(db, id)}>🤖 Copiar prompt per a IA</CopyButton>
         </div>
         <p className="muted small">
