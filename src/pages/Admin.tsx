@@ -96,7 +96,7 @@ function MonthAdmin() {
                 Tornar a "en joc"
               </button>
             </div>
-            <p className="muted small">En tancar, es calculen els guanyadors (en cas d'empat, guanyen tots dos) i s'obre el mes següent.</p>
+            <p className="muted small">En tancar, es calculen els guanyadors i s'obre el mes següent. Empat al MVP: guanya qui tingui menys vots d'anti aquell mes; si continuen empatats, o si l'empat és a l'anti, guanyen tots.</p>
           </>
         )}
         <ErrorMsg err={err} />

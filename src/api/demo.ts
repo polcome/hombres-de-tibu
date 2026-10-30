@@ -240,16 +240,26 @@ export function createDemoApi(): Api {
       requireAdmin()
       mutate((db) => {
         db.awards = db.awards.filter((a) => a.month_id !== id)
-        for (const type of ['mvp', 'anti'] as const) {
+        const ballots = db.ballots.filter((b) => b.month_id === id && !b.annulled)
+        const count = (type: 'mvp' | 'anti') => {
           const counts = new Map<string, number>()
-          db.ballots
-            .filter((b) => b.month_id === id && !b.annulled)
-            .forEach((b) => {
-              const k = type === 'mvp' ? b.mvp_id : b.anti_id
-              counts.set(k, (counts.get(k) ?? 0) + 1)
-            })
+          ballots.forEach((b) => {
+            const k = type === 'mvp' ? b.mvp_id : b.anti_id
+            counts.set(k, (counts.get(k) ?? 0) + 1)
+          })
+          return counts
+        }
+        const antis = count('anti')
+        for (const type of ['mvp', 'anti'] as const) {
+          const counts = count(type)
           const max = Math.max(0, ...counts.values())
-          counts.forEach((v, k) => v === max && db.awards.push({ id: uid(), month_id: id, type, member_id: k, votes: v }))
+          let top = [...counts].filter(([, v]) => v === max)
+          // Desempat del MVP: menys vots d'anti aquell mes (si continuen empatats, guanyen tots)
+          if (type === 'mvp') {
+            const minAnti = Math.min(...top.map(([k]) => antis.get(k) ?? 0))
+            top = top.filter(([k]) => (antis.get(k) ?? 0) === minAnti)
+          }
+          top.forEach(([k, v]) => db.awards.push({ id: uid(), month_id: id, type, member_id: k, votes: v }))
         }
         db.months.find((m) => m.id === id)!.status = 'closed'
       })
