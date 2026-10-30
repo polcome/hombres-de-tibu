@@ -26,7 +26,9 @@ App web del grup d'amics del gimnàs "Los Hombres de Tibu" (13 membres). Serveix
 ## Decisions de disseny (no les canviïs sense preguntar)
 - **Vot 100% secret:** la taula `ballots` no té votant ni data, i `voters` només guarda qui ha votat. Es vota per la RPC `cast_vote`.
   - No et pots votar a tu mateix, el MVP i l'anti han de ser persones diferents i cada motiu ha de tenir mínim 15 caràcters.
-  - L'admin veu les paperetes de forma anònima, les pot anul·lar i pot esborrar un votant perquè torni a votar.
+  - **Ningú veu les paperetes fins que es tanca el mes**, ni l'admin (RLS de `ballots`: només mesos tancats). L'admin només veu qui ha votat i si té la papereta guardada (✅, RPC `vote_check`).
+  - L'admin pot esborrar el vot d'algú (RPC `admin_remove_vote`): s'esborren el votant i la seva papereta, i pot tornar a votar. Per saber quina papereta és, `cast_vote` guarda l'enllaç a `ballot_links`, una taula sense cap política de lectura (només hi accedeixen les RPC) que `close_month` buida en tancar: després ja no es pot saber qui ha votat què.
+  - Ja no es poden anul·lar paperetes (la columna `annulled` es manté per a dades antigues).
 - **Tancar el mes:** ho fa la RPC `close_month`. En cas d'empat guanyen tots. Després s'obre el mes següent.
 - **Comptes:** login amb usuari + contrasenya. L'email és fictici (`<slug>@hombresdetibu.app`) i a Supabase la confirmació d'email està desactivada.
   - L'alta es fa amb un codi d'activació (`member_secrets`) que valida el trigger `handle_new_user`.
@@ -68,6 +70,7 @@ App web del grup d'amics del gimnàs "Los Hombres de Tibu" (13 membres). Serveix
 6. `supabase/migracio-exits-esportius.sql`: taula `achievements`.
 7. `supabase/migracio-limits-dossier.sql`: límit de 2 expedients/dia i 1 reacció per usuari.
 8. `supabase/migracio-foto-propia.sql`: cadascú es pot posar la seva foto base.
+9. `supabase/migracio-vot-secret.sql`: paperetes ocultes fins al tancament, esborrar vot + papereta (⚠️ pendent de confirmar que l'usuari l'ha executat).
 
 Quan un canvi necessiti BD:
 - Crea una **migració nova** `supabase/migracio-*.sql` que sigui idempotent (`if not exists`, `drop policy if exists`).

@@ -24,8 +24,10 @@ export interface Api {
   // Admin
   upsertMonth(m: Partial<Month> & { id: string }): Promise<void>
   closeMonth(id: string): Promise<void>
-  setBallotAnnulled(id: string, annulled: boolean): Promise<void>
-  deleteVoter(monthId: string, memberId: string): Promise<void>
+  /** Esborra el vot d'algú (votant i papereta) perquè torni a votar */
+  removeVote(monthId: string, memberId: string): Promise<void>
+  /** Per a cada votant del mes: té la papereta guardada? (sense dir quina) */
+  voteCheck(monthId: string): Promise<Record<string, boolean>>
   addAward(a: { month_id: string; type: AwardType; member_id: string; votes: number | null }): Promise<void>
   deleteAward(id: string): Promise<void>
   addMember(m: { slug: string; name: string }): Promise<void>

@@ -38,6 +38,15 @@ function MonthAdmin() {
   const month = activeMonth(db)
   const [deadline, setDeadline] = useState(toLocalInput(month?.deadline ?? null))
   useEffect(() => setDeadline(toLocalInput(month?.deadline ?? null)), [month?.deadline])
+  // Comprovació que cada votant té la papereta guardada (sense saber quina)
+  const [check, setCheck] = useState<Record<string, boolean>>({})
+  const voterKey = db.voters
+    .filter((v) => v.month_id === month?.id)
+    .map((v) => v.member_id)
+    .join()
+  useEffect(() => {
+    if (month?.status === 'voting') api.voteCheck(month.id).then(setCheck, () => setCheck({}))
+  }, [month?.id, month?.status, voterKey])
 
   if (!month) {
     const next = closedMonths(db).length ? shiftMonth(closedMonths(db).at(-1)!.id, 1) : currentMonthKey()
@@ -51,7 +60,6 @@ function MonthAdmin() {
     )
   }
 
-  const ballots = db.ballots.filter((b) => b.month_id === month.id)
   const voters = db.voters.filter((v) => v.month_id === month.id)
   const save = (patch: Partial<Month>) => run(() => api.upsertMonth({ id: month.id, ...patch }))
 
@@ -77,7 +85,7 @@ function MonthAdmin() {
                 className="btn btn-primary btn-big"
                 disabled={busy}
                 onClick={async () => {
-                  if (!confirm(`Tancar la votació amb ${ballots.filter((b) => !b.annulled).length} vots vàlids i publicar resultats?`)) return
+                  if (!confirm(`Tancar la votació amb ${voters.length} vots i publicar resultats?`)) return
                   const ok = await run(() => api.closeMonth(month.id))
                   if (ok) await run(() => api.upsertMonth({ id: shiftMonth(month.id, 1), status: 'active' }))
                 }}
@@ -97,36 +105,30 @@ function MonthAdmin() {
       {month.status === 'voting' && (
         <>
           <h3>Han votat ({voters.length})</h3>
-          <p className="muted small">Pots esborrar un votant perquè torni a votar (per exemple, si s'ha equivocat i anul·les la seva papereta). No saps quina és la seva.</p>
+          <p className="muted small">
+            El vot és secret: ningú, ni l'admin, veu les paperetes fins que es tanca el mes, i en tancar-lo s'esborra qualsevol rastre de qui ha votat
+            què. Si algú s'ha equivocat, esborra-li el vot (✕): desapareix la seva papereta i pot tornar a votar.
+          </p>
           <div className="row wrap">
             {voters.map((v) => (
               <span key={v.member_id} className="chip">
-                {displayName(memberById(db, v.member_id))}
-                <button className="link danger" onClick={() => confirm('Permetre que torni a votar?') && run(() => api.deleteVoter(month.id, v.member_id))}>
+                {check[v.member_id] === true ? '✅' : check[v.member_id] === false ? '⚠️' : ''} {displayName(memberById(db, v.member_id))}
+                <button
+                  className="link danger"
+                  title="Esborrar el vot perquè torni a votar"
+                  onClick={() =>
+                    confirm(`Esborrar el vot de ${displayName(memberById(db, v.member_id))}? Haurà de tornar a votar.`) &&
+                    run(() => api.removeVote(month.id, v.member_id))
+                  }
+                >
                   ✕
                 </button>
               </span>
             ))}
           </div>
-          <h3>Paperetes anònimes ({ballots.length})</h3>
-          <div className="stack-sm">
-            {ballots.map((b, i) => (
-              <div key={b.id} className={`ballot ${b.annulled ? 'annulled' : ''}`}>
-                <div className="row">
-                  <span className="muted small">#{i + 1}</span>
-                  <button className="link ml-auto" onClick={() => run(() => api.setBallotAnnulled(b.id, !b.annulled))}>
-                    {b.annulled ? 'Restaurar' : 'Anul·lar'}
-                  </button>
-                </div>
-                <div>
-                  🏆 <b>{displayName(memberById(db, b.mvp_id))}</b>: {b.mvp_reason}
-                </div>
-                <div>
-                  🤡 <b>{displayName(memberById(db, b.anti_id))}</b>: {b.anti_reason}
-                </div>
-              </div>
-            ))}
-          </div>
+          {voters.some((v) => check[v.member_id] === false) && (
+            <p className="muted small">⚠️ Vot d'abans del vot secret: no es pot saber quina és la seva papereta, així que esborrar-lo no la treu.</p>
+          )}
         </>
       )}
     </Section>

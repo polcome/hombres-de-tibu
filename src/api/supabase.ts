@@ -139,11 +139,16 @@ export function createSupabaseApi(url: string, key: string): Api {
     async closeMonth(id) {
       check(await sb.rpc('close_month', { p_month: id }))
     },
-    async setBallotAnnulled(id, annulled) {
-      check(await sb.from('ballots').update({ annulled }).eq('id', id))
+    async removeVote(monthId, memberId) {
+      const { error } = await sb.rpc('admin_remove_vote', { p_month: monthId, p_member: memberId })
+      // Sense la migració del vot secret només es pot esborrar el votant (la papereta es queda)
+      if (error?.code === 'PGRST202') check(await sb.from('voters').delete().eq('month_id', monthId).eq('member_id', memberId))
+      else if (error) throw new Error(error.message)
     },
-    async deleteVoter(monthId, memberId) {
-      check(await sb.from('voters').delete().eq('month_id', monthId).eq('member_id', memberId))
+    async voteCheck(monthId) {
+      const { data, error } = await sb.rpc('vote_check', { p_month: monthId })
+      if (error) return {}
+      return Object.fromEntries((data as { member_id: string; ok: boolean }[]).map((r) => [r.member_id, r.ok]))
     },
     async addAward(a) {
       check(await sb.from('awards').insert(a))

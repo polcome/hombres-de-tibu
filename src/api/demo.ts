@@ -5,6 +5,10 @@ import type { DB, Member } from '../types'
 
 const KEY = 'tibu-demo-db-v3'
 const ME = 'tibu-demo-me'
+/** Enllaç ocult votant → papereta (com `ballot_links`): només el fan servir castVote, removeVote i voteCheck */
+const LINKS = 'tibu-demo-ballot-links'
+const loadLinks = (): Record<string, string> => JSON.parse(localStorage.getItem(LINKS) ?? '{}')
+const saveLinks = (l: Record<string, string>) => localStorage.setItem(LINKS, JSON.stringify(l))
 const uid = () => crypto.randomUUID()
 
 const BASE: [string, string, number, number][] = [
@@ -140,8 +144,11 @@ export function createDemoApi(): Api {
       await tick()
       const db = load()
       const posts = (db as DB & { posts?: { member_id: string; day: string }[] }).posts ?? []
+      const closed = new Set(db.months.filter((m) => m.status === 'closed').map((m) => m.id))
       return {
         ...db,
+        // Com la RLS: les paperetes només es veuen quan el mes està tancat
+        ballots: db.ballots.filter((b) => closed.has(b.month_id)),
         cardPhotos: db.cardPhotos ?? [],
         trainingVotes: db.trainingVotes ?? [],
         achievements: db.achievements ?? [],
@@ -213,10 +220,12 @@ export function createDemoApi(): Api {
       if (mvpId === me || antiId === me) throw new Error('No et pots votar a tu mateix, crack')
       if (mvpId === antiId) throw new Error("El MVP i l'anti no poden ser la mateixa persona")
       if (mvpReason.trim().length < 15 || antiReason.trim().length < 15) throw new Error('Els motius han de tenir mínim 15 caràcters')
+      const id = uid()
       mutate((d) => {
         d.voters.push({ month_id: monthId, member_id: me })
-        d.ballots.push({ id: uid(), month_id: monthId, mvp_id: mvpId, mvp_reason: mvpReason.trim(), anti_id: antiId, anti_reason: antiReason.trim(), annulled: false })
+        d.ballots.push({ id, month_id: monthId, mvp_id: mvpId, mvp_reason: mvpReason.trim(), anti_id: antiId, anti_reason: antiReason.trim(), annulled: false })
       })
+      saveLinks({ ...loadLinks(), [`${monthId}:${me}`]: id })
     },
     async upsertMonth(m) {
       requireAdmin()
@@ -244,14 +253,27 @@ export function createDemoApi(): Api {
         }
         db.months.find((m) => m.id === id)!.status = 'closed'
       })
+      saveLinks(Object.fromEntries(Object.entries(loadLinks()).filter(([k]) => !k.startsWith(`${id}:`))))
     },
-    async setBallotAnnulled(id, annulled) {
+    async removeVote(monthId, memberId) {
       requireAdmin()
-      mutate((db) => (db.ballots.find((b) => b.id === id)!.annulled = annulled))
+      if (load().months.find((m) => m.id === monthId)?.status === 'closed') throw new Error('Aquest mes ja està tancat')
+      const links = loadLinks()
+      const ballotId = links[`${monthId}:${memberId}`]
+      mutate((db) => {
+        db.ballots = db.ballots.filter((b) => b.id !== ballotId)
+        db.voters = db.voters.filter((v) => !(v.month_id === monthId && v.member_id === memberId))
+      })
+      delete links[`${monthId}:${memberId}`]
+      saveLinks(links)
     },
-    async deleteVoter(monthId, memberId) {
+    async voteCheck(monthId) {
       requireAdmin()
-      mutate((db) => (db.voters = db.voters.filter((v) => !(v.month_id === monthId && v.member_id === memberId))))
+      const db = load()
+      const links = loadLinks()
+      return Object.fromEntries(
+        db.voters.filter((v) => v.month_id === monthId).map((v) => [v.member_id, db.ballots.some((b) => b.id === links[`${monthId}:${v.member_id}`])]),
+      )
     },
     async addAward(a) {
       requireAdmin()
