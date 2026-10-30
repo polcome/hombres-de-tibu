@@ -106,8 +106,8 @@ function MonthAdmin() {
         <>
           <h3>Han votat ({voters.length})</h3>
           <p className="muted small">
-            El vot és secret: ningú, ni l'admin, veu les paperetes fins que es tanca el mes, i en tancar-lo s'esborra qualsevol rastre de qui ha votat
-            què. Si algú s'ha equivocat, esborra-li el vot (✕): desapareix la seva papereta i pot tornar a votar.
+            El vot és secret: ningú, ni l'admin, veu les paperetes fins que es tanca el mes, i a l'app mai surt qui ha votat què. Si algú s'ha
+            equivocat, esborra-li el vot (✕): desapareix la seva papereta i pot tornar a votar.
           </p>
           <div className="row wrap">
             {voters.map((v) => (

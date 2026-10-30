@@ -5,7 +5,7 @@ import type { DB, Member } from '../types'
 
 const KEY = 'tibu-demo-db-v3'
 const ME = 'tibu-demo-me'
-/** Enllaç ocult votant → papereta (com `ballot_links`): només el fan servir castVote, removeVote i voteCheck */
+/** Registre ocult votant → papereta (com `ballot_links`): no el llegeix la UI, només castVote, removeVote i voteCheck */
 const LINKS = 'tibu-demo-ballot-links'
 const loadLinks = (): Record<string, string> => JSON.parse(localStorage.getItem(LINKS) ?? '{}')
 const saveLinks = (l: Record<string, string>) => localStorage.setItem(LINKS, JSON.stringify(l))
@@ -253,7 +253,6 @@ export function createDemoApi(): Api {
         }
         db.months.find((m) => m.id === id)!.status = 'closed'
       })
-      saveLinks(Object.fromEntries(Object.entries(loadLinks()).filter(([k]) => !k.startsWith(`${id}:`))))
     },
     async removeVote(monthId, memberId) {
       requireAdmin()

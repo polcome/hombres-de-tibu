@@ -1,9 +1,9 @@
--- Vot secret de debò: ningú (ni l'admin des de l'app) veu les paperetes fins que es tanca el mes,
+-- Vot secret: ningú (ni l'admin des de l'app) veu les paperetes fins que es tanca el mes,
 -- i l'admin pot esborrar un vot perquè la persona torni a votar (s'esborra també la seva papereta).
 -- Idempotent: es pot executar més d'un cop.
 
--- Enllaç ocult votant → papereta. Sense cap política de lectura: des de l'app no el pot llegir ningú,
--- només les funcions de més avall. En tancar el mes s'esborra i el vot queda anònim per sempre.
+-- Registre ocult votant → papereta. Sense cap política de lectura: des de l'app no el pot llegir ningú
+-- (ni l'admin), només les funcions de més avall. Es conserva per sempre: només es pot consultar des del SQL Editor de Supabase.
 create table if not exists ballot_links (
   month_id  text not null references months(id) on delete cascade,
   member_id uuid not null references members(id) on delete cascade,
@@ -73,7 +73,7 @@ begin
     from voters v where v.month_id = p_month;
 end $$;
 
--- En tancar el mes es calculen els guanyadors i s'esborra l'enllaç: ja no es pot saber qui ha votat què
+-- En tancar el mes es calculen els guanyadors (el registre ocult es conserva)
 create or replace function close_month(p_month text)
 returns void language plpgsql security definer set search_path = public as $$
 declare
@@ -92,7 +92,12 @@ begin
     where votes = (select max(votes) from c);
   end loop;
   update months set status = 'closed' where id = p_month;
-  delete from ballot_links where month_id = p_month;
 end $$;
 
 notify pgrst, 'reload schema';
+
+-- Per consultar què ha votat cadascú (només des del SQL Editor):
+-- select l.month_id, m.name as votant, mv.name as mvp, b.mvp_reason, an.name as anti, b.anti_reason
+-- from ballot_links l join ballots b on b.id = l.ballot_id join members m on m.id = l.member_id
+-- join members mv on mv.id = b.mvp_id join members an on an.id = b.anti_id
+-- where l.month_id = '2026-10';

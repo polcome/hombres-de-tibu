@@ -27,7 +27,7 @@ App web del grup d'amics del gimnàs "Los Hombres de Tibu" (13 membres). Serveix
 - **Vot 100% secret:** la taula `ballots` no té votant ni data, i `voters` només guarda qui ha votat. Es vota per la RPC `cast_vote`.
   - No et pots votar a tu mateix, el MVP i l'anti han de ser persones diferents i cada motiu ha de tenir mínim 15 caràcters.
   - **Ningú veu les paperetes fins que es tanca el mes**, ni l'admin (RLS de `ballots`: només mesos tancats). L'admin només veu qui ha votat i si té la papereta guardada (✅, RPC `vote_check`).
-  - L'admin pot esborrar el vot d'algú (RPC `admin_remove_vote`): s'esborren el votant i la seva papereta, i pot tornar a votar. Per saber quina papereta és, `cast_vote` guarda l'enllaç a `ballot_links`, una taula sense cap política de lectura (només hi accedeixen les RPC) que `close_month` buida en tancar: després ja no es pot saber qui ha votat què.
+  - L'admin pot esborrar el vot d'algú (RPC `admin_remove_vote`): s'esborren el votant i la seva papereta, i pot tornar a votar. Per saber quina papereta és, `cast_vote` guarda l'enllaç a `ballot_links`, una taula **oculta** sense cap política de lectura (només hi accedeixen les RPC). Es conserva per sempre perquè l'usuari ho va demanar: només es pot consultar des del SQL Editor de Supabase (hi ha la consulta comentada al final de `migracio-vot-secret.sql`). L'app no ho ha de mostrar mai.
   - Ja no es poden anul·lar paperetes (la columna `annulled` es manté per a dades antigues).
 - **Tancar el mes:** ho fa la RPC `close_month`. En cas d'empat guanyen tots. Després s'obre el mes següent.
 - **Comptes:** login amb usuari + contrasenya. L'email és fictici (`<slug>@hombresdetibu.app`) i a Supabase la confirmació d'email està desactivada.

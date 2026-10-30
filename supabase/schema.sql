@@ -416,10 +416,10 @@ begin
 end $$;
 
 -- ---------------------------------------------------------------------
--- Vot secret: l'enllaç votant → papereta és ocult i s'esborra en tancar el mes
+-- Vot secret: el registre votant → papereta és ocult (només SQL Editor)
 -- ---------------------------------------------------------------------
--- Enllaç ocult votant → papereta. Sense cap política de lectura: des de l'app no el pot llegir ningú,
--- només les funcions de més avall. En tancar el mes s'esborra i el vot queda anònim per sempre.
+-- Registre ocult votant → papereta. Sense cap política de lectura: des de l'app no el pot llegir ningú
+-- (ni l'admin), només les funcions de més avall. Es conserva per sempre: només es pot consultar des del SQL Editor de Supabase.
 create table if not exists ballot_links (
   month_id  text not null references months(id) on delete cascade,
   member_id uuid not null references members(id) on delete cascade,
@@ -489,7 +489,7 @@ begin
     from voters v where v.month_id = p_month;
 end $$;
 
--- En tancar el mes es calculen els guanyadors i s'esborra l'enllaç: ja no es pot saber qui ha votat què
+-- En tancar el mes es calculen els guanyadors (el registre ocult es conserva)
 create or replace function close_month(p_month text)
 returns void language plpgsql security definer set search_path = public as $$
 declare
@@ -508,7 +508,6 @@ begin
     where votes = (select max(votes) from c);
   end loop;
   update months set status = 'closed' where id = p_month;
-  delete from ballot_links where month_id = p_month;
 end $$;
 
 notify pgrst, 'reload schema';
