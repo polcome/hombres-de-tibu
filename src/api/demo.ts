@@ -249,16 +249,14 @@ export function createDemoApi(): Api {
           })
           return counts
         }
-        const antis = count('anti')
+        const other = { mvp: count('anti'), anti: count('mvp') }
         for (const type of ['mvp', 'anti'] as const) {
           const counts = count(type)
           const max = Math.max(0, ...counts.values())
           let top = [...counts].filter(([, v]) => v === max)
-          // Desempat del MVP: menys vots d'anti aquell mes (si continuen empatats, guanyen tots)
-          if (type === 'mvp') {
-            const minAnti = Math.min(...top.map(([k]) => antis.get(k) ?? 0))
-            top = top.filter(([k]) => (antis.get(k) ?? 0) === minAnti)
-          }
+          // Desempat: MVP → menys vots d'anti; anti → menys vots de MVP (si continuen empatats, guanyen tots)
+          const min = Math.min(...top.map(([k]) => other[type].get(k) ?? 0))
+          top = top.filter(([k]) => (other[type].get(k) ?? 0) === min)
           top.forEach(([k, v]) => db.awards.push({ id: uid(), month_id: id, type, member_id: k, votes: v }))
         }
         db.months.find((m) => m.id === id)!.status = 'closed'

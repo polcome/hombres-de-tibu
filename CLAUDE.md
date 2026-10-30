@@ -29,7 +29,7 @@ App web del grup d'amics del gimnàs "Los Hombres de Tibu" (13 membres). Serveix
   - **Ningú veu les paperetes fins que es tanca el mes**, ni l'admin (RLS de `ballots`: només mesos tancats). L'admin només veu qui ha votat i si té la papereta guardada (✅, RPC `vote_check`).
   - L'admin pot esborrar el vot d'algú (RPC `admin_remove_vote`): s'esborren el votant i la seva papereta, i pot tornar a votar. Per saber quina papereta és, `cast_vote` guarda l'enllaç a `ballot_links`, una taula **oculta** sense cap política de lectura (només hi accedeixen les RPC). Es conserva per sempre perquè l'usuari ho va demanar: només es pot consultar des del SQL Editor de Supabase (hi ha la consulta comentada al final de `migracio-vot-secret.sql`). L'app no ho ha de mostrar mai.
   - Ja no es poden anul·lar paperetes (la columna `annulled` es manté per a dades antigues).
-- **Tancar el mes:** ho fa la RPC `close_month`. Empat al MVP: guanya qui tingui menys vots d'anti aquell mes; si continuen empatats, guanyen tots. Empat a l'anti: guanyen tots. Després s'obre el mes següent.
+- **Tancar el mes:** ho fa la RPC `close_month`. Empat al MVP: guanya qui tingui menys vots d'anti aquell mes. Empat a l'anti: se l'emporta qui tingui menys vots de MVP. Si continuen empatats, guanyen tots. Després s'obre el mes següent.
 - **Comptes:** login amb usuari + contrasenya. L'email és fictici (`<slug>@hombresdetibu.app`) i a Supabase la confirmació d'email està desactivada.
   - L'alta es fa amb un codi d'activació (`member_secrets`) que valida el trigger `handle_new_user`.
 - **Expedients:** cal sessió per publicar-los (RPC `post_expedient`), però el text surt anònim o signat amb un nom lliure. **Màxim 2 al dia per usuari** (dia de Madrid). La taula `expedient_posts` guarda qui i quin dia, però no quin expedient, perquè el xivato continuï sent anònim.
@@ -71,7 +71,8 @@ App web del grup d'amics del gimnàs "Los Hombres de Tibu" (13 membres). Serveix
 7. `supabase/migracio-limits-dossier.sql`: límit de 2 expedients/dia i 1 reacció per usuari.
 8. `supabase/migracio-foto-propia.sql`: cadascú es pot posar la seva foto base.
 9. `supabase/migracio-vot-secret.sql`: paperetes ocultes fins al tancament, esborrar vot + papereta.
-10. `supabase/migracio-desempat.sql`: desempat del MVP per menys vots d'anti (⚠️ pendent de confirmar que l'usuari l'ha executat).
+10. `supabase/migracio-desempat.sql`: desempat del MVP per menys vots d'anti.
+11. `supabase/migracio-desempat-anti.sql`: afegeix el desempat de l'anti per menys vots de MVP (⚠️ pendent de confirmar que l'usuari l'ha executat).
 
 Quan un canvi necessiti BD:
 - Crea una **migració nova** `supabase/migracio-*.sql` que sigui idempotent (`if not exists`, `drop policy if exists`).

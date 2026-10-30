@@ -511,7 +511,7 @@ begin
 end $$;
 
 -- ---------------------------------------------------------------------
--- Desempat del MVP: menys vots d'anti aquell mes
+-- Desempats: MVP per menys vots d'anti, anti-MVP per menys vots de MVP
 -- ---------------------------------------------------------------------
 create or replace function close_month(p_month text)
 returns void language plpgsql security definer set search_path = public as $$
@@ -523,22 +523,23 @@ begin
   insert into awards(month_id, type, member_id, votes)
   with b as (select * from ballots where month_id = p_month and not annulled),
   c as (
-    select m.member_id, m.votes, (select count(*) from b where b.anti_id = m.member_id) as antis
+    select m.member_id, m.votes, (select count(*) from b where b.anti_id = m.member_id) as other
     from (select mvp_id as member_id, count(*)::int as votes from b group by 1) m
   ),
   top as (select * from c where votes = (select max(votes) from c))
   select p_month, 'mvp', member_id, votes from top
-  where antis = (select min(antis) from top);
+  where other = (select min(other) from top);
 
-  -- Anti-MVP: més vots d'anti (en cas d'empat, guanyen tots)
+  -- Anti-MVP: més vots d'anti i, en cas d'empat, menys vots de MVP
   insert into awards(month_id, type, member_id, votes)
-  with c as (
-    select anti_id as member_id, count(*)::int as votes
-    from ballots where month_id = p_month and not annulled
-    group by 1
-  )
-  select p_month, 'anti', member_id, votes from c
-  where votes = (select max(votes) from c);
+  with b as (select * from ballots where month_id = p_month and not annulled),
+  c as (
+    select a.member_id, a.votes, (select count(*) from b where b.mvp_id = a.member_id) as other
+    from (select anti_id as member_id, count(*)::int as votes from b group by 1) a
+  ),
+  top as (select * from c where votes = (select max(votes) from c))
+  select p_month, 'anti', member_id, votes from top
+  where other = (select min(other) from top);
 
   update months set status = 'closed' where id = p_month;
 end $$;
