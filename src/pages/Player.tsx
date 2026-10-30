@@ -4,7 +4,7 @@ import { toPng } from 'html-to-image'
 import { api } from '../api'
 import { useStore } from '../store'
 import { closedMonths, currentMonthKey, monthLabel, shiftMonth } from '../logic/months'
-import { STAT_LABELS, awardsOf, cardKey, displayName, featuredCard, fmtTotals, monthTotals, photoFor, rating, unlockedCards, yearTotals } from '../logic/stats'
+import { STAT_LABELS, awardsOf, cardKey, displayName, fmtTotals, monthTotals, rating, unlockedCards, yearTotals } from '../logic/stats'
 import { PhotoControls } from '../components/PhotoControls'
 import { FifaCard } from '../components/FifaCard'
 import { unlockProps } from '../components/CardZoom'
@@ -22,7 +22,6 @@ export default function Player() {
   if (!m) return <p>Jugador no trobat.</p>
 
   const unlocks = unlockedCards(db)
-  const f = featuredCard(db, m, unlocks)
   const r = rating(db, m.id)
   const year = new Date().getFullYear()
   const yt = yearTotals(db, m.id, year)
@@ -56,12 +55,8 @@ export default function Player() {
           ref={cardRef}
           member={m}
           rating={r}
-          variant={f.variant}
-          boost={f.boost} focus={f.focus}
-          label={f.label}
-          title={f.title}
+          variant={r.tier}
           size="lg"
-          photo={photoFor(db, m, f.key)}
         />
         <div className="row wrap center">
           <button className="btn" onClick={download}>
@@ -82,9 +77,9 @@ export default function Player() {
         </div>
       </div>
 
-      {me?.is_admin && (
-        <Section title="📷 Foto base">
-          <p className="muted small">Surt a la carta normal, a l'avatar i a les cartes especials que no tinguin foto pròpia.</p>
+      {(me?.is_admin || me?.id === m.id) && (
+        <Section title={me?.id === m.id ? '📷 La teva foto' : '📷 Foto base'}>
+          <p className="muted small">Surt a la carta base, a l'avatar i a les cartes especials que no tinguin foto pròpia (aquestes les posen els admins).</p>
           <PhotoControls url={m.photo_url} onChange={(img) => api.setPhoto(m.id, img)} />
         </Section>
       )}

@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useStore } from '../store'
 import { activeMonth, closedMonths, currentMonthKey, formatDeadline, monthLabel } from '../logic/months'
-import { displayName, fmtTotals, memberById, monthTotals, photoFor, rating, unlockedCards, winnersOf } from '../logic/stats'
+import { cardKey, displayName, fmtTotals, memberById, monthTotals, photoFor, rating, unlockedCards, winnersOf } from '../logic/stats'
 import { Avatar } from '../components/Avatar'
 import { FifaCard } from '../components/FifaCard'
 import { CardZoom, unlockProps } from '../components/CardZoom'
@@ -109,10 +109,11 @@ export default function Home() {
                 const u = unlocks.find((x) => x.memberId === a.member_id && x.sortKey === last.id && x.def.id === (type === 'mvp' ? 'totm' : 'antim'))
                 if (u)
                   return (
-                    <CardZoom key={a.id} card={unlockProps(db, u)} def={u.def}>
+                    <CardZoom key={a.id} card={unlockProps(db, u)} def={u.def} photoKey={cardKey(u)}>
                       <FifaCard {...unlockProps(db, u)} size="xs" />
                     </CardZoom>
                   )
+                const key = `${type === 'mvp' ? 'totm' : 'antim'}:${last.id}`
                 const card = {
                   member: m,
                   rating: rating(db, m.id, last.id),
@@ -121,10 +122,10 @@ export default function Home() {
                   label: monthLabel(last.id),
                   title: type === 'mvp' ? 'Tibu of the Month' : 'Anti-MVP del mes',
                   emoji: type === 'mvp' ? '🏆' : '🤡',
-                  photo: photoFor(db, m, `${type === 'mvp' ? 'totm' : 'antim'}:${last.id}`),
+                  photo: photoFor(db, m, key),
                 }
                 return (
-                  <CardZoom key={a.id} card={card}>
+                  <CardZoom key={a.id} card={card} photoKey={key}>
                     <FifaCard {...card} size="xs" />
                   </CardZoom>
                 )

@@ -21,7 +21,7 @@ App web del grup d'amics del gimnàs "Los Hombres de Tibu" (13 membres). Serveix
 - `src/logic/acta.ts`: genera l'acta del mes amb plantilles (sense IA) i el "prompt per a IA" per enganxar a ChatGPT o Claude.
 - `src/logic/months.ts`: utilitats de mesos (`'YYYY-MM'`).
 - `src/pages/*`: Home, Dossier, Vote, Trainings, Cards, Palmares, MonthPage, Player, Admin, Login.
-- `src/components/*`: FifaCard + CardArt (plantilles SVG) + fifa.css, CardZoom (pop-up de cartes d'assoliment), Album (àlbum de cromos), PhotoEditor (encuadrar), PhotoControls, CameraCapture (càmera dins l'app amb getUserMedia), TrainingItem, ui.
+- `src/components/*`: FifaCard + CardArt (plantilles SVG) + fifa.css, CardZoom (pop-up de cartes, amb controls de foto), Album (àlbum de cromos), PhotoEditor (encuadrar), PhotoControls, CameraCapture (càmera dins l'app amb getUserMedia), TrainingItem, ui.
 
 ## Decisions de disseny (no les canviïs sense preguntar)
 - **Vot 100% secret:** la taula `ballots` no té votant ni data, i `voters` només guarda qui ha votat. Es vota per la RPC `cast_vote`.
@@ -52,8 +52,10 @@ App web del grup d'amics del gimnàs "Los Hombres de Tibu" (13 membres). Serveix
   - Valoració de les cartes especials: la de final del mes de la carta (congelada). Les anuals, o les d'un any sense cap dada d'entrenos a l'app, fan servir la valoració actual (`unlockMonth`).
   - Els ids de `CARD_DEFS` no es canvien encara que canviï el nom (hi van lligades les fotos de cartes).
   - **Èxits esportius** (manuals, taula `achievements`): ascens, mitja marató, marató i Hyrox. L'admin els dona des d'Admin a una o diverses persones amb el nom de l'esdeveniment (tots els que hi van tenen la mateixa carta). Tenen boost propi com les altres especials (Ascens i Mitja +3, Hyrox +4, Marató +6) i, a més, sumen entrenos fora **virtuals** al càlcul de FOR de la carta base durant l'any natural de l'èxit (`ACHIEVEMENT_FOR_BONUS`: 12/12/15/25); al recompte d'entrenos no hi surten.
-- **Fotos de membres i cartes:** només l'admin les puja o les treu. N'hi ha una de base i una opcional per a cada carta especial (`card_photos`, clau `defId:mes|any`).
-  - A Inici i a Cartes (Carta base i Col·lecció) totes les cartes van petites i en clicar-les s'obren en gran en un pop-up, que té el botó "Veure perfil". La pestanya "Carta base" mostra sempre la carta base actual de cadascú (sense TOTM ni Anti-MVP).
+- **Fotos de membres i cartes:** n'hi ha una de base i una opcional per a cada carta especial (`card_photos`, clau `defId:mes|any`).
+  - La **foto base** (carta base i avatar) se la pot posar cadascú al seu perfil o al pop-up de la seva carta base; l'admin pot canviar la de tothom. Va per la RPC `set_member_photo` (si no existeix, el client fa servir `updateMember`, que només funciona per a admins).
+  - Les **fotos de cartes especials** només les posen els admins: des de l'àlbum o des del pop-up de qualsevol carta (`CardZoom` amb `photoKey`).
+  - El perfil mostra sempre la carta base. A Inici i a Cartes (Carta base i Col·lecció) totes les cartes van petites i en clicar-les s'obren en gran en un pop-up, que té el botó "Veure perfil". La pestanya "Carta base" mostra sempre la carta base actual de cadascú (sense TOTM ni Anti-MVP).
 - **Àlbum de cromos** (`src/components/Album.tsx`): al perfil hi ha una vista prèvia que obre un àlbum a pantalla completa. La portada té la carta base actual, el progrés (X/40) i un índex. Hi ha una pàgina per família (base + PLUS + ULTRA) i una per als èxits esportius, amb els buits bloquejats. Es passa pàgina lliscant o amb fletxes. L'admin hi posa les fotos de cada carta.
 - **Descartat de moment** (l'usuari ho ha dit): minijocs, porra/Tibucoins, premis, comodins, rol "editor de fotos" i blindar la foto obligatòria a la BD.
 
@@ -65,6 +67,7 @@ App web del grup d'amics del gimnàs "Los Hombres de Tibu" (13 membres). Serveix
 5. `supabase/migracio-proves-entrenos.sql`: `trainings.photo_url`, `training_votes` i el bucket `proofs`.
 6. `supabase/migracio-exits-esportius.sql`: taula `achievements`.
 7. `supabase/migracio-limits-dossier.sql`: límit de 2 expedients/dia i 1 reacció per usuari (⚠️ pendent de confirmar que l'usuari l'ha executat).
+8. `supabase/migracio-foto-propia.sql`: cadascú es pot posar la seva foto base (⚠️ pendent de confirmar que l'usuari l'ha executat).
 
 Quan un canvi necessiti BD:
 - Crea una **migració nova** `supabase/migracio-*.sql` que sigui idempotent (`if not exists`, `drop policy if exists`).

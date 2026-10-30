@@ -276,6 +276,7 @@ export function createDemoApi(): Api {
       return 'DEMO'
     },
     async setPhoto(memberId, image) {
+      if (memberId !== meId()) requireAdmin()
       const url = image ? await toDataUrl(image) : null
       await this.updateMember(memberId, { photo_url: url })
     },

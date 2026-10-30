@@ -15,7 +15,7 @@ export function createSupabaseApi(url: string, key: string): Api {
 
   async function upload(memberId: string, name: string, image: Blob) {
     const path = `${memberId}/${name}-${Date.now()}.jpg`
-    check(await sb.storage.from('avatars').upload(path, image, { contentType: 'image/jpeg', upsert: true }))
+    check(await sb.storage.from('avatars').upload(path, image, { contentType: 'image/jpeg' }))
     return sb.storage.from('avatars').getPublicUrl(path).data.publicUrl
   }
 
@@ -166,7 +166,10 @@ export function createSupabaseApi(url: string, key: string): Api {
     },
     async setPhoto(memberId, image) {
       const url = image ? await upload(memberId, 'base', image) : null
-      await this.updateMember(memberId, { photo_url: url })
+      const { error } = await sb.rpc('set_member_photo', { p_member: memberId, p_url: url })
+      // Si la migració de la foto pròpia encara no s'ha executat, els admins ho poden fer com abans
+      if (error?.code === 'PGRST202') await this.updateMember(memberId, { photo_url: url })
+      else if (error) throw new Error(error.message)
     },
     async setCardPhoto(memberId, cardKey, image) {
       if (!image) {

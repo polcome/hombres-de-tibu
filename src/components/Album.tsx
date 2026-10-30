@@ -149,7 +149,7 @@ export function Album({ member, unlocks, onClose }: { member: Member; unlocks: C
                           <div className="album-stack">
                             {have.map((u) => (
                               <div key={cardKey(u)} className="card-with-ctl">
-                                <CardZoom card={unlockProps(db, u)} def={u.def}>
+                                <CardZoom card={unlockProps(db, u)} def={u.def} photoKey={cardKey(u)}>
                                   <FifaCard {...unlockProps(db, u)} size="sm" />
                                 </CardZoom>
                                 {me?.is_admin && (

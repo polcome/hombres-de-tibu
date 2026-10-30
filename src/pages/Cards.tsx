@@ -121,7 +121,7 @@ export default function Cards() {
                             </div>,
                           ]
                         return got.map((u) => (
-                          <CardZoom key={cardKey(u) + u.memberId} card={unlockProps(db, u)} def={t}>
+                          <CardZoom key={cardKey(u) + u.memberId} card={unlockProps(db, u)} def={t} photoKey={cardKey(u)}>
                             <FifaCard {...unlockProps(db, u)} size="xs" />
                           </CardZoom>
                         ))

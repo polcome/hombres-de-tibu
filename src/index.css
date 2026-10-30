@@ -967,6 +967,19 @@ textarea:focus {
   padding: 12px 14px;
   width: 100%;
 }
+.card-modal-photo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px dashed var(--line);
+  border-radius: 14px;
+}
+.card-modal-photo .row {
+  justify-content: center;
+}
 .card-modal-title {
   font-weight: 800;
   font-size: 17px;
