@@ -18,7 +18,7 @@ App web del grup d'amics del gimnàs "Los Hombres de Tibu" (13 membres). Serveix
 - `src/api/types.ts`: interfície `Api`. N'hi ha dues implementacions, `supabase.ts` i `demo.ts`, que **s'han de mantenir en paral·lel**.
 - `src/store.tsx`: carrega tota la BD d'un cop (`loadAll`), exposa `useStore()` i `useAction()`, i després de cada acció recarrega les dades.
 - `src/logic/stats.ts`: totals, valoració FIFA (`rating`), cartes especials (`CARD_DEFS`, `unlockedCards`) i `photoFor`. Tot es **calcula al client**.
-- `src/logic/acta.ts`: genera l'acta del mes amb plantilles (sense IA, `generateActa`) i el prompt per a la IA (`aiPrompt`, amb un estil a l'atzar de `AI_STYLES` perquè cada mes surti diferent).
+- `src/logic/acta.ts`: genera l'acta del mes amb plantilles (sense IA, `generateActa`) i el prompt per a la IA (`aiPrompt`, amb 24 estils a `AI_STYLES`: l'acta de tancar el mes en fa servir un que va rotant per mes, `styleFor`, i no es repeteix fins al cap de 2 anys; «Generar amb IA» en tria un a l'atzar).
 - `src/logic/months.ts`: utilitats de mesos (`'YYYY-MM'`).
 - `src/pages/*`: Home, Dossier, Vote, Trainings, Cards, Palmares, MonthPage, Player, Admin, Login.
 - `src/components/*`: FifaCard + CardArt (plantilles SVG) + fifa.css, CardZoom (pop-up de cartes, amb controls de foto), ActaView (acta publicada amb format visual a partir del text de WhatsApp), Album (àlbum de cromos), PhotoEditor (encuadrar), PhotoControls, CameraCapture (càmera dins l'app amb getUserMedia), TrainingItem, ui.

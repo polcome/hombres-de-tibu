@@ -110,7 +110,7 @@ export function generateActa(db: DB, monthId: string) {
   return L.join('\n')
 }
 
-/** Estils per a l'acta amb IA: se'n tria un a l'atzar perquè cada mes surti diferent */
+/** Estils per a l'acta amb IA. L'automàtica (en tancar el mes) va rotant: no repeteix estil fins al cap de 2 anys */
 const AI_STYLES = [
   "crònica esportiva èpica i exagerada, com un narrador de futbol desfasat",
   "sentència judicial solemne del Tribunal Suprem de Tibu, amb fets provats i condemnes absurdes",
@@ -122,7 +122,27 @@ const AI_STYLES = [
   "gala dels Oscars amb discurs d'agraïment i catifa vermella",
   "parte meteorològic on cada membre és un fenomen del temps",
   "previa i post-partit d'un programa de tertúlia esportiva on tothom crida",
+  "gala d'expulsió d'un reality show tipus Gran Germà, amb el presentador allargant el suspens",
+  "homilia d'una missa solemne, amb lectures, sermó i pregàries pels pecadors del grup",
+  "prospecte d'un medicament, amb composició, indicacions, contraindicacions i efectes secundaris",
+  "ressenyes de TripAdvisor, amb estrelles i opinions de clients indignats o entusiasmats",
+  "conte infantil per anar a dormir, amb moralina final",
+  "episodi d'un podcast de true crime, investigant els fets amb misteri i tensió",
+  "butlletí oficial del Parlament amb una llei aprovada per votació, articles i disposicions",
+  "carta astral i horòscop, on els astres expliquen el que ha passat al grup",
+  "subhasta d'art, on els guanyadors són peces de col·lecció que es liciten",
+  "tràiler d'una pel·lícula de Hollywood amb veu en off d'«en un món on…»",
+  "retransmissió d'una cursa de Fórmula 1, amb boxes, avançaments i sancions",
+  "receptari de cuina, amb ingredients, passos de la recepta i emplatat final",
+  "partida d'escacs comentada per un gran mestre molt intens",
+  "obituari i esquela solemne de la dignitat de l'anti-MVP, amb honors al MVP",
 ]
+
+/** Estil fix per a cada mes, rotant per la llista */
+export function styleFor(monthId: string) {
+  const [y, m] = monthId.split('-').map(Number)
+  return AI_STYLES[(y * 12 + m) % AI_STYLES.length]
+}
 
 /** Prompt per a la IA (automàtica amb Gemini o per enganxar a ChatGPT/Claude) */
 export function aiPrompt(db: DB, monthId: string, style = AI_STYLES[Math.floor(Math.random() * AI_STYLES.length)]) {
