@@ -72,7 +72,7 @@ App web del grup d'amics del gimnàs "Los Hombres de Tibu" (13 membres). Serveix
 8. `supabase/migracio-foto-propia.sql`: cadascú es pot posar la seva foto base.
 9. `supabase/migracio-vot-secret.sql`: paperetes ocultes fins al tancament, esborrar vot + papereta.
 10. `supabase/migracio-desempat.sql`: desempat del MVP per menys vots d'anti.
-11. `supabase/migracio-desempat-anti.sql`: afegeix el desempat de l'anti per menys vots de MVP (⚠️ pendent de confirmar que l'usuari l'ha executat).
+11. `supabase/migracio-desempat-anti.sql`: afegeix el desempat de l'anti per menys vots de MVP.
 
 Quan un canvi necessiti BD:
 - Crea una **migració nova** `supabase/migracio-*.sql` que sigui idempotent (`if not exists`, `drop policy if exists`).
