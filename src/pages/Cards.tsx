@@ -52,7 +52,7 @@ export default function Cards() {
         <div className="cards-grid">
           {squad.map(({ m, r, f }) => (
             <Link key={m.id} to={`/jugador/${m.slug}`}>
-              <FifaCard member={m} rating={r} variant={f.variant} boost={f.boost} label={f.label} title={f.title} size="sm" photo={photoFor(db, m, f.key)} />
+              <FifaCard member={m} rating={r} variant={f.variant} boost={f.boost} focus={f.focus} label={f.label} title={f.title} size="sm" photo={photoFor(db, m, f.key)} />
             </Link>
           ))}
         </div>
@@ -274,8 +274,13 @@ export default function Cards() {
             <pre className="formula">Carta especial = valors a final del mes de la carta + bonus de la carta</pre>
             <ul className="how">
               <li>
-                El bonus depèn de la carta (TOTM +3, Icona +6, Pilota d'Or +12, Anti-MVP −3…) i se suma a la mitjana <b>i a cada una de les 5 estadístiques</b>{' '}
-                d'aquella carta. Sempre entre 1 i 99.
+                El bonus depèn de la carta (TOTM +3, Icona +6, Pilota d'Or +12, Anti-MVP −3…) i és el que puja (o baixa) la mitjana d'aquella carta.
+                Sempre entre 1 i 99.
+              </li>
+              <li>
+                El bonus es reparteix entre les stats: el <b>60%</b> va a la stat relacionada amb la carta (o <b>30% + 30%</b> si en té dues) i un{' '}
+                <b>10%</b> a cada una de les altres, ajustat perquè la mitjana pugi just el bonus. Exemple: la TOTM puja sobretot MVP; GymRat, ENT; IronMan, ENT i
+                CON.
               </li>
               <li>La carta base no canvia mai: sempre reflecteix la realitat.</li>
               <li>

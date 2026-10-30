@@ -1,6 +1,6 @@
 import { forwardRef } from 'react'
 import type { Member } from '../types'
-import { STAT_LABELS, displayName, type CardLevel, type CardVariant, type Rating } from '../logic/stats'
+import { STAT_LABELS, boostedStats, displayName, type CardLevel, type CardVariant, type Rating, type StatKey } from '../logic/stats'
 import { hue } from './Avatar'
 import { CardArt } from './CardArt'
 import './fifa.css'
@@ -10,6 +10,8 @@ interface Props {
   rating: Rating
   variant: CardVariant
   boost?: number
+  /** Stats principals de la carta especial (s'emporten la major part del bonus) */
+  focus?: StatKey[]
   label?: string
   title?: string
   emoji?: string
@@ -50,10 +52,11 @@ const TAG: Record<CardVariant, string> = {
 }
 
 export const FifaCard = forwardRef<HTMLDivElement, Props>(function FifaCard(
-  { member, rating, variant, boost = 0, label, title, emoji, size = 'md', locked, photo, level },
+  { member, rating, variant, boost = 0, focus, label, title, emoji, size = 'md', locked, photo, level },
   ref,
 ) {
   const ovr = Math.max(1, Math.min(99, rating.overall + boost))
+  const stats = boostedStats(rating, boost, focus)
   const name = displayName(member)
   const src = photo === undefined ? member.photo_url : photo
   return (
@@ -77,7 +80,7 @@ export const FifaCard = forwardRef<HTMLDivElement, Props>(function FifaCard(
       <div className="fifa-stats">
         {STAT_LABELS.map(([k, l]) => (
           <div key={k}>
-            <b>{boost ? Math.max(1, Math.min(99, (rating[k] as number) + boost)) : (rating[k] as number)}</b> {l}
+            <b>{stats[k as StatKey]}</b> {l}
           </div>
         ))}
       </div>

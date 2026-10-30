@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import { toPng } from 'html-to-image'
 import { FifaCard } from './FifaCard'
 import type { DB } from '../types'
-import { cardKey, displayName, memberById, photoFor, rating, unlockMonth, type CardDef, type CardUnlock } from '../logic/stats'
+import { cardKey, displayName, focusOf, statLabel, memberById, photoFor, rating, unlockMonth, type CardDef, type CardUnlock } from '../logic/stats'
 
 type CardProps = Omit<ComponentProps<typeof FifaCard>, 'size' | 'ref'>
 
@@ -23,6 +23,7 @@ export function unlockProps(db: DB, u: CardUnlock): CardProps {
     level: u.def.level,
     variant: u.def.variant,
     boost: u.def.boost,
+    focus: focusOf(u.def),
     label: u.label,
     title: u.def.name,
     emoji: u.def.emoji,
@@ -81,7 +82,7 @@ function CardModal({ card, def, onClose }: { card: CardProps; def?: CardDef; onC
             </div>
             <div className="muted small">
               {def.how}
-              {def.boost !== 0 && ` ${def.boost > 0 ? '+' : ''}${def.boost} a la mitjana i a cada estadística.`}
+              {def.boost !== 0 && ` ${def.boost > 0 ? '+' : ''}${def.boost} a la mitjana (sobretot a ${focusOf(def).map(statLabel).join(' i ')}).`}
             </div>
             <div className="small">
               Aconseguida per <b>{displayName(card.member)}</b>

@@ -57,7 +57,7 @@ export default function Player() {
           member={m}
           rating={r}
           variant={f.variant}
-          boost={f.boost}
+          boost={f.boost} focus={f.focus}
           label={f.label}
           title={f.title}
           size="lg"

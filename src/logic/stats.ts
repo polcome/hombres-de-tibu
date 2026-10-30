@@ -195,7 +195,7 @@ export interface CardDef {
   emoji: string
   variant: CardVariant
   how: string
-  boost: number // punts que suma (o resta) a la mitjana i a cada estadística a la carta especial
+  boost: number // punts que suma (o resta) a la mitjana de la carta especial (es reparteix entre les stats amb `boostedStats`)
   rarity: 'Comuna' | 'Rara' | 'Èpica' | 'Llegendària' | 'Mítica' | 'Maleïda'
   /** automàtica (es desbloqueja sola) o manual (l'assigna l'admin) */
   auto: boolean
@@ -227,6 +227,45 @@ const BASE_DEFS: CardDef[] = [
   { id: 'exit-marato', name: 'Marató', emoji: '🏅', variant: 'marato', how: 'Acaba una marató (42,2 km).', boost: 6, rarity: 'Llegendària', auto: false },
   { id: 'exit-hyrox', name: 'Hyrox', emoji: '🏋️', variant: 'hyrox', how: 'Acaba una competició Hyrox.', boost: 4, rarity: 'Èpica', auto: false },
 ]
+
+export type StatKey = 'ent' | 'fora' | 'mvp' | 'com' | 'con'
+
+/** Estadístiques principals de cada família de cartes: s'emporten la major part del bonus */
+export const CARD_FOCUS: Record<string, StatKey[]> = {
+  totm: ['mvp'],
+  antim: ['com'],
+  icona: ['mvp'],
+  nongrata: ['com'],
+  hattrick: ['mvp'],
+  bdo: ['mvp'],
+  fang: ['com'],
+  redempcio: ['mvp', 'com'],
+  doblecara: ['mvp', 'com'],
+  rata: ['ent'],
+  centurio: ['ent'],
+  totterreny: ['fora'],
+  ferro: ['ent', 'con'],
+  superman: ['ent', 'con'],
+  fantasma: ['ent', 'con'],
+  reifantasma: ['ent', 'fora'],
+  'exit-ascens': ['fora'],
+  'exit-mitja': ['fora'],
+  'exit-marato': ['fora'],
+  'exit-hyrox': ['fora', 'ent'],
+}
+export const focusOf = (def: CardDef) => CARD_FOCUS[def.family ?? def.id] ?? []
+export const statLabel = (k: StatKey) => STAT_LABELS.find(([x]) => x === k)![1]
+
+/**
+ * Stats d'una carta especial: el bonus es reparteix un 60% a la stat principal (30% + 30% si n'hi ha dues)
+ * i un 10% a cada una de les altres, escalat perquè la mitjana ponderada pugi exactament el bonus.
+ */
+export function boostedStats(r: Rating, boost: number, focus: StatKey[] = []): Record<StatKey, number> {
+  const keys = Object.keys(WEIGHTS) as StatKey[]
+  const share = (k: StatKey) => (!focus.length ? 1 : focus.includes(k) ? 0.6 / focus.length : 0.1)
+  const scale = boost / keys.reduce((sum, k) => sum + WEIGHTS[k] * share(k), 0)
+  return Object.fromEntries(keys.map((k) => [k, boost ? clamp(r[k] + scale * share(k), 1) : r[k]])) as Record<StatKey, number>
+}
 
 /** Llindars de les versions PLUS i ULTRA (el que compta depèn de la carta) */
 export const LEVEL_RULES: Record<string, { plus: [number, string, number]; ultra: [number, string, number] }> = {
@@ -390,13 +429,13 @@ export function featuredCard(
   db: DB,
   member: Member,
   unlocks: CardUnlock[],
-): { variant: CardVariant; label?: string; boost: number; title?: string; key?: string } {
+): { variant: CardVariant; label?: string; boost: number; focus?: StatKey[]; title?: string; key?: string } {
   const last = closedMonths(db).at(-1)?.id
   const mine = unlocks.filter((u) => u.memberId === member.id)
   const recent = (id: string) => mine.find((u) => u.def.id === id && (u.sortKey === last || u.sortKey === last?.slice(0, 4)))
   for (const id of ['bdo', 'fang', 'totm', 'antim']) {
     const u = recent(id)
-    if (u) return { variant: u.def.variant, label: u.label, boost: u.def.boost, title: u.def.name, key: cardKey(u) }
+    if (u) return { variant: u.def.variant, label: u.label, boost: u.def.boost, focus: focusOf(u.def), title: u.def.name, key: cardKey(u) }
   }
   return { variant: rating(db, member.id).tier, boost: 0 }
 }
