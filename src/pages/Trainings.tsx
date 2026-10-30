@@ -203,7 +203,7 @@ export default function Trainings() {
                     {t.photo_url && <span title="Amb foto">📷</span>}
                     <span>{new Date(t.date).toLocaleDateString('ca-ES', { weekday: 'short', day: 'numeric', month: 'short' })}</span>
                     {t.note && <span className="muted">{t.note}</span>}
-                    <button className="link danger ml-auto" onClick={() => run(() => api.deleteTraining(t.id))}>
+                    <button className="link danger ml-auto" onClick={() => confirm('Treure aquest entreno?') && run(() => api.deleteTraining(t.id))}>
                       treure
                     </button>
                   </div>

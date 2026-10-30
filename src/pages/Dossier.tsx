@@ -1,3 +1,4 @@
+import { ownToken } from '../logic/own'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../api'
@@ -47,7 +48,7 @@ export function ExpedientItem({ e, compact }: { e: Expedient; compact?: boolean 
             {e.author ? `per ${e.author}` : '🕵️ xivato anònim'} · {timeAgo(e.created_at)}
           </div>
         </div>
-        {me?.is_admin && !compact && (
+        {(me?.is_admin || ownToken(e.id)) && !compact && (
           <button className="link ml-auto danger" onClick={() => confirm('Esborrar expedient?') && run(() => api.deleteExpedient(e.id))}>
             🗑
           </button>
@@ -77,8 +78,8 @@ export function ExpedientItem({ e, compact }: { e: Expedient; compact?: boolean 
               {comments.map((c) => (
                 <div key={c.id} className="comment">
                   <b>{c.author || 'Anònim'}</b> {c.text} <span className="muted small">· {timeAgo(c.created_at)}</span>
-                  {me?.is_admin && (
-                    <button className="link danger" onClick={() => run(() => api.deleteComment(c.id))}>
+                  {(me?.is_admin || ownToken(c.id)) && (
+                    <button className="link danger" onClick={() => confirm('Esborrar comentari?') && run(() => api.deleteComment(c.id))}>
                       🗑
                     </button>
                   )}

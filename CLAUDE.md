@@ -36,6 +36,7 @@ App web del grup d'amics del gimnàs "Los Hombres de Tibu" (13 membres). Serveix
 - **Expedients:** cal sessió per publicar-los (RPC `post_expedient`), però el text surt anònim o signat amb un nom lliure. **Màxim 2 al dia per usuari** (dia de Madrid). La taula `expedient_posts` guarda qui i quin dia, però no quin expedient, perquè el xivato continuï sent anònim.
 - **Reaccions:** cal sessió, i només **una per usuari i expedient** (`expedient_reactions`; tocar la mateixa la treu, tocar-ne una altra la canvia). El jsonb `expedients.reactions` és llegat (es va posar a zero).
 - **Comentaris:** il·limitats, anònims i sense sessió.
+- **Esborrar el que és teu:** els entrenos propis (no el recompte inicial) es poden treure (RLS de `trainings`). Els expedients i comentaris propis també, sense trencar l'anonimat: en publicar, el mòbil genera un codi secret (`src/logic/own.ts`, localStorage) i a la BD només en va el hash (`delete_token`); les RPC `delete_own_expedient` / `delete_own_comment` el comproven. Només funciona des del mòbil on es va publicar. L'admin pot esborrar-ho tot.
 - **Entrenos:** format "gym (fora)".
   - Hi ha un recompte inicial de 2026 amb `baseline = true`, que compta per a l'any però no per a cap mes.
   - **Foto obligatòria per a gym** (només ho controla el client) i opcional per a fora. Es pot fer amb la càmera de l'app o triar de la galeria.
@@ -75,6 +76,7 @@ App web del grup d'amics del gimnàs "Los Hombres de Tibu" (13 membres). Serveix
 10. `supabase/migracio-desempat.sql`: desempat del MVP per menys vots d'anti.
 11. `supabase/migracio-desempat-anti.sql`: afegeix el desempat de l'anti per menys vots de MVP.
 12. `supabase/migracio-estil-acta.sql`: columna `months.acta_style`.
+13. `supabase/migracio-esborrar-propi.sql`: esborrar els propis expedients i comentaris amb codi secret (⚠️ pendent de confirmar que l'usuari l'ha executat).
 
 Quan un canvi necessiti BD:
 - Crea una **migració nova** `supabase/migracio-*.sql` que sigui idempotent (`if not exists`, `drop policy if exists`).

@@ -1,5 +1,6 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import type { Api } from './types'
+import { forgetOwn, newOwn, ownToken } from '../logic/own'
 import type { DB } from '../types'
 
 const EMAIL_DOMAIN = 'hombresdetibu.app'
@@ -110,13 +111,23 @@ export function createSupabaseApi(url: string, key: string): Api {
       check(await sb.from('trainings').delete().eq('id', id))
     },
     async addExpedient(e) {
-      const r = await sb.rpc('post_expedient', { p_month: e.month_id, p_target: e.target_id, p_kind: e.kind, p_text: e.text, p_author: e.author })
-      // Si encara no s'ha executat la migració del límit, es publica com abans
-      if (r.error && /could not find the function/i.test(r.error.message)) check(await sb.from('expedients').insert(e))
-      else check(r)
+      const { id, hash } = await newOwn()
+      const args = { p_month: e.month_id, p_target: e.target_id, p_kind: e.kind, p_text: e.text, p_author: e.author }
+      let r = await sb.rpc('post_expedient', { ...args, p_id: id, p_token_hash: hash })
+      // Si encara no s'ha executat la migració d'esborrar el propi, es publica com abans (i no es podrà esborrar)
+      if (r.error?.code === 'PGRST202') {
+        forgetOwn(id)
+        r = await sb.rpc('post_expedient', args)
+      }
+      check(r)
     },
     async addComment(c) {
-      check(await sb.from('comments').insert(c))
+      const { id, hash } = await newOwn()
+      const r = await sb.from('comments').insert({ ...c, id, delete_token: hash })
+      if (r.error && /delete_token/.test(r.error.message)) {
+        forgetOwn(id)
+        check(await sb.from('comments').insert(c))
+      } else check(r)
     },
     async react(expedientId, emoji) {
       check(await sb.rpc('react', { p_expedient: expedientId, p_emoji: emoji }))
@@ -214,10 +225,16 @@ export function createSupabaseApi(url: string, key: string): Api {
       check(await sb.from('achievements').delete().eq('id', id))
     },
     async deleteExpedient(id) {
-      check(await sb.from('expedients').delete().eq('id', id))
+      const token = ownToken(id)
+      if (token) check(await sb.rpc('delete_own_expedient', { p_id: id, p_token: token }))
+      else check(await sb.from('expedients').delete().eq('id', id))
+      forgetOwn(id)
     },
     async deleteComment(id) {
-      check(await sb.from('comments').delete().eq('id', id))
+      const token = ownToken(id)
+      if (token) check(await sb.rpc('delete_own_comment', { p_id: id, p_token: token }))
+      else check(await sb.from('comments').delete().eq('id', id))
+      forgetOwn(id)
     },
   }
 }

@@ -70,7 +70,7 @@ export function TrainingItem({ t }: { t: Training }) {
             {!t.photo_url && ' · sense foto'}
           </div>
         </div>
-        {me?.is_admin && (
+        {(me?.is_admin || (me?.id === t.member_id && !t.baseline)) && (
           <button className="link danger" onClick={() => confirm('Esborrar aquest entreno?') && run(() => api.deleteTraining(t.id))}>
             🗑
           </button>

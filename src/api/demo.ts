@@ -2,6 +2,7 @@
 // l'app sense configurar Supabase. Contrasenya de qualsevol usuari: "tibu".
 import type { Api } from './types'
 import type { DB, Member } from '../types'
+import { forgetOwn, newOwn, ownToken } from '../logic/own'
 
 const KEY = 'tibu-demo-db-v3'
 const ME = 'tibu-demo-me'
@@ -184,6 +185,9 @@ export function createDemoApi(): Api {
       })
     },
     async deleteTraining(id) {
+      // Com la RLS: els propis (no el recompte inicial) o, si ets admin, qualsevol
+      const t = load().trainings.find((x) => x.id === id)
+      if (!(t && t.member_id === meId() && !t.baseline)) requireAdmin()
       mutate((db) => (db.trainings = db.trainings.filter((t) => t.id !== id)))
     },
     async addExpedient(e) {
@@ -195,11 +199,13 @@ export function createDemoApi(): Api {
         d.posts = d.posts ?? []
         if (d.posts.filter((p) => p.member_id === me && p.day === today).length >= 2) throw new Error('Ja has publicat 2 expedients avui. Torna demà 😉')
         d.posts.push({ member_id: me, day: today })
-        db.expedients.unshift({ ...e, id: uid(), reactions: {}, created_at: new Date().toISOString() })
       })
+      const { id } = await newOwn()
+      mutate((db) => db.expedients.unshift({ ...e, id, reactions: {}, created_at: new Date().toISOString() }))
     },
     async addComment(c) {
-      mutate((db) => db.comments.push({ ...c, id: uid(), created_at: new Date().toISOString() }))
+      const { id } = await newOwn()
+      mutate((db) => db.comments.push({ ...c, id, created_at: new Date().toISOString() }))
     },
     async react(id, emoji) {
       const me = meId()
@@ -333,12 +339,14 @@ export function createDemoApi(): Api {
       mutate((db) => (db.achievements = (db.achievements ?? []).filter((x) => x.id !== id)))
     },
     async deleteExpedient(id) {
-      requireAdmin()
+      if (!ownToken(id)) requireAdmin()
       mutate((db) => (db.expedients = db.expedients.filter((e) => e.id !== id)))
+      forgetOwn(id)
     },
     async deleteComment(id) {
-      requireAdmin()
+      if (!ownToken(id)) requireAdmin()
       mutate((db) => (db.comments = db.comments.filter((c) => c.id !== id)))
+      forgetOwn(id)
     },
   }
 }
