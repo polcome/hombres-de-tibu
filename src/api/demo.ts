@@ -262,6 +262,10 @@ export function createDemoApi(): Api {
         db.months.find((m) => m.id === id)!.status = 'closed'
       })
     },
+    async aiActa() {
+      requireAdmin()
+      throw new Error("En mode demo no hi ha IA: es fa servir l'acta automàtica")
+    },
     async removeVote(monthId, memberId) {
       requireAdmin()
       if (load().months.find((m) => m.id === monthId)?.status === 'closed') throw new Error('Aquest mes ja està tancat')

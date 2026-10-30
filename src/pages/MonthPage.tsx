@@ -31,7 +31,7 @@ export default function MonthPage() {
           <CopyButton text={aiPrompt(db, id)}>🤖 Copiar prompt per a IA</CopyButton>
         </div>
         <p className="muted small">
-          "Prompt per a IA": enganxa'l a ChatGPT o Claude (gratis) i et farà una acta encara més elaborada.
+          "Prompt per a IA": enganxa'l a ChatGPT o Claude i et farà una altra versió de l'acta.
         </p>
       </Section>
 

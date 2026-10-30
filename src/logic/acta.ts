@@ -1,6 +1,6 @@
 import type { DB } from '../types'
 import { deMonth, monthLabel } from './months'
-import { awardsOf, displayName, fmtTotals, memberById, monthTotals, winnersOf } from './stats'
+import { awardsOf, displayName, fmtTotals, memberById, monthTotals, unlockedCards, winnersOf } from './stats'
 
 // Random amb llavor: la mateixa acta surt igual cada cop que es genera
 function rng(seed: string) {
@@ -109,24 +109,73 @@ export function generateActa(db: DB, monthId: string) {
   return L.join('\n')
 }
 
-/** Prompt per enganxar a ChatGPT/Claude i que faci una acta més elaborada */
-export function aiPrompt(db: DB, monthId: string) {
+/** Estils per a l'acta amb IA: se'n tria un a l'atzar perquè cada mes surti diferent */
+const AI_STYLES = [
+  "crònica esportiva èpica i exagerada, com un narrador de futbol desfasat",
+  "sentència judicial solemne del Tribunal Suprem de Tibu, amb fets provats i condemnes absurdes",
+  "documental de natura, com si el grup fossin animals salvatges observats al seu hàbitat (el gimnàs)",
+  "notícia d'última hora de telenotícies, amb connexions en directe i testimonis inventats que no aporten fets nous",
+  "retransmissió d'un combat de boxa amb presentació a l'americana",
+  "llegenda medieval narrada per un trobador, amb herois, traïdors i profecies",
+  "informe confidencial dels serveis secrets, amb parts censurades",
+  "gala dels Oscars amb discurs d'agraïment i catifa vermella",
+  "parte meteorològic on cada membre és un fenomen del temps",
+  "previa i post-partit d'un programa de tertúlia esportiva on tothom crida",
+]
+
+/** Prompt per a la IA (automàtica amb Gemini o per enganxar a ChatGPT/Claude) */
+export function aiPrompt(db: DB, monthId: string, style = AI_STYLES[Math.floor(Math.random() * AI_STYLES.length)]) {
   const name = (id: string) => displayName(memberById(db, id))
   const { mvp, anti } = winnersOf(db, monthId)
   const ballots = db.ballots.filter((b) => b.month_id === monthId && !b.annulled)
   const exps = db.expedients.filter((e) => e.month_id === monthId)
+  const active = db.members.filter((m) => m.active)
+  const voterIds = new Set(db.voters.filter((v) => v.month_id === monthId).map((v) => v.member_id))
+  const reacts = (id: string) => (db.expedientReactions ?? []).filter((r) => r.expedient_id === id).map((r) => r.emoji)
+  const rows = active.map((m) => ({ m, t: monthTotals(db, m.id, monthId) })).sort((a, b) => b.t.gym + b.t.fora - (a.t.gym + a.t.fora))
+  const cards = unlockedCards(db).filter((u) => u.sortKey.startsWith(monthId))
+  const winnerLine = (list: typeof mvp, type: 'mvp' | 'anti') =>
+    list.map((a) => `${name(a.member_id)} (${a.votes != null ? `${a.votes} vots; ` : ''}${awardsOf(db, a.member_id)[type].length}a vegada en total)`).join(' i ') || 'desert'
+
   return [
-    `Ets el cronista oficial d'un grup d'amics del gimnàs anomenat "Los Hombres de Tibu". Cada mes votem un MVP i un anti-MVP. Escriu, en català col·loquial i en to èpic, sarcàstic i molt divertit (estil crònica esportiva exagerada), l'acta proclamant els guanyadors ${deMonth(monthId)}. Format per a WhatsApp (negretes amb *asteriscs*, emojis), màxim 250 paraules. No t'inventis fets: fes servir només aquests.`,
+    `Ets el cronista oficial de "Los Hombres de Tibu", un grup de ${active.length} amics del gimnàs. Cada mes voten un MVP (el millor) i un anti-MVP (el pitjor), amb un motiu cadascun, i tenen un dossier on s'obren expedients (mèrits i faltes) als companys.`,
+    `Escriu l'acta oficial ${deMonth(monthId)} en català col·loquial de Catalunya, molt divertida, original i amb mala llet sana (és tot comèdia entre amics).`,
+    `Aquest mes fes-la en format de: ${style}.`,
     '',
-    `MVP: ${mvp.map((a) => `${name(a.member_id)} (${a.votes ?? '?'} vots)`).join(', ') || 'desert'}`,
-    `Anti-MVP: ${anti.map((a) => `${name(a.member_id)} (${a.votes ?? '?'} vots)`).join(', ') || 'desert'}`,
+    'Instruccions:',
+    "- Interpreta i comenta els motius i els expedients amb gràcia: relaciona'ls entre ells, troba-hi el punt còmic, fes servir ironia i exageració. No els copiïs tots literalment: cita'n només algun de molt bo.",
+    "- No t'inventis fets nous sobre ningú: només pots exagerar o interpretar el que hi ha aquí sota.",
+    "- Deixa ben clar qui és el MVP i qui és l'anti-MVP (si hi ha empat, tots els que surten).",
+    '- Format per a WhatsApp: títol amb emoji, negretes amb *un asterisc* a cada costat, paràgrafs curts, emojis amb moderació. Res de markdown amb # ni **.',
+    '- Entre 200 i 350 paraules. Acaba amb una signatura del Consell Suprem dels Hombres de Tibu 🦈.',
+    "- Respon només amb el text de l'acta.",
     '',
-    'Motius dels vots:',
-    ...ballots.map((b) => `- MVP ${name(b.mvp_id)}: ${b.mvp_reason} | Anti ${name(b.anti_id)}: ${b.anti_reason}`),
+    `MVP: ${winnerLine(mvp, 'mvp')}`,
+    `Anti-MVP: ${winnerLine(anti, 'anti')}`,
+    // Els mesos antics no tenen registre de votants
+    voterIds.size
+      ? `Han votat ${voterIds.size} de ${active.length}.${active.some((m) => !voterIds.has(m.id)) ? ` No han votat: ${active.filter((m) => !voterIds.has(m.id)).map(displayName).join(', ')}.` : ''}`
+      : '',
     '',
-    'Expedients del mes:',
-    ...exps.map((e) => `- [${e.kind === 'merit' ? 'MÈRIT' : 'FALTA'}] ${name(e.target_id)}: ${e.text}`),
-  ].join('\n')
+    'Motius de les paperetes (anònimes):',
+    ...(ballots.length ? ballots.map((b) => `- MVP per a ${name(b.mvp_id)}: "${b.mvp_reason}" | Anti per a ${name(b.anti_id)}: "${b.anti_reason}"`) : ['- (cap)']),
+    '',
+    'Expedients del dossier aquest mes:',
+    ...(exps.length
+      ? exps.map((e) => {
+          const r = reacts(e.id)
+          const cs = db.comments.filter((c) => c.expedient_id === e.id).map((c) => `"${c.text}"`)
+          return `- [${e.kind === 'merit' ? 'MÈRIT' : 'FALTA'}] ${name(e.target_id)}: "${e.text}"${r.length ? ` (reaccions: ${r.join('')})` : ''}${cs.length ? ` · comentaris: ${cs.slice(0, 3).join(', ')}` : ''}`
+        })
+      : ['- (cap)']),
+    '',
+    rows.some((x) => x.t.gym + x.t.fora > 0)
+      ? `Entrenos del mes (gym i, entre parèntesis, fora): ${rows.map((x) => `${displayName(x.m)} ${fmtTotals(x.t)}`).join(', ')}.`
+      : '',
+    cards.length ? `Cartes especials guanyades aquest mes: ${cards.map((u) => `${u.def.name} (${name(u.memberId)})`).join(', ')}.` : '',
+  ]
+    .filter((l, k, a) => l !== '' || a[k - 1] !== '')
+    .join('\n')
 }
 
 /** Recompte en el format de sempre del WhatsApp */

@@ -139,6 +139,15 @@ export function createSupabaseApi(url: string, key: string): Api {
     async closeMonth(id) {
       check(await sb.rpc('close_month', { p_month: id }))
     },
+    async aiActa(prompt) {
+      const { data, error } = await sb.functions.invoke('acta-ia', { body: { prompt } })
+      if (error) {
+        // L'error de la funció ve dins la resposta
+        const body = await (error as { context?: Response }).context?.json?.().catch(() => null)
+        throw new Error(body?.error ?? "No s'ha pogut generar l'acta amb IA (la funció acta-ia està creada?)")
+      }
+      return (data as { text: string }).text
+    },
     async removeVote(monthId, memberId) {
       const { error } = await sb.rpc('admin_remove_vote', { p_month: monthId, p_member: memberId })
       // Sense la migració del vot secret només es pot esborrar el votant (la papereta es queda)

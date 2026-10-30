@@ -24,6 +24,8 @@ export interface Api {
   // Admin
   upsertMonth(m: Partial<Month> & { id: string }): Promise<void>
   closeMonth(id: string): Promise<void>
+  /** Escriu l'acta amb IA (Gemini, per l'Edge Function `acta-ia`) a partir del prompt */
+  aiActa(prompt: string): Promise<string>
   /** Esborra el vot d'algú (votant i papereta) perquè torni a votar */
   removeVote(monthId: string, memberId: string): Promise<void>
   /** Per a cada votant del mes: té la papereta guardada? (sense dir quina) */

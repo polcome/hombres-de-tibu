@@ -4,7 +4,7 @@ import { useAction, useStore } from '../store'
 import type { AchievementKind, AwardType, Member, Month, TrainingKind } from '../types'
 import { activeMonth, closedMonths, currentMonthKey, monthLabel, shiftMonth, todayISO } from '../logic/months'
 import { ACHIEVEMENT_FOR_BONUS, CARD_DEFS, displayName, memberById } from '../logic/stats'
-import { generateActa } from '../logic/acta'
+import { aiPrompt, generateActa } from '../logic/acta'
 import { Avatar } from '../components/Avatar'
 import { CopyButton, ErrorMsg, MemberSelect, Section } from '../components/ui'
 import { PhotoControls } from '../components/PhotoControls'
@@ -30,6 +30,13 @@ export default function Admin() {
       <HistoryAdmin />
     </div>
   )
+}
+
+/** Genera l'acta amb IA i la desa (amb les dades acabades de carregar, que inclouen les paperetes del mes tancat) */
+async function saveAiActa(monthId: string) {
+  const fresh = await api.loadAll()
+  const text = await api.aiActa(aiPrompt(fresh, monthId))
+  await api.upsertMonth({ id: monthId, acta: text })
 }
 
 function MonthAdmin() {
@@ -87,7 +94,10 @@ function MonthAdmin() {
                 onClick={async () => {
                   if (!confirm(`Tancar la votació amb ${voters.length} vots i publicar resultats?`)) return
                   const ok = await run(() => api.closeMonth(month.id))
-                  if (ok) await run(() => api.upsertMonth({ id: shiftMonth(month.id, 1), status: 'active' }))
+                  if (!ok) return
+                  await run(() => api.upsertMonth({ id: shiftMonth(month.id, 1), status: 'active' }))
+                  // L'acta amb IA: si falla, queda l'automàtica i es pot tornar a provar des d'"Editar acta"
+                  await run(() => saveAiActa(month.id))
                 }}
               >
                 🏁 Tancar i publicar
@@ -96,7 +106,7 @@ function MonthAdmin() {
                 Tornar a "en joc"
               </button>
             </div>
-            <p className="muted small">En tancar, es calculen els guanyadors i s'obre el mes següent. Empat al MVP: guanya qui tingui menys vots d'anti aquell mes. Empat a l'anti: se l'emporta qui tingui menys vots de MVP. Si continuen empatats, guanyen tots.</p>
+            <p className="muted small">En tancar, es calculen els guanyadors, la IA escriu l'acta i s'obre el mes següent. Empat al MVP: guanya qui tingui menys vots d'anti aquell mes. Empat a l'anti: se l'emporta qui tingui menys vots de MVP. Si continuen empatats, guanyen tots.</p>
           </>
         )}
         <ErrorMsg err={err} />
@@ -137,7 +147,7 @@ function MonthAdmin() {
 
 function ActaAdmin() {
   const { db } = useStore()
-  const { run, busy } = useAction()
+  const { run, busy, err } = useAction()
   const months = closedMonths(db).reverse()
   const [id, setId] = useState(months[0]?.id ?? '')
   const month = db.months.find((m) => m.id === id)
@@ -158,11 +168,17 @@ function ActaAdmin() {
         </select>
       }
     >
-      <p className="muted small">L'acta es genera sola. La pots retocar o enganxar-hi la que et faci una IA.</p>
+      <p className="muted small">
+        En tancar el mes, la IA (Gemini) escriu l'acta sola, cada mes amb un estil diferent. Si no et convenç, torna-la a generar, retoca-la o torna a
+        l'automàtica (plantilles, sense IA).
+      </p>
       <textarea rows={12} value={text} onChange={(e) => setText(e.target.value)} className="mono" />
       <div className="row wrap">
         <button className="btn btn-primary" disabled={busy} onClick={() => run(() => api.upsertMonth({ id, acta: text }))}>
           Desar acta
+        </button>
+        <button className="btn" disabled={busy} onClick={() => run(() => saveAiActa(id))}>
+          {busy ? '✨ Escrivint…' : '✨ Generar amb IA'}
         </button>
         <button className="btn" disabled={busy} onClick={() => run(() => api.upsertMonth({ id, acta: null }))}>
           Tornar a l'automàtica
@@ -171,6 +187,7 @@ function ActaAdmin() {
           Recalcular guanyadors
         </button>
       </div>
+      <ErrorMsg err={err} />
     </Section>
   )
 }

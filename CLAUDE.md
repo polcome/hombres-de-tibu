@@ -18,7 +18,7 @@ App web del grup d'amics del gimnàs "Los Hombres de Tibu" (13 membres). Serveix
 - `src/api/types.ts`: interfície `Api`. N'hi ha dues implementacions, `supabase.ts` i `demo.ts`, que **s'han de mantenir en paral·lel**.
 - `src/store.tsx`: carrega tota la BD d'un cop (`loadAll`), exposa `useStore()` i `useAction()`, i després de cada acció recarrega les dades.
 - `src/logic/stats.ts`: totals, valoració FIFA (`rating`), cartes especials (`CARD_DEFS`, `unlockedCards`) i `photoFor`. Tot es **calcula al client**.
-- `src/logic/acta.ts`: genera l'acta del mes amb plantilles (sense IA) i el "prompt per a IA" per enganxar a ChatGPT o Claude.
+- `src/logic/acta.ts`: genera l'acta del mes amb plantilles (sense IA, `generateActa`) i el prompt per a la IA (`aiPrompt`, amb un estil a l'atzar de `AI_STYLES` perquè cada mes surti diferent).
 - `src/logic/months.ts`: utilitats de mesos (`'YYYY-MM'`).
 - `src/pages/*`: Home, Dossier, Vote, Trainings, Cards, Palmares, MonthPage, Player, Admin, Login.
 - `src/components/*`: FifaCard + CardArt (plantilles SVG) + fifa.css, CardZoom (pop-up de cartes, amb controls de foto), Album (àlbum de cromos), PhotoEditor (encuadrar), PhotoControls, CameraCapture (càmera dins l'app amb getUserMedia), TrainingItem, ui.
@@ -29,6 +29,7 @@ App web del grup d'amics del gimnàs "Los Hombres de Tibu" (13 membres). Serveix
   - **Ningú veu les paperetes fins que es tanca el mes**, ni l'admin (RLS de `ballots`: només mesos tancats). L'admin només veu qui ha votat i si té la papereta guardada (✅, RPC `vote_check`).
   - L'admin pot esborrar el vot d'algú (RPC `admin_remove_vote`): s'esborren el votant i la seva papereta, i pot tornar a votar. Per saber quina papereta és, `cast_vote` guarda l'enllaç a `ballot_links`, una taula **oculta** sense cap política de lectura (només hi accedeixen les RPC). Es conserva per sempre perquè l'usuari ho va demanar: només es pot consultar des del SQL Editor de Supabase (hi ha la consulta comentada al final de `migracio-vot-secret.sql`). L'app no ho ha de mostrar mai.
   - Ja no es poden anul·lar paperetes (la columna `annulled` es manté per a dades antigues).
+- **Acta amb IA:** en tancar el mes, el client crida l'Edge Function `acta-ia` (`supabase/functions/acta-ia/index.ts`), que comprova que és admin i passa el prompt a **Gemini** (pla gratuït de Google; secret `GEMINI_API_KEY` a Supabase, model opcional `GEMINI_MODEL`, per defecte `gemini-flash-latest`). L'acta es desa a `months.acta`. Si falla, es mostra l'automàtica de plantilles. Des d'Admin → Editar acta es pot tornar a generar. En mode demo no hi ha IA.
 - **Tancar el mes:** ho fa la RPC `close_month`. Empat al MVP: guanya qui tingui menys vots d'anti aquell mes. Empat a l'anti: se l'emporta qui tingui menys vots de MVP. Si continuen empatats, guanyen tots. Després s'obre el mes següent.
 - **Comptes:** login amb usuari + contrasenya. L'email és fictici (`<slug>@hombresdetibu.app`) i a Supabase la confirmació d'email està desactivada.
   - L'alta es fa amb un codi d'activació (`member_secrets`) que valida el trigger `handle_new_user`.
