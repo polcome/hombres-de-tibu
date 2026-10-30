@@ -70,7 +70,7 @@ App web del grup d'amics del gimnàs "Los Hombres de Tibu" (13 membres). Serveix
 6. `supabase/migracio-exits-esportius.sql`: taula `achievements`.
 7. `supabase/migracio-limits-dossier.sql`: límit de 2 expedients/dia i 1 reacció per usuari.
 8. `supabase/migracio-foto-propia.sql`: cadascú es pot posar la seva foto base.
-9. `supabase/migracio-vot-secret.sql`: paperetes ocultes fins al tancament, esborrar vot + papereta (⚠️ pendent de confirmar que l'usuari l'ha executat).
+9. `supabase/migracio-vot-secret.sql`: paperetes ocultes fins al tancament, esborrar vot + papereta.
 
 Quan un canvi necessiti BD:
 - Crea una **migració nova** `supabase/migracio-*.sql` que sigui idempotent (`if not exists`, `drop policy if exists`).
