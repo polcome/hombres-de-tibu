@@ -4,6 +4,7 @@ import { monthLabel } from '../logic/months'
 import { displayName, memberById } from '../logic/stats'
 import { aiPrompt, generateActa } from '../logic/acta'
 import { appUrl } from './Home'
+import { ActaView } from '../components/ActaView'
 import { CopyButton, Section, WhatsAppButton } from '../components/ui'
 
 export default function MonthPage() {
@@ -25,9 +26,9 @@ export default function MonthPage() {
   return (
     <div className="stack">
       <Section title={`📜 Acta · ${monthLabel(id)}`}>
-        <pre className="acta">{acta}</pre>
+        <ActaView text={acta} label={monthLabel(id)} />
         <div className="row wrap">
-          <CopyButton text={acta}>📋 Copiar acta</CopyButton>
+          <CopyButton text={acta}>📋 Copiar per WhatsApp</CopyButton>
           <WhatsAppButton text={`${acta}\n\n👉 ${appUrl()}#/mes/${id}`}>Enviar al grup</WhatsAppButton>
           <CopyButton text={aiPrompt(db, id)}>🤖 Copiar prompt per a IA</CopyButton>
         </div>
