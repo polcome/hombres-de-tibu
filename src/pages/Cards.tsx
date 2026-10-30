@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
 import { useStore } from '../store'
 import {
   ACHIEVEMENT_FOR_BONUS,
@@ -49,12 +48,18 @@ export default function Cards() {
       </div>
 
       {tab === 'squad' && (
-        <div className="cards-grid">
-          {squad.map(({ m, r, f }) => (
-            <Link key={m.id} to={`/jugador/${m.slug}`}>
-              <FifaCard member={m} rating={r} variant={f.variant} boost={f.boost} focus={f.focus} label={f.label} title={f.title} size="sm" photo={photoFor(db, m, f.key)} />
-            </Link>
-          ))}
+        <div className="stack">
+          <p className="muted small center">Toca una carta per veure-la en gran.</p>
+          <div className="cards-row mini">
+            {squad.map(({ m, r, f }) => {
+              const card = { member: m, rating: r, variant: f.variant, boost: f.boost, focus: f.focus, label: f.label, title: f.title, photo: photoFor(db, m, f.key) }
+              return (
+                <CardZoom key={m.id} card={card}>
+                  <FifaCard {...card} size="xs" />
+                </CardZoom>
+              )
+            })}
+          </div>
         </div>
       )}
 

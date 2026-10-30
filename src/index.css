@@ -812,12 +812,6 @@ textarea:focus {
   width: max-content;
   max-width: 90%;
 }
-.cards-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 14px;
-  justify-items: center;
-}
 .locked-card {
   width: 150px;
   height: 210px;
