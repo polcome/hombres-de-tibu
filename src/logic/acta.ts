@@ -95,7 +95,8 @@ export function generateActa(db: DB, monthId: string) {
     L.push('')
   }
 
-  if (ballots.length && morosos.length) {
+  // Els mesos sense registre de votants (antics o de prova) no tenen morosos
+  if (voterIds.size && morosos.length) {
     L.push(`🐌 *Morosos que no han votat:* ${morosos.map(displayName).join(', ')}. Ho tindrem en compte.`)
     L.push('')
   }

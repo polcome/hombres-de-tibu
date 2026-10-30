@@ -2,21 +2,25 @@
 // La clau de Gemini és un secret de Supabase (GEMINI_API_KEY) i només la poden fer servir els admins.
 // Es pot enganxar tal qual a Supabase → Edge Functions → Deploy a new function → Via Editor.
 
-const CORS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+// No cal "Verify JWT": la funció ja comprova ella mateixa que qui crida és admin.
 
-const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { ...CORS, 'Content-Type': 'application/json' } })
+const HEADERS = 'authorization, x-client-info, apikey, content-type, x-retry-count, traceparent, tracestate, baggage'
 
 Deno.serve(async (req) => {
+  // CORS: accepta les capçaleres que demani el navegador (el SDK de Supabase n'hi va afegint de noves)
+  const CORS = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': req.headers.get('Access-Control-Request-Headers') ?? HEADERS,
+  }
+  const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { ...CORS, 'Content-Type': 'application/json' } })
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS })
   try {
     // Només admins: ho pregunta a la BD amb la sessió de qui fa la crida
     const auth = req.headers.get('Authorization') ?? ''
     const admin = await fetch(`${Deno.env.get('SUPABASE_URL')}/rest/v1/rpc/is_admin`, {
       method: 'POST',
-      headers: { apikey: Deno.env.get('SUPABASE_ANON_KEY')!, Authorization: auth, 'Content-Type': 'application/json' },
+      headers: { apikey: req.headers.get('apikey') ?? Deno.env.get('SUPABASE_ANON_KEY') ?? '', Authorization: auth, 'Content-Type': 'application/json' },
       body: '{}',
     }).then((r) => r.json())
     if (admin !== true) return json({ error: 'Només admins' }, 403)
