@@ -30,15 +30,25 @@ Deno.serve(async (req) => {
 
     const key = Deno.env.get('GEMINI_API_KEY')
     if (!key) return json({ error: 'Falta el secret GEMINI_API_KEY' }, 500)
-    const model = Deno.env.get('GEMINI_MODEL') ?? 'gemini-flash-latest'
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
-      method: 'POST',
-      headers: { 'x-goog-api-key': key, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 1.1 } }),
-    })
-    const data = await res.json()
-    const text = data?.candidates?.[0]?.content?.parts?.map((p: { text?: string }) => p.text ?? '').join('').trim()
-    if (!res.ok || !text) return json({ error: data?.error?.message ?? 'Gemini no ha retornat cap text' }, 502)
+    // Si un model està saturat (503) o sense quota (429), es prova amb el següent i, al final, es torna a provar
+    const models = [Deno.env.get('GEMINI_MODEL') ?? 'gemini-flash-latest', 'gemini-2.5-flash', 'gemini-flash-lite-latest']
+    let text = ''
+    let lastError = 'Gemini no ha retornat cap text'
+    for (const model of [...models, ...models]) {
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+        method: 'POST',
+        headers: { 'x-goog-api-key': key, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 1.1 } }),
+      })
+      const data = await res.json().catch(() => null)
+      text = data?.candidates?.[0]?.content?.parts?.map((p: { text?: string }) => p.text ?? '').join('').trim() ?? ''
+      if (res.ok && text) break
+      lastError = data?.error?.message ?? lastError
+      // Errors que no s'arreglen canviant de model (clau dolenta, prompt bloquejat…): no cal insistir
+      if (![404, 429, 500, 503].includes(res.status)) break
+      await new Promise((r) => setTimeout(r, 1500))
+    }
+    if (!text) return json({ error: lastError }, 502)
     return json({ text })
   } catch (e) {
     return json({ error: String(e) }, 500)
