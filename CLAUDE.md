@@ -67,7 +67,7 @@ App web del grup d'amics del gimnàs "Los Hombres de Tibu" (13 membres). Serveix
 5. `supabase/migracio-proves-entrenos.sql`: `trainings.photo_url`, `training_votes` i el bucket `proofs`.
 6. `supabase/migracio-exits-esportius.sql`: taula `achievements`.
 7. `supabase/migracio-limits-dossier.sql`: límit de 2 expedients/dia i 1 reacció per usuari (⚠️ pendent de confirmar que l'usuari l'ha executat).
-8. `supabase/migracio-foto-propia.sql`: cadascú es pot posar la seva foto base (⚠️ pendent de confirmar que l'usuari l'ha executat).
+8. `supabase/migracio-foto-propia.sql`: cadascú es pot posar la seva foto base.
 
 Quan un canvi necessiti BD:
 - Crea una **migració nova** `supabase/migracio-*.sql` que sigui idempotent (`if not exists`, `drop policy if exists`).
