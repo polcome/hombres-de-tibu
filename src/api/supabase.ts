@@ -142,9 +142,18 @@ export function createSupabaseApi(url: string, key: string): Api {
     async aiActa(prompt) {
       const { data, error } = await sb.functions.invoke('acta-ia', { body: { prompt } })
       if (error) {
-        // L'error de la funció ve dins la resposta
-        const body = await (error as { context?: Response }).context?.json?.().catch(() => null)
-        throw new Error(body?.error ?? "No s'ha pogut generar l'acta amb IA (la funció acta-ia està creada?)")
+        // L'error de la funció (o de Supabase) ve dins la resposta: el mostrem tal qual per poder-lo diagnosticar
+        const res = (error as { context?: unknown }).context
+        if (!(res instanceof Response)) throw new Error(`No s'ha pogut contactar amb la funció acta-ia: ${error.message}`)
+        const raw = await res.text().catch(() => '')
+        let msg = raw
+        try {
+          const body = JSON.parse(raw)
+          msg = body.error ?? body.message ?? body.msg ?? raw
+        } catch {
+          // no és JSON
+        }
+        throw new Error(`Error ${res.status} de la funció acta-ia: ${msg || error.message}`)
       }
       return (data as { text: string }).text
     },
