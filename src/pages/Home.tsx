@@ -102,7 +102,7 @@ export default function Home() {
 
       {last && (
         <Section title={`Guanyadors ${monthLabel(last.id)}`} right={<Link to={`/mes/${last.id}`}>Veure acta →</Link>}>
-          <div className="cards-row">
+          <div className="cards-row mini">
             {(['mvp', 'anti'] as const).flatMap((type) =>
               winnersOf(db, last.id)[type].map((a) => {
                 const m = memberById(db, a.member_id)!
@@ -110,22 +110,23 @@ export default function Home() {
                 if (u)
                   return (
                     <CardZoom key={a.id} card={unlockProps(db, u)} def={u.def}>
-                      <FifaCard {...unlockProps(db, u)} />
+                      <FifaCard {...unlockProps(db, u)} size="xs" />
                     </CardZoom>
                   )
+                const card = {
+                  member: m,
+                  rating: rating(db, m.id, last.id),
+                  variant: type === 'mvp' ? ('totm' as const) : ('anti' as const),
+                  boost: 0,
+                  label: monthLabel(last.id),
+                  title: type === 'mvp' ? 'Tibu of the Month' : 'Anti-MVP del mes',
+                  emoji: type === 'mvp' ? '🏆' : '🤡',
+                  photo: photoFor(db, m, `${type === 'mvp' ? 'totm' : 'antim'}:${last.id}`),
+                }
                 return (
-                  <Link key={a.id} to={`/jugador/${m.slug}`}>
-                    <FifaCard
-                      member={m}
-                      rating={rating(db, m.id, last.id)}
-                      variant={type === 'mvp' ? 'totm' : 'anti'}
-                      boost={0}
-                      label={monthLabel(last.id)}
-                      title={type === 'mvp' ? 'Tibu of the Month' : 'Anti-MVP del mes'}
-                      emoji={type === 'mvp' ? '🏆' : '🤡'}
-                      photo={photoFor(db, m, `${type === 'mvp' ? 'totm' : 'antim'}:${last.id}`)}
-                    />
-                  </Link>
+                  <CardZoom key={a.id} card={card}>
+                    <FifaCard {...card} size="xs" />
+                  </CardZoom>
                 )
               }),
             )}

@@ -5,7 +5,6 @@ import {
   CARD_DEFS,
   cardKey,
   displayName,
-  featuredCard,
   photoFor,
   rating,
   unlockedCards,
@@ -30,14 +29,14 @@ export default function Cards() {
   const unlocks = unlockedCards(db)
   const squad = db.members
     .filter((m) => m.active)
-    .map((m) => ({ m, r: rating(db, m.id), f: featuredCard(db, m, unlocks) }))
-    .sort((a, b) => b.r.overall + b.f.boost - (a.r.overall + a.f.boost))
+    .map((m) => ({ m, r: rating(db, m.id) }))
+    .sort((a, b) => b.r.overall - a.r.overall)
 
   return (
     <div className="stack">
       <div className="tabs">
         <button className={tab === 'squad' ? 'on' : ''} onClick={() => setTab('squad')}>
-          Plantilla
+          Carta base
         </button>
         <button className={tab === 'collection' ? 'on' : ''} onClick={() => setTab('collection')}>
           Col·lecció ({new Set(unlocks.map((u) => u.def.id)).size}/{CARD_DEFS.length})
@@ -49,10 +48,10 @@ export default function Cards() {
 
       {tab === 'squad' && (
         <div className="stack">
-          <p className="muted small center">Toca una carta per veure-la en gran.</p>
+          <p className="muted small center">La carta base de cadascú amb els valors d'avui. Toca-la per veure-la en gran.</p>
           <div className="cards-row mini">
-            {squad.map(({ m, r, f }) => {
-              const card = { member: m, rating: r, variant: f.variant, boost: f.boost, focus: f.focus, label: f.label, title: f.title, photo: photoFor(db, m, f.key) }
+            {squad.map(({ m, r }) => {
+              const card = { member: m, rating: r, variant: r.tier, photo: photoFor(db, m) }
               return (
                 <CardZoom key={m.id} card={card}>
                   <FifaCard {...card} size="xs" />
@@ -296,7 +295,7 @@ export default function Cards() {
             </ul>
           </Section>
 
-          <p className="muted small center">Líder actual: {squad[0] ? `${displayName(squad[0].m)} (${squad[0].r.overall + squad[0].f.boost})` : '-'}</p>
+          <p className="muted small center">Líder actual: {squad[0] ? `${displayName(squad[0].m)} (${squad[0].r.overall})` : '-'}</p>
         </div>
       )}
     </div>
