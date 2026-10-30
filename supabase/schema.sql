@@ -32,7 +32,8 @@ create table if not exists months (
   id       text primary key check (id ~ '^\d{4}-\d{2}$'),  -- 'YYYY-MM'
   status   text not null default 'active' check (status in ('active','voting','closed')),
   deadline timestamptz,
-  acta     text
+  acta     text,
+  acta_style text  -- estil de l'acta amb IA (per no repetir-lo)
 );
 
 create table if not exists trainings (
@@ -543,5 +544,8 @@ begin
 
   update months set status = 'closed' where id = p_month;
 end $$;
+
+-- Estil de l'acta amb IA (instal·lacions antigues)
+alter table months add column if not exists acta_style text;
 
 notify pgrst, 'reload schema';

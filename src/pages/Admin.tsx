@@ -4,7 +4,7 @@ import { useAction, useStore } from '../store'
 import type { AchievementKind, AwardType, Member, Month, TrainingKind } from '../types'
 import { activeMonth, closedMonths, currentMonthKey, monthLabel, shiftMonth, todayISO } from '../logic/months'
 import { ACHIEVEMENT_FOR_BONUS, CARD_DEFS, displayName, memberById } from '../logic/stats'
-import { aiPrompt, generateActa, styleFor } from '../logic/acta'
+import { aiPrompt, generateActa, pickStyle } from '../logic/acta'
 import { Avatar } from '../components/Avatar'
 import { CopyButton, ErrorMsg, MemberSelect, Section, WhatsAppButton } from '../components/ui'
 import { PhotoControls } from '../components/PhotoControls'
@@ -34,12 +34,13 @@ export default function Admin() {
 
 /**
  * Genera l'acta amb IA i la desa (amb les dades acabades de carregar, que inclouen les paperetes del mes tancat).
- * En tancar el mes l'estil va rotant (`styleFor`); en tornar-la a generar, a l'atzar.
+ * L'estil és a l'atzar però sense repetir els dels últims mesos, i es desa per tenir-ho en compte la propera vegada.
  */
-async function saveAiActa(monthId: string, rotate = false) {
+async function saveAiActa(monthId: string) {
   const fresh = await api.loadAll()
-  const text = await api.aiActa(rotate ? aiPrompt(fresh, monthId, styleFor(monthId)) : aiPrompt(fresh, monthId))
-  await api.upsertMonth({ id: monthId, acta: text })
+  const style = pickStyle(fresh, monthId)
+  const text = await api.aiActa(aiPrompt(fresh, monthId, style))
+  await api.upsertMonth({ id: monthId, acta: text, acta_style: style })
 }
 
 function MonthAdmin() {
@@ -100,7 +101,7 @@ function MonthAdmin() {
                   if (!ok) return
                   await run(() => api.upsertMonth({ id: shiftMonth(month.id, 1), status: 'active' }))
                   // L'acta amb IA: si falla, queda l'automàtica i es pot tornar a provar des d'"Editar acta"
-                  await run(() => saveAiActa(month.id, true))
+                  await run(() => saveAiActa(month.id))
                 }}
               >
                 🏁 Tancar i publicar

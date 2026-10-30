@@ -110,7 +110,7 @@ export function generateActa(db: DB, monthId: string) {
   return L.join('\n')
 }
 
-/** Estils per a l'acta amb IA. L'automàtica (en tancar el mes) va rotant: no repeteix estil fins al cap de 2 anys */
+/** Estils per a l'acta amb IA: se'n tria un a l'atzar, sense repetir els dels últims 23 mesos (`pickStyle`) */
 const AI_STYLES = [
   "crònica esportiva èpica i exagerada, com un narrador de futbol desfasat",
   "sentència judicial solemne del Tribunal Suprem de Tibu, amb fets provats i condemnes absurdes",
@@ -138,10 +138,16 @@ const AI_STYLES = [
   "obituari i esquela solemne de la dignitat de l'anti-MVP, amb honors al MVP",
 ]
 
-/** Estil fix per a cada mes, rotant per la llista */
-export function styleFor(monthId: string) {
-  const [y, m] = monthId.split('-').map(Number)
-  return AI_STYLES[(y * 12 + m) % AI_STYLES.length]
+/** Estil a l'atzar que no s'hagi fet servir a cap altra acta dels últims 23 mesos */
+export function pickStyle(db: DB, monthId: string) {
+  const recent = db.months
+    .filter((m) => m.id !== monthId && m.acta_style)
+    .sort((a, b) => b.id.localeCompare(a.id))
+    .slice(0, AI_STYLES.length - 1)
+    .map((m) => m.acta_style)
+  const free = AI_STYLES.filter((x) => !recent.includes(x))
+  const pool = free.length ? free : AI_STYLES
+  return pool[Math.floor(Math.random() * pool.length)]
 }
 
 /** Prompt per a la IA (automàtica amb Gemini o per enganxar a ChatGPT/Claude) */

@@ -134,7 +134,12 @@ export function createSupabaseApi(url: string, key: string): Api {
     },
 
     async upsertMonth(m) {
-      check(await sb.from('months').upsert(m))
+      const r = await sb.from('months').upsert(m)
+      // Si la migració de l'estil de l'acta encara no s'ha executat, es desa sense
+      if (r.error && 'acta_style' in m && /acta_style/.test(r.error.message)) {
+        const { acta_style: _, ...rest } = m
+        check(await sb.from('months').upsert(rest))
+      } else check(r)
     },
     async closeMonth(id) {
       check(await sb.rpc('close_month', { p_month: id }))

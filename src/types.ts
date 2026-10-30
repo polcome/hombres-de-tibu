@@ -18,6 +18,8 @@ export interface Month {
   status: MonthStatus
   deadline: string | null
   acta: string | null
+  /** Estil que ha fet servir la IA per a l'acta (per no repetir-lo) */
+  acta_style?: string | null
 }
 
 export interface Training {
