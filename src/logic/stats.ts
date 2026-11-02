@@ -269,8 +269,8 @@ export function boostedStats(r: Rating, boost: number, focus: StatKey[] = []): R
 
 /** Llindars de les versions PLUS i ULTRA (el que compta depèn de la carta) */
 export const LEVEL_RULES: Record<string, { plus: [number, string, number]; ultra: [number, string, number] }> = {
-  icona: { plus: [6, 'Acumula 6 MVPs.', 9], ultra: [10, 'Acumula 10 MVPs.', 13] },
-  nongrata: { plus: [6, 'Acumula 6 antis.', -9], ultra: [10, 'Acumula 10 antis.', -13] },
+  icona: { plus: [4, 'Acumula 4 MVPs.', 9], ultra: [5, 'Acumula 5 MVPs.', 13] },
+  nongrata: { plus: [4, 'Acumula 4 antis.', -9], ultra: [5, 'Acumula 5 antis.', -13] },
   hattrick: { plus: [4, '4 MVPs en 4 mesos seguits.', 13], ultra: [5, '5 MVPs en 5 mesos seguits.', 16] },
   doblecara: { plus: [2, '2 MVPs i 2 antis el mateix any.', 0], ultra: [3, '3 MVPs i 3 antis el mateix any.', 0] },
   rata: { plus: [225, '225 entrenos al gym en un any.', 7], ultra: [250, '250 entrenos al gym en un any.', 10] },
@@ -280,6 +280,9 @@ export const LEVEL_RULES: Record<string, { plus: [number, string, number]; ultra
   fantasma: { plus: [2, '2 mesos seguits sense trepitjar el gym.', -6], ultra: [3, '3 mesos seguits sense trepitjar el gym.', -9] },
   reifantasma: { plus: [2, '2 mesos seguits sense cap entreno.', -11], ultra: [3, '3 mesos seguits sense cap entreno.', -15] },
 }
+
+/** Noms propis d'algunes versions PLUS/ULTRA (la resta: "<nom> PLUS/ULTRA") */
+export const LEVEL_NAMES: Record<string, Partial<Record<CardLevel, string>>> = { hattrick: { plus: 'Pòquer', ultra: 'Repòquer' } }
 
 const BASE_RULE: Record<string, number> = { icona: 3, nongrata: 3, hattrick: 3, doblecara: 1, rata: 200, totterreny: 100, ferro: 3, superman: 3, fantasma: 1, reifantasma: 1 }
 
@@ -293,7 +296,7 @@ export const CARD_DEFS: CardDef[] = BASE_DEFS.flatMap((d) => {
     ...(['plus', 'ultra'] as const).map((level) => ({
       ...d,
       id: `${d.id}-${level}`,
-      name: `${d.name} ${level.toUpperCase()}`,
+      name: LEVEL_NAMES[d.id]?.[level] ?? `${d.name} ${level.toUpperCase()}`,
       how: rules[level][1],
       boost: rules[level][2],
       rarity: cursed ? ('Maleïda' as const) : level === 'plus' ? ('Llegendària' as const) : ('Mítica' as const),

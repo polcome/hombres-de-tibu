@@ -1,6 +1,6 @@
 import { forwardRef } from 'react'
 import type { Member } from '../types'
-import { STAT_LABELS, boostedStats, displayName, type CardLevel, type CardVariant, type Rating, type StatKey } from '../logic/stats'
+import { LEVEL_NAMES, STAT_LABELS, boostedStats, displayName, type CardLevel, type CardVariant, type Rating, type StatKey } from '../logic/stats'
 import { hue } from './Avatar'
 import { CardArt } from './CardArt'
 import './fifa.css'
@@ -72,7 +72,7 @@ export const FifaCard = forwardRef<HTMLDivElement, Props>(function FifaCard(
       <CardArt variant={variant} layer="fg" level={level} />
       <div className="fifa-top">
         <div className="fifa-ovr">{ovr}</div>
-        <div className="fifa-pos">{TAG[variant]}</div>
+        <div className="fifa-pos">{(level && LEVEL_NAMES[variant]?.[level]?.toUpperCase()) || TAG[variant]}</div>
         {emoji && <div className="fifa-emoji">{emoji}</div>}
       </div>
       <div className="fifa-name">{name}</div>

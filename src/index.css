@@ -2707,3 +2707,26 @@ textarea:focus {
     roman-slam 0.4s 0.8s cubic-bezier(0.5, 0, 0.75, 0) both,
     pack-shake 0.4s 1.2s linear;
 }
+
+/* Carta base de temporada */
+.scene-tier {
+  font-family: 'Barlow Condensed', 'Arial Narrow', system-ui, sans-serif;
+  font-size: 54px;
+  font-weight: 900;
+  letter-spacing: 0.2em;
+  animation: roman-slam 0.45s 0.9s cubic-bezier(0.5, 0, 0.75, 0) both;
+}
+.tier-bronze .scene-tier {
+  color: #e0a06a;
+  text-shadow: 0 0 24px #b06a32;
+}
+.tier-silver .scene-tier,
+.tier-silvershiny .scene-tier {
+  color: #e8edf3;
+  text-shadow: 0 0 24px #9fb0c4;
+}
+.tier-gold .scene-tier,
+.tier-goldshiny .scene-tier {
+  color: #ffd75a;
+  text-shadow: 0 0 24px #f5c542;
+}

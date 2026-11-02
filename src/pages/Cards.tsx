@@ -3,6 +3,7 @@ import { useStore } from '../store'
 import {
   ACHIEVEMENT_FOR_BONUS,
   CARD_DEFS,
+  LEVEL_NAMES,
   cardKey,
   displayName,
   photoFor,
@@ -95,7 +96,11 @@ export default function Cards() {
                           .filter((t) => t.level)
                           .map((t) => (
                             <div key={t.id} className={`level-rule level-${t.level}`}>
-                              <b>{t.level === 'plus' ? '★ PLUS' : '🔥 ULTRA'}</b> {t.how}
+                              <b>
+                                {t.level === 'plus' ? '★ PLUS' : '🔥 ULTRA'}
+                                {LEVEL_NAMES[def.id]?.[t.level!] && ` · ${t.name}`}
+                              </b>{' '}
+                              {t.how}
                               {t.boost !== 0 && ` (${t.boost > 0 ? '+' : ''}${t.boost})`}
                             </div>
                           ))}

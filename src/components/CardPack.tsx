@@ -5,7 +5,8 @@ import { FifaCard } from './FifaCard'
 import { unlockProps } from './CardZoom'
 import { api } from '../api'
 import { useStore } from '../store'
-import { STAT_LABELS, boostedStats, cardKey, displayName, unlockedCards, type CardDef, type StatKey } from '../logic/stats'
+import { STAT_LABELS, TIERS, boostedStats, cardKey, displayName, rating, unlockedCards, type CardDef, type StatKey } from '../logic/stats'
+import type { DB, Member } from '../types'
 import { hue } from './Avatar'
 
 type CardProps = Omit<ComponentProps<typeof FifaCard>, 'size' | 'ref'>
@@ -16,11 +17,11 @@ const themeOf = (def: CardDef): Theme => (def.rarity === 'Maleïda' ? 'cursed' :
 type Preset = 'confetti' | 'gold' | 'rain' | 'sparkles' | 'embers' | 'noses' | 'ghosts' | 'dust' | 'rats' | 'beach' | 'feathers' | 'mud' | 'heroic'
 /** Famílies amb escena pròpia just després d'obrir el sobre (totes les cartes actuals) */
 const SCENES = [
-  'totm', 'antim', 'icona', 'nongrata', 'hattrick', 'bdo', 'fang', 'redempcio', 'doblecara', 'rata', 'centurio', 'totterreny',
+  'base', 'totm', 'antim', 'icona', 'nongrata', 'hattrick', 'bdo', 'fang', 'redempcio', 'doblecara', 'rata', 'centurio', 'totterreny',
   'ferro', 'superman', 'fantasma', 'reifantasma', 'exit-ascens', 'exit-mitja', 'exit-marato', 'exit-hyrox',
 ]
 const FAMILY_PRESET: Record<string, Preset> = {
-  totm: 'gold', antim: 'noses', icona: 'gold', nongrata: 'embers', hattrick: 'confetti', bdo: 'gold', fang: 'beach', redempcio: 'feathers',
+  base: 'confetti', totm: 'gold', antim: 'noses', icona: 'gold', nongrata: 'embers', hattrick: 'confetti', bdo: 'gold', fang: 'beach', redempcio: 'feathers',
   doblecara: 'confetti', rata: 'rats', centurio: 'dust', totterreny: 'mud', ferro: 'embers', superman: 'heroic', fantasma: 'ghosts',
   reifantasma: 'ghosts', 'exit-ascens': 'confetti', 'exit-mitja': 'confetti', 'exit-marato': 'gold', 'exit-hyrox': 'dust',
 }
@@ -30,6 +31,19 @@ const THUD = ['antim', 'centurio', 'hattrick', 'exit-hyrox', 'nongrata']
 const presetOf = (def: CardDef, theme: Theme): Preset =>
   def.level === 'ultra' ? 'embers' : def.level === 'plus' ? 'sparkles' : (FAMILY_PRESET[def.family ?? def.id] ?? (theme === 'cursed' ? 'rain' : 'confetti'))
 const vibrate = (p: number | number[]) => navigator.vibrate?.(p)
+
+/** Clau del sobre de la carta base de la temporada (un per any: el primer cop que s'entra a l'app i cada 1 de gener) */
+export const baseKey = (year: number) => `base:${year}`
+
+/** Sobre de la carta base actual d'un membre, com si fos una carta especial */
+export function basePack(db: DB, m: Member, year = new Date().getFullYear()): { card: CardProps; def: CardDef } {
+  const r = rating(db, m.id)
+  const tierName = TIERS.find(([t]) => t === r.tier)![2]
+  return {
+    card: { member: m, rating: r, variant: r.tier, photo: m.photo_url },
+    def: { id: 'base', name: `Carta base ${year}`, emoji: '🃏', variant: r.tier, how: `La teva carta de la temporada ${year}: ${tierName}.`, boost: 0, rarity: 'Comuna', auto: true },
+  }
+}
 
 /**
  * Vigila les cartes del membre que ha entrat: les noves (no vistes) s'obren com un sobre.
@@ -62,8 +76,25 @@ export function PackWatcher() {
     api.markCardsSeen(keys).catch(() => {})
   }, [seen, mine])
 
-  if (!seen || !seen.has('__init__')) return null
+  if (!seen || !seen.has('__init__') || !me) return null
+  // Primer de tot, la carta base de la temporada (primer cop a l'app i cada 1 de gener)
+  const year = new Date().getFullYear()
   const queue = mine.filter((u) => !seen.has(cardKey(u)))
+  if (!seen.has(baseKey(year))) {
+    const { card, def } = basePack(db, me, year)
+    return (
+      <PackOpening
+        key={baseKey(year)}
+        card={card}
+        def={def}
+        remaining={queue.length}
+        onDone={() => {
+          setSeen(new Set([...seen, baseKey(year)]))
+          api.markCardsSeen([baseKey(year)]).catch(() => {})
+        }}
+      />
+    )
+  }
   if (!queue.length) return null
   const u = queue[0]
   return (
@@ -141,7 +172,7 @@ export function PackOpening({ card, def, remaining = 0, onDone }: { card: CardPr
     <div className={`pack-overlay pack-${theme} ${stage === 'cut' && theme === 'cursed' ? 'pack-shake' : ''}`} onClick={() => stage === 'reveal' && step < 6 && setStep(6)}>
       <div className="pack-beams" />
       {stage === 'reveal' && step >= 6 && <Particles preset={presetOf(def, theme)} />}
-      {stage === 'reveal' && step === 1 && <CardScene family={family} />}
+      {stage === 'reveal' && step === 1 && <CardScene family={family} name={def.name} tier={def.variant} />}
 
       {stage !== 'reveal' && (
         <div className="pack-stage">
@@ -164,7 +195,9 @@ export function PackOpening({ card, def, remaining = 0, onDone }: { card: CardPr
             <div className="pack-body">
               <div className="pack-logo">🦈</div>
               <div className="pack-brand">HOMBRES DE TIBU</div>
-              <div className="pack-sub">{theme === 'cursed' ? 'Sobre maleït' : def.level ? `Sobre ${def.level.toUpperCase()}` : 'Sobre especial'}</div>
+              <div className="pack-sub">
+                {theme === 'cursed' ? 'Sobre maleït' : def.level ? `Sobre ${def.level.toUpperCase()}` : family === 'base' ? 'Sobre de temporada' : 'Sobre especial'}
+              </div>
               <div className="pack-shine" />
             </div>
           </div>
@@ -213,7 +246,9 @@ export function PackOpening({ card, def, remaining = 0, onDone }: { card: CardPr
 
       {stage === 'reveal' && step >= 6 && (
         <div className="pack-final" onClick={(e) => e.stopPropagation()}>
-          <div className="pack-final-title">{theme === 'cursed' ? '💀 Has rebut una carta maleïda' : '🎉 Nova carta!'}</div>
+          <div className="pack-final-title">
+            {theme === 'cursed' ? '💀 Has rebut una carta maleïda' : family === 'base' ? `🃏 La teva carta de la temporada` : '🎉 Nova carta!'}
+          </div>
           <div className="pack-card">
             <FifaCard {...card} size="xl" />
           </div>
@@ -246,7 +281,7 @@ export function PackOpening({ card, def, remaining = 0, onDone }: { card: CardPr
 }
 
 /** Escena pròpia de cada família, just després d'obrir el sobre */
-function CardScene({ family }: { family: string }) {
+function CardScene({ family, name, tier }: { family: string; name: string; tier: string }) {
   const rows = [0, 1, 2, 3, 4]
   const text = (t: string) => <div className="scene-text">{t}</div>
   switch (family) {
@@ -265,6 +300,15 @@ function CardScene({ family }: { family: string }) {
           <div className="scene-big scene-pop">🤡</div>
           <div className="scene-honk">📯 MEC MEC!</div>
           {text('ANTI-MVP DEL MES')}
+        </div>
+      )
+    case 'base':
+      return (
+        <div className={`scene scene-base tier-${tier}`}>
+          <div className="halo-glow" />
+          <div className="scene-big scene-rise">🃏</div>
+          <div className="scene-tier">{tier.includes('gold') ? 'OR' : tier.includes('silver') ? 'PLATA' : 'BRONZE'}</div>
+          {text(name.replace('Carta base', 'TEMPORADA'))}
         </div>
       )
     case 'icona':
@@ -302,7 +346,7 @@ function CardScene({ family }: { family: string }) {
               </span>
             ))}
           </div>
-          {text('HAT-TRICK!')}
+          {text(`${name.toUpperCase()}!`)}
         </div>
       )
     case 'bdo':
