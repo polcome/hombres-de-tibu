@@ -1,6 +1,6 @@
 # Hombres de Tibu — context per a Claude
 
-App web del grup d'amics del gimnàs "Los Hombres de Tibu" (13 membres). Serveix per a la votació mensual de MVP i anti-MVP, el recompte d'entrenos, un dossier d'expedients i cartes tipus FIFA. Tot és comèdia entre amics.
+App web del grup d'amics del gimnàs "Los Hombres de Tibu" (13 membres). Serveix per a la votació mensual de MVP i anti-MVP, el recompte d'entrenos, un dossier d'expedients i cartes de jugador (estil FIFA, però a la UI es diuen només «cartes»: mai «FIFA»). Tot és comèdia entre amics.
 
 - **Idioma:** tota la UI, els textos i els missatges de commit en **català** (col·loquial i amb humor). Parla en català amb l'usuari.
 - **Admin / propietari:** Come (usuari `come`, GitHub `polcome`). Ell decideix. És el **superadmin** (`members.is_owner`, trigger `protect_owner`): ningú li pot treure l'admin, desactivar-lo, reiniciar-li el compte ni esborrar-lo, i només ell pot donar o treure l'admin als altres. No surt enlloc de la UI.

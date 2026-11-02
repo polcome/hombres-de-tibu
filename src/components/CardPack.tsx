@@ -120,7 +120,7 @@ const WELCOME: [string, string, string][] = [
   ['🏋️', 'Entrenos', 'Apunta cada entreno (al gym, amb foto) i valida els dels altres amb ✅ o 🧢.'],
   ['📁', 'Dossier', 'Obre expedients de mèrits i faltes dels companys. Anònims o signats.'],
   ['🗳️', 'Votació', "A final de mes votes l'MVP i l'anti-MVP. Vot secret."],
-  ['🃏', 'Cartes', 'Tens una carta FIFA que puja o baixa amb el que fas, i pots guanyar cartes especials.'],
+  ['🃏', 'Cartes', 'Tens una carta que puja o baixa amb el que fas, i pots guanyar cartes especials.'],
 ]
 
 /** Benvinguda (primer cop a l'app) o temporada nova, abans del sobre de la carta base */
@@ -186,7 +186,7 @@ export function Welcome({ member, year, firstTime, onDone }: { member: Member; y
   )
 }
 
-/** Sobre que es talla lliscant el dit i revelació de la carta, estil FIFA */
+/** Sobre que es talla lliscant el dit i revelació de la carta */
 export function PackOpening({ card, def, remaining = 0, onDone }: { card: CardProps; def: CardDef; remaining?: number; onDone: () => void }) {
   const theme = themeOf(def)
   const family = def.family ?? def.id

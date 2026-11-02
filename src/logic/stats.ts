@@ -44,7 +44,7 @@ export function appStartMonth(db: DB) {
 }
 
 // ---------------------------------------------------------------------------
-// Valoració tipus FIFA
+// Valoració de les cartes
 // ---------------------------------------------------------------------------
 
 export interface Rating {
