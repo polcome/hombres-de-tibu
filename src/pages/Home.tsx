@@ -24,6 +24,11 @@ export default function Home() {
   const last = closedMonths(db).at(-1)
   const active = db.members.filter((m) => m.active)
   const unlocks = unlockedCards(db)
+  // Últimes cartes guanyades per la colla (sense TOTM ni Anti-MVP, que ja surten a Guanyadors)
+  const latest = unlocks
+    .filter((u) => u.def.id !== 'totm' && u.def.id !== 'antim')
+    .sort((a, b) => b.sortKey.localeCompare(a.sortKey))
+    .slice(0, 6)
 
   const voterIds = new Set(db.voters.filter((v) => v.month_id === month?.id).map((v) => v.member_id))
   const pending = active.filter((m) => !voterIds.has(m.id))
@@ -131,6 +136,18 @@ export default function Home() {
                 )
               }),
             )}
+          </div>
+        </Section>
+      )}
+
+      {latest.length > 0 && (
+        <Section title="🃏 Últimes cartes" right={<Link to="/cartes">Col·lecció →</Link>}>
+          <div className="cards-row mini">
+            {latest.map((u) => (
+              <CardZoom key={cardKey(u) + u.memberId} card={unlockProps(db, u)} def={u.def} photoKey={cardKey(u)}>
+                <FifaCard {...unlockProps(db, u)} size="xs" />
+              </CardZoom>
+            ))}
           </div>
         </Section>
       )}

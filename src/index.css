@@ -2022,3 +2022,251 @@ textarea:focus {
   position: relative;
   z-index: 5;
 }
+
+/* Escenes pròpies de cada carta (entre la revelació i la carta final) */
+.scene {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  overflow: hidden;
+  pointer-events: none;
+}
+.scene-big {
+  font-size: 120px;
+  line-height: 1;
+  filter: drop-shadow(0 0 30px var(--a));
+  position: relative;
+}
+.scene-text {
+  font-family: 'Barlow Condensed', 'Arial Narrow', system-ui, sans-serif;
+  font-size: 30px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  color: var(--a);
+  text-shadow: 0 0 20px var(--a);
+  animation: scene-text 0.6s 0.9s both;
+}
+@keyframes scene-text {
+  from {
+    opacity: 0;
+    letter-spacing: 0.6em;
+  }
+}
+.scene-rise {
+  animation: scene-rise 1.2s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+@keyframes scene-rise {
+  from {
+    transform: translateY(60vh) scale(0.4);
+  }
+}
+.scene-pop {
+  animation: scene-pop 0.9s cubic-bezier(0.3, 1.6, 0.4, 1) both;
+}
+@keyframes scene-pop {
+  0% {
+    transform: translateY(70vh) scale(0.5);
+  }
+  60% {
+    transform: translateY(-20px) scale(1.15) rotate(-8deg);
+  }
+  80% {
+    transform: rotate(6deg);
+  }
+}
+.scene-float {
+  animation:
+    walkout-in 0.8s both,
+    pack-float 2.4s ease-in-out infinite;
+}
+
+/* TOTM: focus d'estadi */
+.spot {
+  position: absolute;
+  top: -20%;
+  width: 60%;
+  height: 140%;
+  background: linear-gradient(180deg, rgba(255, 240, 180, 0.55), transparent 80%);
+  clip-path: polygon(45% 0, 55% 0, 100% 100%, 0 100%);
+  transform-origin: top center;
+  filter: blur(2px);
+}
+.spot-l {
+  left: -10%;
+  animation: spot-l 2.8s ease-in-out infinite;
+}
+.spot-r {
+  right: -10%;
+  animation: spot-r 2.8s ease-in-out infinite;
+}
+@keyframes spot-l {
+  0%,
+  100% {
+    transform: rotate(-30deg);
+  }
+  50% {
+    transform: rotate(10deg);
+  }
+}
+@keyframes spot-r {
+  0%,
+  100% {
+    transform: rotate(30deg);
+  }
+  50% {
+    transform: rotate(-10deg);
+  }
+}
+
+/* Anti-MVP: pallasso i botzina */
+.scene-honk {
+  font-size: 34px;
+  font-weight: 900;
+  color: #fff;
+  background: #e8202a;
+  padding: 6px 16px;
+  border-radius: 999px;
+  transform: rotate(-6deg);
+  animation:
+    scene-pop 0.6s 0.7s both,
+    honk 0.25s 1.3s 6 linear;
+}
+@keyframes honk {
+  50% {
+    transform: rotate(6deg) scale(1.15);
+  }
+}
+
+/* Fantasmes */
+.fog {
+  position: absolute;
+  inset: -20% -50%;
+  background: radial-gradient(ellipse at 30% 60%, rgba(220, 225, 255, 0.18), transparent 50%),
+    radial-gradient(ellipse at 70% 40%, rgba(220, 225, 255, 0.14), transparent 45%);
+  animation: fog 6s linear infinite;
+}
+.fog-2 {
+  animation-duration: 9s;
+  animation-direction: reverse;
+  opacity: 0.7;
+}
+@keyframes fog {
+  from {
+    transform: translateX(-15%);
+  }
+  to {
+    transform: translateX(15%);
+  }
+}
+.ghost-fly {
+  position: absolute;
+  left: -15%;
+  font-size: 44px;
+  opacity: 0.75;
+  animation: ghost-fly 2.6s ease-in-out both;
+}
+@keyframes ghost-fly {
+  0% {
+    left: -15%;
+    transform: translateY(0);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.75;
+  }
+  50% {
+    transform: translateY(-25px);
+  }
+  100% {
+    left: 110%;
+    transform: translateY(10px);
+    opacity: 0;
+  }
+}
+.scene-ghostking {
+  background: radial-gradient(circle at 50% 45%, rgba(80, 60, 140, 0.35), transparent 60%);
+}
+.scene-ghostking .scene-big {
+  font-size: 150px;
+  filter: drop-shadow(0 0 40px #8f7cff) grayscale(0.3);
+}
+.ghost-crown {
+  position: absolute;
+  top: -55px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-10deg);
+  font-size: 70px;
+}
+
+/* Centurió: columnes i C de marbre */
+.column {
+  position: absolute;
+  bottom: 18%;
+  font-size: 110px;
+  animation: column-up 1s cubic-bezier(0.2, 0.9, 0.3, 1.1) both;
+}
+.column-l {
+  left: 4%;
+}
+.column-r {
+  right: 4%;
+  animation-delay: 0.2s;
+}
+@keyframes column-up {
+  from {
+    transform: translateY(60vh);
+  }
+}
+.scene-roman {
+  font-family: 'Times New Roman', Georgia, serif;
+  font-size: 180px;
+  font-weight: 700;
+  line-height: 1;
+  color: #f2efe6;
+  text-shadow:
+    0 4px 0 #b9b2a0,
+    0 8px 0 #8f8878,
+    0 14px 30px rgba(0, 0, 0, 0.6);
+  animation: roman-slam 0.5s 0.9s cubic-bezier(0.5, 0, 0.75, 0) both;
+}
+@keyframes roman-slam {
+  from {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+/* GymRat: rates corrent */
+.rat-run {
+  position: absolute;
+  right: -15%;
+  font-size: 40px;
+  animation: rat-run 1.4s linear both;
+}
+@keyframes rat-run {
+  0% {
+    right: -15%;
+    transform: translateY(0);
+  }
+  25% {
+    transform: translateY(-6px);
+  }
+  50% {
+    transform: translateY(0);
+  }
+  75% {
+    transform: translateY(-6px);
+  }
+  100% {
+    right: 115%;
+  }
+}
+.scene-ghost .scene-text {
+  color: #e4e6ff;
+  text-shadow: 0 0 20px #8f7cff;
+}
