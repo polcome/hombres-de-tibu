@@ -40,9 +40,9 @@ insert into months (id, status) values ('2026-10', 'closed')
   on conflict (id) do update set status = 'closed', acta = null, acta_style = null;
 delete from awards where month_id = '2026-10';
 insert into awards (month_id, type, member_id, votes)
-select '2026-10', 'mvp',  id, null from members where slug = 'ferran'
+select '2026-10', 'mvp',  id, null::int from members where slug = 'ferran'
 union all
-select '2026-10', 'anti', id, null from members where slug = 'policho';
+select '2026-10', 'anti', id, null::int from members where slug = 'policho';
 
 -- 4. Novembre en joc
 insert into months (id, status) values ('2026-11', 'active') on conflict (id) do nothing;
