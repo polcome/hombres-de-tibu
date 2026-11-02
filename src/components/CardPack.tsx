@@ -52,6 +52,7 @@ export function basePack(db: DB, m: Member, year = new Date().getFullYear()): { 
 export function PackWatcher() {
   const { db, me } = useStore()
   const [seen, setSeen] = useState<Set<string> | null>(null)
+  const [intro, setIntro] = useState(false)
 
   useEffect(() => {
     setSeen(null)
@@ -82,6 +83,8 @@ export function PackWatcher() {
   const queue = mine.filter((u) => !seen.has(cardKey(u)))
   if (!seen.has(baseKey(year))) {
     const { card, def } = basePack(db, me, year)
+    // Abans del sobre: benvinguda (primer cop a l'app) o avís de temporada nova (cada 1 de gener)
+    if (!intro) return <Welcome member={me} year={year} firstTime={![...seen].some((k) => k.startsWith('base:'))} onDone={() => setIntro(true)} />
     return (
       <PackOpening
         key={baseKey(year)}
@@ -109,6 +112,77 @@ export function PackWatcher() {
         api.markCardsSeen([k]).catch(() => {})
       }}
     />
+  )
+}
+
+const WELCOME: [string, string, string][] = [
+  ['🦈', 'Benvingut a Hombres de Tibu', "L'app oficial de la colla: tot el que passa al grup queda registrat aquí."],
+  ['🏋️', 'Entrenos', 'Apunta cada entreno (al gym, amb foto) i valida els dels altres amb ✅ o 🧢.'],
+  ['📁', 'Dossier', 'Obre expedients de mèrits i faltes dels companys. Anònims o signats.'],
+  ['🗳️', 'Votació', "A final de mes votes l'MVP i l'anti-MVP. Vot secret."],
+  ['🃏', 'Cartes', 'Tens una carta FIFA que puja o baixa amb el que fas, i pots guanyar cartes especials.'],
+]
+
+/** Benvinguda (primer cop a l'app) o temporada nova, abans del sobre de la carta base */
+export function Welcome({ member, year, firstTime, onDone }: { member: Member; year: number; firstTime: boolean; onDone: () => void }) {
+  const slides: [string, string, string][] = [
+    ...(firstTime
+      ? WELCOME.map(([e, t, d], i): [string, string, string] => (i === 0 ? [e, `${t}, ${displayName(member)}!`, d] : [e, t, d]))
+      : [['🎆', `Comença la temporada ${year}!`, 'Tothom torna a zero: entrenos, MVPs, antis i constància. Les cartes guanyades es queden.'] as [string, string, string]]),
+    ['🎁', 'El teu sobre', `Obre el sobre per descobrir la teva carta base${firstTime ? '' : ` del ${year}`}, que podràs anar millorant durant l'any.`],
+  ]
+  const [i, setI] = useState(0)
+  const touch = useRef<number | null>(null)
+  const last = i === slides.length - 1
+  const go = (d: number) => setI((x) => Math.max(0, Math.min(slides.length - 1, x + d)))
+  useEffect(() => {
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [])
+  const [emoji, title, text] = slides[i]
+  return createPortal(
+    <div
+      className="pack-overlay pack-gold welcome"
+      onTouchStart={(e) => (touch.current = e.touches[0].clientX)}
+      onTouchEnd={(e) => {
+        if (touch.current == null) return
+        const dx = e.changedTouches[0].clientX - touch.current
+        if (Math.abs(dx) > 50) go(dx < 0 ? 1 : -1)
+        touch.current = null
+      }}
+    >
+      <div className="pack-beams" />
+      <div key={i} className="welcome-slide">
+        <div className="welcome-emoji">{emoji}</div>
+        <h2>{title}</h2>
+        <p>{text}</p>
+      </div>
+      <div className="welcome-nav">
+        <div className="welcome-dots">
+          {slides.map((_, k) => (
+            <span key={k} className={k === i ? 'on' : ''} />
+          ))}
+        </div>
+        <div className="row center">
+          {i > 0 && (
+            <button type="button" className="btn" onClick={() => go(-1)}>
+              ←
+            </button>
+          )}
+          <button type="button" className="btn btn-primary" onClick={() => (last ? onDone() : go(1))}>
+            {last ? '🎁 Obrir el sobre' : 'Següent →'}
+          </button>
+        </div>
+        {!last && (
+          <button type="button" className="link muted small" onClick={() => setI(slides.length - 1)}>
+            Saltar
+          </button>
+        )}
+      </div>
+    </div>,
+    document.body,
   )
 }
 

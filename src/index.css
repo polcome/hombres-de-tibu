@@ -2730,3 +2730,56 @@ textarea:focus {
   color: #ffd75a;
   text-shadow: 0 0 24px #f5c542;
 }
+
+/* Benvinguda abans del sobre de la carta base */
+.welcome {
+  grid-template-rows: 1fr auto;
+  padding: 24px 20px calc(24px + env(safe-area-inset-bottom));
+}
+.welcome-slide {
+  position: relative;
+  z-index: 2;
+  align-self: center;
+  max-width: 340px;
+  text-align: center;
+  animation: walkout-in 0.5s both;
+}
+.welcome-emoji {
+  font-size: 84px;
+  filter: drop-shadow(0 0 24px var(--a));
+}
+.welcome-slide h2 {
+  margin: 12px 0 8px;
+  font-size: 26px;
+  line-height: 1.2;
+}
+.welcome-slide p {
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.5;
+  color: #d6d9f5;
+}
+.welcome-nav {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.welcome-dots {
+  display: flex;
+  gap: 8px;
+}
+.welcome-dots span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transition: all 0.2s;
+}
+.welcome-dots span.on {
+  width: 22px;
+  border-radius: 4px;
+  background: var(--a);
+}

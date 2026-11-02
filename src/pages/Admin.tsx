@@ -4,7 +4,7 @@ import { useAction, useStore } from '../store'
 import type { AchievementKind, AwardType, Member, Month, TrainingKind } from '../types'
 import { activeMonth, closedMonths, currentMonthKey, monthLabel, shiftMonth, todayISO } from '../logic/months'
 import { ACHIEVEMENT_FOR_BONUS, CARD_DEFS, displayName, focusOf, memberById, rating } from '../logic/stats'
-import { PackOpening, basePack } from '../components/CardPack'
+import { PackOpening, Welcome, basePack } from '../components/CardPack'
 import { aiPrompt, generateActa, pickStyle } from '../logic/acta'
 import { Avatar } from '../components/Avatar'
 import { CopyButton, ErrorMsg, MemberSelect, Section, WhatsAppButton } from '../components/ui'
@@ -498,8 +498,9 @@ function AchievementsAdmin() {
 /** Prova de l'animació del sobre amb qualsevol carta (no es guarda res) */
 function PackTestAdmin() {
   const { db, me } = useStore()
-  const [id, setId] = useState('base')
+  const [id, setId] = useState('welcome')
   const [open, setOpen] = useState(false)
+  const [welcomed, setWelcomed] = useState(false)
   if (!me) return null
   const def = CARD_DEFS.find((d) => d.id === id)
   const pack = def
@@ -516,6 +517,8 @@ function PackTestAdmin() {
       </p>
       <div className="row wrap">
         <select value={id} onChange={(e) => setId(e.target.value)}>
+          <option value="welcome">👋 Benvinguda + carta base (primer cop)</option>
+          <option value="newyear">🎆 Temporada nova + carta base (1 de gener)</option>
           <option value="base">🃏 Carta base (temporada)</option>
           {CARD_DEFS.map((d) => (
             <option key={d.id} value={d.id}>
@@ -523,12 +526,22 @@ function PackTestAdmin() {
             </option>
           ))}
         </select>
-        <button className="btn btn-primary" onClick={() => setOpen(true)}>
+        <button
+          className="btn btn-primary"
+          onClick={() => {
+            setWelcomed(false)
+            setOpen(true)
+          }}
+        >
           Obrir sobre de prova
         </button>
       </div>
       {open && (
-        <PackOpening card={pack.card} def={pack.def} onDone={() => setOpen(false)} />
+        (id === 'welcome' || id === 'newyear') && !welcomed ? (
+          <Welcome member={me} year={new Date().getFullYear() + (id === 'newyear' ? 1 : 0)} firstTime={id === 'welcome'} onDone={() => setWelcomed(true)} />
+        ) : (
+          <PackOpening card={pack.card} def={pack.def} onDone={() => setOpen(false)} />
+        )
       )}
     </Section>
   )
