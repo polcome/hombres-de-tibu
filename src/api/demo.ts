@@ -306,12 +306,23 @@ export function createDemoApi(): Api {
     },
     async updateMember(id, patch) {
       requireAdmin()
+      // Com el trigger protect_owner: el Come és el superadmin
+      const db = load()
+      const owner = db.members.find((m) => m.slug === 'come')
+      const target = db.members.find((m) => m.id === id)!
+      if (meId() !== owner?.id) {
+        if ('is_admin' in patch && patch.is_admin !== target.is_admin) throw new Error("Només el Come pot donar o treure l'admin")
+        if (target.id === owner?.id && 'active' in patch && patch.active !== target.active) throw new Error('Al Come no li pots tocar això 😏')
+      }
       mutate((db) => Object.assign(db.members.find((m) => m.id === id)!, patch))
     },
     async inviteCodes() {
       return Object.fromEntries(load().members.map((m) => [m.id, 'DEMO']))
     },
-    async resetMember() {
+    async resetMember(id) {
+      requireAdmin()
+      const owner = load().members.find((m) => m.slug === 'come')
+      if (id === owner?.id && meId() !== owner.id) throw new Error('Al Come no li pots tocar això 😏')
       return 'DEMO'
     },
     async setPhoto(memberId, image) {

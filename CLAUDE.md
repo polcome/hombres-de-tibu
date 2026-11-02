@@ -3,7 +3,7 @@
 App web del grup d'amics del gimnàs "Los Hombres de Tibu" (13 membres). Serveix per a la votació mensual de MVP i anti-MVP, el recompte d'entrenos, un dossier d'expedients i cartes tipus FIFA. Tot és comèdia entre amics.
 
 - **Idioma:** tota la UI, els textos i els missatges de commit en **català** (col·loquial i amb humor). Parla en català amb l'usuari.
-- **Admin / propietari:** Come (usuari `come`, GitHub `polcome`). Ell decideix.
+- **Admin / propietari:** Come (usuari `come`, GitHub `polcome`). Ell decideix. És el **superadmin** (`members.is_owner`, trigger `protect_owner`): ningú li pot treure l'admin, desactivar-lo, reiniciar-li el compte ni esborrar-lo, i només ell pot donar o treure l'admin als altres. No surt enlloc de la UI.
 - **Web:** https://polcome.github.io/hombres-de-tibu/
 - **Cost:** ha de ser 100% gratuït. Res de serveis de pagament ni d'APIs d'IA de pagament.
 
@@ -77,6 +77,7 @@ App web del grup d'amics del gimnàs "Los Hombres de Tibu" (13 membres). Serveix
 11. `supabase/migracio-desempat-anti.sql`: afegeix el desempat de l'anti per menys vots de MVP.
 12. `supabase/migracio-estil-acta.sql`: columna `months.acta_style`.
 13. `supabase/migracio-esborrar-propi.sql`: esborrar els propis expedients i comentaris amb codi secret.
+14. `supabase/migracio-superadmin.sql`: el Come és superadmin (⚠️ pendent de confirmar que l'usuari l'ha executat).
 
 Quan un canvi necessiti BD:
 - Crea una **migració nova** `supabase/migracio-*.sql` que sigui idempotent (`if not exists`, `drop policy if exists`).
