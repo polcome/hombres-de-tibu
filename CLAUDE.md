@@ -78,7 +78,7 @@ App web del grup d'amics del gimnàs "Los Hombres de Tibu" (13 membres). Serveix
 12. `supabase/migracio-estil-acta.sql`: columna `months.acta_style`.
 13. `supabase/migracio-esborrar-propi.sql`: esborrar els propis expedients i comentaris amb codi secret.
 14. `supabase/migracio-superadmin.sql`: el Come és superadmin.
-15. `supabase/neteja-novembre-2026.sql`: neteja de dades de prova, recompte d'entrenos a 2/11/2026 com a recompte inicial, octubre (MVP Ferran, anti Policho) (⚠️ pendent de confirmar que l'usuari l'ha executat).
+15. `supabase/neteja-novembre-2026.sql`: neteja de dades de prova, recompte d'entrenos a 2/11/2026 com a recompte inicial, octubre (MVP Ferran, anti Policho).
 
 Quan un canvi necessiti BD:
 - Crea una **migració nova** `supabase/migracio-*.sql` que sigui idempotent (`if not exists`, `drop policy if exists`).
