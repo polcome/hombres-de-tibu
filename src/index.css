@@ -2270,3 +2270,440 @@ textarea:focus {
   color: #e4e6ff;
   text-shadow: 0 0 20px #8f7cff;
 }
+
+/* --- Escenes de la segona tanda --- */
+.scene-delay {
+  animation: walkout-in 0.7s 1s both;
+}
+
+/* Icona: corona que baixa */
+.halo-glow {
+  position: absolute;
+  width: 260px;
+  height: 260px;
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--a) 60%, transparent), transparent 70%);
+  animation: pack-pulse 1.6s ease-in-out infinite;
+}
+.crown-drop {
+  font-size: 90px;
+  animation: crown-drop 1.1s cubic-bezier(0.3, 1.4, 0.5, 1) both;
+  margin-bottom: -40px;
+  z-index: 1;
+}
+@keyframes crown-drop {
+  from {
+    transform: translateY(-60vh) rotate(-30deg);
+  }
+}
+
+/* Anti-Icona: foc */
+.flames {
+  position: absolute;
+  left: -10%;
+  right: -10%;
+  bottom: -10%;
+  height: 60%;
+  background:
+    radial-gradient(ellipse at 20% 100%, #ff3d00 0%, transparent 55%),
+    radial-gradient(ellipse at 50% 100%, #ff7a18 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 100%, #ff3d00 0%, transparent 55%);
+  filter: blur(6px);
+  animation: flicker 0.35s ease-in-out infinite alternate;
+  opacity: 0.85;
+}
+@keyframes flicker {
+  to {
+    transform: scaleY(1.12) translateY(-4px);
+    opacity: 1;
+  }
+}
+
+/* Hat-trick: tres xuts a porteria */
+.goal {
+  position: absolute;
+  top: 18%;
+  left: 50%;
+  width: 240px;
+  height: 120px;
+  transform: translateX(-50%);
+  border: 6px solid #fff;
+  border-bottom: none;
+  border-radius: 4px 4px 0 0;
+}
+.net {
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.35) 0 1px, transparent 1px 14px),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.35) 0 1px, transparent 1px 14px);
+  animation: net-shake 0.3s 3 0.5s;
+  animation-delay: 0.55s;
+}
+@keyframes net-shake {
+  50% {
+    transform: scale(1.04, 0.96) translateY(4px);
+  }
+}
+.shot {
+  position: absolute;
+  bottom: -10%;
+  font-size: 46px;
+  animation: shot 0.6s cubic-bezier(0.2, 0.7, 0.4, 1) both;
+}
+@keyframes shot {
+  from {
+    bottom: -10%;
+    transform: scale(1.6) rotate(0);
+  }
+  to {
+    bottom: 68%;
+    transform: scale(0.7) rotate(540deg);
+  }
+}
+.goal-count {
+  display: flex;
+  gap: 20px;
+  font-size: 44px;
+  font-weight: 900;
+  color: var(--a);
+}
+.goal-count span {
+  animation: scene-pop 0.4s both;
+}
+
+/* Pilota d'Or */
+.golden-ball {
+  filter: sepia(1) saturate(6) hue-rotate(-12deg) brightness(1.15) drop-shadow(0 0 40px #f5c542);
+  animation:
+    scene-rise 1.2s cubic-bezier(0.2, 0.9, 0.3, 1.2) both,
+    ball-spin 1.6s linear infinite;
+}
+@keyframes ball-spin {
+  to {
+    rotate: 360deg;
+  }
+}
+
+/* Pilota de Platja */
+.scene-beach {
+  background: linear-gradient(180deg, #2a7fd6 0%, #67c2ff 55%, #f2d49b 56%, #e8c27c 100%);
+}
+.sun {
+  position: absolute;
+  top: 8%;
+  right: 10%;
+  font-size: 80px;
+  animation: ball-spin 8s linear infinite;
+}
+.beach-ball {
+  animation: beach-bounce 0.8s ease-in infinite alternate;
+}
+@keyframes beach-bounce {
+  from {
+    transform: translateY(-120px) rotate(-20deg);
+  }
+  to {
+    transform: translateY(40px) rotate(20deg) scale(1.05, 0.92);
+  }
+}
+.waves {
+  position: absolute;
+  left: -50%;
+  right: -50%;
+  bottom: 38%;
+  height: 40px;
+  background: radial-gradient(circle at 20px -10px, transparent 22px, #ffffff 23px, #ffffff 26px, transparent 27px) repeat-x;
+  background-size: 40px 40px;
+  animation: waves 2s linear infinite;
+  opacity: 0.7;
+}
+@keyframes waves {
+  to {
+    transform: translateX(40px);
+  }
+}
+.scene-beach .scene-text {
+  color: #fff;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+}
+
+/* Redemption: llum del cel i aurèola */
+.heaven-light {
+  position: absolute;
+  top: -10%;
+  left: 50%;
+  width: 70%;
+  height: 120%;
+  transform: translateX(-50%);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.75), transparent 75%);
+  clip-path: polygon(40% 0, 60% 0, 100% 100%, 0 100%);
+  animation: walkout-in 1s both;
+}
+.halo-ring {
+  position: absolute;
+  top: -34px;
+  left: 50%;
+  width: 90px;
+  height: 22px;
+  border: 6px solid #ffe58a;
+  border-radius: 50%;
+  transform: translateX(-50%);
+  box-shadow: 0 0 20px #ffe58a;
+  animation: halo-down 1.2s 0.4s cubic-bezier(0.3, 1.3, 0.5, 1) both;
+}
+@keyframes halo-down {
+  from {
+    transform: translate(-50%, -50vh);
+  }
+}
+
+/* Doble Cara: pantalla partida */
+.half {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 50%;
+  display: flex;
+  justify-content: center;
+  padding-top: 16vh;
+  font-size: 80px;
+}
+.half-good {
+  left: 0;
+  background: linear-gradient(135deg, #6b4bff, #f5c542);
+  animation: half-l 0.8s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+.half-bad {
+  right: 0;
+  background: linear-gradient(135deg, #3a0d12, #c0392b);
+  animation: half-r 0.8s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+@keyframes half-l {
+  from {
+    transform: translateX(-100%);
+  }
+}
+@keyframes half-r {
+  from {
+    transform: translateX(100%);
+  }
+}
+.scene-twoface .scene-big,
+.scene-twoface .scene-text {
+  z-index: 1;
+  color: #fff;
+}
+
+/* 4x4 */
+.jeep {
+  font-size: 110px;
+  animation: jeep 2.2s linear both;
+  transform: scaleX(-1);
+}
+@keyframes jeep {
+  0% {
+    translate: -80vw 0;
+  }
+  20% {
+    translate: -40vw -10px;
+  }
+  30% {
+    translate: -25vw 6px;
+  }
+  60% {
+    translate: 0 0;
+  }
+  100% {
+    translate: 0 0;
+  }
+}
+.mud-trail {
+  position: absolute;
+  top: 47%;
+  left: 0;
+  height: 14px;
+  background: repeating-linear-gradient(90deg, #6b4a2b 0 12px, transparent 12px 22px);
+  border-radius: 7px;
+  animation: mud 1.4s linear both;
+}
+@keyframes mud {
+  from {
+    width: 0;
+  }
+  to {
+    width: 50%;
+  }
+}
+
+/* IronMan: espurnes metàl·liques */
+.scene-iron {
+  background: radial-gradient(circle at 50% 50%, rgba(200, 210, 225, 0.18), transparent 60%);
+}
+.spark {
+  position: absolute;
+  top: 45%;
+  left: 50%;
+  width: 6px;
+  height: 18px;
+  border-radius: 3px;
+  background: #ffe08a;
+  box-shadow: 0 0 10px #ffb347;
+  animation: spark 0.7s ease-out infinite;
+}
+@keyframes spark {
+  from {
+    transform: translate(0, 0);
+    opacity: 1;
+  }
+  to {
+    transform: translate(var(--dx), -120px) rotate(40deg);
+    opacity: 0;
+  }
+}
+.steel {
+  background: linear-gradient(180deg, #ffffff, #8e9aab 55%, #e7ecf3);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: none;
+  filter: drop-shadow(0 0 10px rgba(180, 200, 230, 0.7));
+}
+
+/* SuperMan: vola */
+.speed-lines {
+  position: absolute;
+  inset: -50% 0;
+  background: repeating-linear-gradient(90deg, transparent 0 22px, rgba(255, 255, 255, 0.18) 22px 24px, transparent 24px 60px);
+  animation: speed 0.4s linear infinite;
+}
+@keyframes speed {
+  to {
+    transform: translateY(80px);
+  }
+}
+.hero-fly {
+  animation: hero-fly 1.4s cubic-bezier(0.2, 0.8, 0.3, 1) both;
+}
+@keyframes hero-fly {
+  from {
+    transform: translate(-40vw, 60vh) rotate(-35deg) scale(0.4);
+  }
+  70% {
+    transform: translate(0, -20px) rotate(-10deg);
+  }
+}
+
+/* Ascens: escales */
+.stairs {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 100px;
+}
+.stairs span {
+  width: 52px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--a) 80%, #fff), color-mix(in srgb, var(--a) 50%, #000));
+  border-radius: 4px 4px 0 0;
+  animation: column-up 0.6s both;
+}
+.stairs-wrap {
+  position: relative;
+  padding-top: 80px;
+}
+.stair-climber {
+  position: absolute;
+  left: 50%;
+  top: 70px;
+  margin-left: -30px;
+  font-size: 60px;
+  line-height: 1;
+  animation: climb 1.6s 0.6s ease-in-out both;
+}
+@keyframes climb {
+  0% {
+    transform: translate(-90px, 90px);
+  }
+  25% {
+    transform: translate(-36px, 60px);
+  }
+  50% {
+    transform: translate(18px, 35px);
+  }
+  75% {
+    transform: translate(72px, 10px);
+  }
+  100% {
+    transform: translate(72px, -10px) scale(1.3);
+  }
+}
+
+/* Mitja / Marató: línia de meta */
+.chrono {
+  font-family: 'Barlow Condensed', 'Arial Narrow', system-ui, sans-serif;
+  font-size: 34px;
+  font-weight: 900;
+  color: #fff;
+}
+.finish-tape {
+  position: absolute;
+  top: 52%;
+  left: 0;
+  right: 0;
+  display: flex;
+}
+.finish-tape span {
+  flex: 1;
+  height: 10px;
+  background: repeating-linear-gradient(90deg, #e8202a 0 20px, #fff 20px 40px);
+  animation: tape-l 0.6s 1.1s ease-out both;
+  transform-origin: left center;
+}
+.finish-tape span + span {
+  animation-name: tape-r;
+  transform-origin: right center;
+}
+@keyframes tape-l {
+  to {
+    transform: rotate(35deg) translateY(30px);
+    opacity: 0.6;
+  }
+}
+@keyframes tape-r {
+  to {
+    transform: rotate(-35deg) translateY(30px);
+    opacity: 0.6;
+  }
+}
+.runner {
+  font-size: 100px;
+  animation: runner 1.4s ease-in both;
+  transform: scaleX(-1);
+}
+@keyframes runner {
+  from {
+    translate: 0 50vh;
+    scale: 0.4;
+  }
+}
+
+/* Hyrox: trineu i cop de pes */
+.sled {
+  position: absolute;
+  top: 70%;
+  font-size: 60px;
+  animation: sled 1.6s linear both;
+}
+@keyframes sled {
+  from {
+    left: -20%;
+  }
+  to {
+    left: 110%;
+  }
+}
+.slam {
+  animation:
+    roman-slam 0.4s 0.8s cubic-bezier(0.5, 0, 0.75, 0) both,
+    pack-shake 0.4s 1.2s linear;
+}

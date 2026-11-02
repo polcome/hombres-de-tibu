@@ -13,10 +13,19 @@ type Theme = 'gold' | 'cursed' | 'plus' | 'ultra'
 
 const themeOf = (def: CardDef): Theme => (def.rarity === 'Maleïda' ? 'cursed' : def.level === 'ultra' ? 'ultra' : def.level === 'plus' ? 'plus' : 'gold')
 
-type Preset = 'confetti' | 'gold' | 'rain' | 'sparkles' | 'embers' | 'noses' | 'ghosts' | 'dust' | 'rats'
-/** Famílies amb escena pròpia abans de la carta (la resta va directa a la carta) */
-const SCENES = ['totm', 'antim', 'fantasma', 'reifantasma', 'centurio', 'rata']
-const FAMILY_PRESET: Record<string, Preset> = { totm: 'gold', antim: 'noses', fantasma: 'ghosts', reifantasma: 'ghosts', centurio: 'dust', rata: 'rats' }
+type Preset = 'confetti' | 'gold' | 'rain' | 'sparkles' | 'embers' | 'noses' | 'ghosts' | 'dust' | 'rats' | 'beach' | 'feathers' | 'mud' | 'heroic'
+/** Famílies amb escena pròpia just després d'obrir el sobre (totes les cartes actuals) */
+const SCENES = [
+  'totm', 'antim', 'icona', 'nongrata', 'hattrick', 'bdo', 'fang', 'redempcio', 'doblecara', 'rata', 'centurio', 'totterreny',
+  'ferro', 'superman', 'fantasma', 'reifantasma', 'exit-ascens', 'exit-mitja', 'exit-marato', 'exit-hyrox',
+]
+const FAMILY_PRESET: Record<string, Preset> = {
+  totm: 'gold', antim: 'noses', icona: 'gold', nongrata: 'embers', hattrick: 'confetti', bdo: 'gold', fang: 'beach', redempcio: 'feathers',
+  doblecara: 'confetti', rata: 'rats', centurio: 'dust', totterreny: 'mud', ferro: 'embers', superman: 'heroic', fantasma: 'ghosts',
+  reifantasma: 'ghosts', 'exit-ascens': 'confetti', 'exit-mitja': 'confetti', 'exit-marato': 'gold', 'exit-hyrox': 'dust',
+}
+/** Famílies amb cop fort a l'escena (vibra el mòbil) */
+const THUD = ['antim', 'centurio', 'hattrick', 'exit-hyrox', 'nongrata']
 /** Partícules de la carta final: les PLUS i ULTRA mantenen les seves; la resta, les de la família o del tema */
 const presetOf = (def: CardDef, theme: Theme): Preset =>
   def.level === 'ultra' ? 'embers' : def.level === 'plus' ? 'sparkles' : (FAMILY_PRESET[def.family ?? def.id] ?? (theme === 'cursed' ? 'rain' : 'confetti'))
@@ -102,12 +111,14 @@ export function PackOpening({ card, def, remaining = 0, onDone }: { card: CardPr
   // Revelació pas a pas: intro → stats → nom → foto → escena de la carta (si en té) → carta
   useEffect(() => {
     if (stage !== 'reveal') return
-    const times = hasScene ? [0, 1300, 2700, 3700, 4900, 7900] : [0, 1300, 2700, 3700, 4900]
-    const ids = times.map((t, i) => setTimeout(() => setStep(hasScene ? i + 1 : i === 4 ? 6 : i + 1), t))
+    // 1 escena · 2 emoji i raresa · 3 stats · 4 nom · 5 foto · 6 carta
+    const o = hasScene ? 3200 : 0
+    const plan: [number, number][] = [...(hasScene ? ([[0, 1]] as [number, number][]) : []), [o, 2], [o + 1300, 3], [o + 2700, 4], [o + 3700, 5], [o + 4900, 6]]
+    const ids = plan.map(([t, st]) => setTimeout(() => setStep(st), t))
     return () => ids.forEach(clearTimeout)
   }, [stage, hasScene])
   useEffect(() => {
-    if (step === 5 && (family === 'antim' || family === 'centurio')) vibrate(80)
+    if (step === 1 && THUD.includes(family)) setTimeout(() => vibrate(80), 900)
     if (step === 6) vibrate([30, 60, 30])
   }, [step, family])
 
@@ -130,7 +141,7 @@ export function PackOpening({ card, def, remaining = 0, onDone }: { card: CardPr
     <div className={`pack-overlay pack-${theme} ${stage === 'cut' && theme === 'cursed' ? 'pack-shake' : ''}`} onClick={() => stage === 'reveal' && step < 6 && setStep(6)}>
       <div className="pack-beams" />
       {stage === 'reveal' && step >= 6 && <Particles preset={presetOf(def, theme)} />}
-      {stage === 'reveal' && step === 5 && <CardScene family={family} />}
+      {stage === 'reveal' && step === 1 && <CardScene family={family} />}
 
       {stage !== 'reveal' && (
         <div className="pack-stage">
@@ -169,15 +180,15 @@ export function PackOpening({ card, def, remaining = 0, onDone }: { card: CardPr
         </div>
       )}
 
-      {stage === 'reveal' && step < 5 && (
+      {stage === 'reveal' && step >= 2 && step < 6 && (
         <div className="walkout">
-          {step >= 1 && (
+          {step >= 2 && (
             <div className="walkout-intro">
               <div className="walkout-emoji">{def.emoji}</div>
               <span className={`rarity rarity-${def.rarity}`}>{def.rarity}</span>
             </div>
           )}
-          {step >= 2 && (
+          {step >= 3 && (
             <div className="walkout-stats">
               <div className="walkout-ovr">{ovr}</div>
               {STAT_LABELS.map(([k, l], i) => (
@@ -187,13 +198,13 @@ export function PackOpening({ card, def, remaining = 0, onDone }: { card: CardPr
               ))}
             </div>
           )}
-          {step >= 3 && (
+          {step >= 4 && (
             <div className="walkout-name">
               <div>{name}</div>
               <small>{card.title ?? def.name}</small>
             </div>
           )}
-          {step >= 4 && (
+          {step >= 5 && (
             <div className="walkout-photo">{photo ? <img src={photo} alt={name} /> : <span style={{ background: hue(name) }}>{name.slice(0, 1).toUpperCase()}</span>}</div>
           )}
           <div className="walkout-tap muted small">Toca per saltar</div>
@@ -234,25 +245,149 @@ export function PackOpening({ card, def, remaining = 0, onDone }: { card: CardPr
   )
 }
 
-/** Escena pròpia de cada família, entre la revelació i la carta */
+/** Escena pròpia de cada família, just després d'obrir el sobre */
 function CardScene({ family }: { family: string }) {
   const rows = [0, 1, 2, 3, 4]
+  const text = (t: string) => <div className="scene-text">{t}</div>
   switch (family) {
     case 'totm':
       return (
-        <div className="scene scene-totm">
+        <div className="scene">
           <div className="spot spot-l" />
           <div className="spot spot-r" />
           <div className="scene-big scene-rise">🏆</div>
-          <div className="scene-text">TIBU OF THE MONTH</div>
+          {text('TIBU OF THE MONTH')}
         </div>
       )
     case 'antim':
       return (
-        <div className="scene scene-antim">
+        <div className="scene">
           <div className="scene-big scene-pop">🤡</div>
           <div className="scene-honk">📯 MEC MEC!</div>
-          <div className="scene-text">ANTI-MVP DEL MES</div>
+          {text('ANTI-MVP DEL MES')}
+        </div>
+      )
+    case 'icona':
+      return (
+        <div className="scene scene-icona">
+          <div className="halo-glow" />
+          <div className="crown-drop">👑</div>
+          <div className="scene-big scene-delay">⭐</div>
+          {text('ICONA')}
+        </div>
+      )
+    case 'nongrata':
+      return (
+        <div className="scene scene-fire">
+          <div className="flames" />
+          <div className="scene-big scene-pop">😈</div>
+          {text('PERSONA NON GRATA')}
+        </div>
+      )
+    case 'hattrick':
+      return (
+        <div className="scene scene-hattrick">
+          <div className="goal">
+            <div className="net" />
+          </div>
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="shot" style={{ animationDelay: `${i * 0.7}s`, left: `${35 + i * 15}%` }}>
+              ⚽
+            </div>
+          ))}
+          <div className="goal-count">
+            {[1, 2, 3].map((n) => (
+              <span key={n} style={{ animationDelay: `${0.55 + (n - 1) * 0.7}s` }}>
+                {n}
+              </span>
+            ))}
+          </div>
+          {text('HAT-TRICK!')}
+        </div>
+      )
+    case 'bdo':
+      return (
+        <div className="scene">
+          <div className="spot spot-l" />
+          <div className="spot spot-r" />
+          <div className="scene-big golden-ball">⚽</div>
+          {text("PILOTA D'OR")}
+        </div>
+      )
+    case 'fang':
+      return (
+        <div className="scene scene-beach">
+          <div className="sun">☀️</div>
+          <div className="scene-big beach-ball">🏐</div>
+          <div className="waves" />
+          {text('PILOTA DE PLATJA')}
+        </div>
+      )
+    case 'redempcio':
+      return (
+        <div className="scene scene-heaven">
+          <div className="heaven-light" />
+          <div className="scene-big">
+            <span className="halo-ring" />
+            😇
+          </div>
+          {text('REDEMPTION')}
+        </div>
+      )
+    case 'doblecara':
+      return (
+        <div className="scene scene-twoface">
+          <div className="half half-good">😇</div>
+          <div className="half half-bad">🤡</div>
+          <div className="scene-big scene-delay">🎭</div>
+          {text('DOBLE CARA')}
+        </div>
+      )
+    case 'rata':
+      return (
+        <div className="scene">
+          {rows.map((i) => (
+            <div key={i} className="rat-run" style={{ top: `${15 + i * 15}%`, animationDelay: `${i * 0.25}s` }}>
+              🐀
+            </div>
+          ))}
+          <div className="scene-big scene-pop">🐀</div>
+          {text('GYMRAT')}
+        </div>
+      )
+    case 'centurio':
+      return (
+        <div className="scene">
+          <div className="column column-l">🏛️</div>
+          <div className="column column-r">🏛️</div>
+          <div className="scene-roman">C</div>
+          {text('CENT ENTRENOS')}
+        </div>
+      )
+    case 'totterreny':
+      return (
+        <div className="scene scene-offroad">
+          <div className="jeep">🚙</div>
+          <div className="mud-trail" />
+          {text('4x4 · TOT TERRENY')}
+        </div>
+      )
+    case 'ferro':
+      return (
+        <div className="scene scene-iron">
+          {rows.map((i) => (
+            <span key={i} className="spark" style={{ ['--dx' as string]: `${(i - 2) * 60}px`, animationDelay: `${0.6 + i * 0.08}s` }} />
+          ))}
+          <div className="scene-big scene-rise">🦾</div>
+          <div className="scene-text steel">IRONMAN</div>
+        </div>
+      )
+    case 'superman':
+      return (
+        <div className="scene scene-super">
+          <div className="speed-lines" />
+          <div className="scene-big hero-fly">🦸</div>
+          {text('SUPERMAN')}
         </div>
       )
     case 'fantasma':
@@ -269,28 +404,42 @@ function CardScene({ family }: { family: string }) {
           <div className="scene-big scene-float">
             {family === 'reifantasma' && <span className="ghost-crown">👑</span>}👻
           </div>
-          <div className="scene-text">{family === 'reifantasma' ? 'EL REI FANTASMA' : 'ON ERES?'}</div>
+          {text(family === 'reifantasma' ? 'EL REI FANTASMA' : 'ON ERES?')}
         </div>
       )
-    case 'centurio':
+    case 'exit-ascens':
       return (
-        <div className="scene scene-centurio">
-          <div className="column column-l">🏛️</div>
-          <div className="column column-r">🏛️</div>
-          <div className="scene-roman">C</div>
-          <div className="scene-text">CENT ENTRENOS</div>
-        </div>
-      )
-    case 'rata':
-      return (
-        <div className="scene scene-rata">
-          {rows.map((i) => (
-            <div key={i} className="rat-run" style={{ top: `${15 + i * 15}%`, animationDelay: `${i * 0.25}s` }}>
-              🐀
+        <div className="scene scene-stairs">
+          <div className="stairs-wrap">
+            <div className="stairs">
+              {[0, 1, 2, 3].map((i) => (
+                <span key={i} style={{ height: `${(i + 1) * 22}px`, animationDelay: `${i * 0.15}s` }} />
+              ))}
             </div>
-          ))}
-          <div className="scene-big scene-pop">🐀</div>
-          <div className="scene-text">GYMRAT</div>
+            <div className="stair-climber">🏆</div>
+          </div>
+          {text('ASCENS!')}
+        </div>
+      )
+    case 'exit-mitja':
+    case 'exit-marato':
+      return (
+        <div className="scene scene-finish">
+          <div className="chrono">⏱️ {family === 'exit-marato' ? '42,2 km' : '21,1 km'}</div>
+          <div className="finish-tape">
+            <span />
+            <span />
+          </div>
+          <div className="runner">🏃</div>
+          {text(family === 'exit-marato' ? 'MARATÓ!' : 'MITJA MARATÓ!')}
+        </div>
+      )
+    case 'exit-hyrox':
+      return (
+        <div className="scene scene-hyrox">
+          <div className="sled">🛷</div>
+          <div className="scene-big slam">🏋️</div>
+          {text('HYROX')}
         </div>
       )
     default:
@@ -317,8 +466,12 @@ function Particles({ preset }: { preset: Preset }) {
       ghosts: ['#ffffff'],
       dust: ['#e8e4da', '#cfc8b8', '#ffffff', '#a8a294'],
       rats: ['#ffffff'],
+      beach: ['#ffffff'],
+      feathers: ['#ffffff'],
+      mud: ['#6b4a2b', '#8a5f36', '#4a3220', '#a07040'],
+      heroic: ['#e8202a', '#1f5bff', '#f5c542', '#ffffff'],
     }
-    const emojis: Partial<Record<Preset, string[]>> = { ghosts: ['👻'], rats: ['🐀', '🧀', '🏋️'] }
+    const emojis: Partial<Record<Preset, string[]>> = { ghosts: ['👻'], rats: ['🐀', '🧀', '🏋️'], beach: ['🌊', '☀️', '🩴', '🍹'], feathers: ['🪶', '🤍', '✨'] }
     type P = { x: number; y: number; vx: number; vy: number; s: number; r: number; vr: number; c: string; e?: string; life: number }
     const rnd = (a: number, b: number) => a + Math.random() * (b - a)
     const pick = <T,>(a: T[]) => a[Math.floor(Math.random() * a.length)]
@@ -336,7 +489,12 @@ function Particles({ preset }: { preset: Preset }) {
         case 'dust':
           return { ...base, x: rnd(0, W), y: -10 * dpr, vx: rnd(-0.3, 0.3) * dpr, vy: rnd(0.5, 1.6) * dpr, s: rnd(2, 5) * dpr }
         case 'rats':
-          return { ...base, e: pick(emojis.rats!), x: rnd(0, W), y: -30 * dpr, vx: rnd(-0.6, 0.6) * dpr, vy: rnd(2, 4) * dpr, s: rnd(20, 30) * dpr }
+        case 'beach':
+          return { ...base, e: pick(emojis[preset]!), x: rnd(0, W), y: -30 * dpr, vx: rnd(-0.6, 0.6) * dpr, vy: rnd(2, 4) * dpr, s: rnd(20, 30) * dpr }
+        case 'feathers':
+          return { ...base, e: pick(emojis.feathers!), x: rnd(0, W), y: -30 * dpr, vx: rnd(-0.4, 0.4) * dpr, vy: rnd(0.6, 1.4) * dpr, s: rnd(16, 28) * dpr }
+        case 'mud':
+          return { ...base, x: rnd(0, W), y: -10 * dpr, vx: rnd(-1, 1) * dpr, vy: rnd(3, 7) * dpr, s: rnd(4, 10) * dpr }
         default: {
           const a = Math.random() * Math.PI * 2
           const v = (burst ? rnd(6, 16) : rnd(1, 3)) * dpr
@@ -352,9 +510,9 @@ function Particles({ preset }: { preset: Preset }) {
         }
       }
     }
-    const bursty = preset === 'confetti' || preset === 'gold' || preset === 'sparkles'
+    const bursty = preset === 'confetti' || preset === 'gold' || preset === 'sparkles' || preset === 'heroic'
     let ps: P[] = bursty ? Array.from({ length: 170 }, () => make(true)) : []
-    const rate = preset === 'rain' ? 6 : preset === 'ghosts' || preset === 'rats' ? 0.25 : preset === 'noses' ? 0.6 : 2
+    const rate = preset === 'rain' ? 6 : ['ghosts', 'rats', 'beach', 'feathers'].includes(preset) ? 0.25 : preset === 'noses' ? 0.6 : 2
     let acc = 0
     let frame = 0
     let raf = 0
@@ -373,7 +531,7 @@ function Particles({ preset }: { preset: Preset }) {
         if (preset === 'noses' && p.y > H - p.s && p.vy > 0) p.vy *= -0.55 // els nassos boten
         if (preset === 'noses') p.vy += 0.15 * dpr
         if (preset === 'embers') p.life -= 0.006
-        if (preset === 'ghosts') p.x += Math.sin((frame + p.s) / 25) * 0.8 * dpr
+        if (preset === 'ghosts' || preset === 'feathers') p.x += Math.sin((frame + p.s) / 25) * 0.8 * dpr
         p.r += p.vr
         ctx.save()
         ctx.globalAlpha = Math.max(0, Math.min(1, p.life))
@@ -383,7 +541,7 @@ function Particles({ preset }: { preset: Preset }) {
           ctx.font = `${p.s}px serif`
           ctx.fillText(p.e, 0, 0)
         } else if (preset === 'rain') ctx.fillRect(0, 0, p.s, p.s * 8)
-        else if (preset === 'embers' || preset === 'sparkles' || preset === 'noses' || preset === 'dust') {
+        else if (preset === 'embers' || preset === 'sparkles' || preset === 'noses' || preset === 'dust' || preset === 'mud') {
           ctx.beginPath()
           ctx.arc(0, 0, p.s / 2, 0, Math.PI * 2)
           ctx.fill()
