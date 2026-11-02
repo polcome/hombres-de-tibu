@@ -1,4 +1,4 @@
-// KINGS: el torneig anual de futsal de la colla. De moment, pantalla de "properament".
+// KINGS: torneig de futsal (no és dels Tibus, però hi juguen molts). De moment, pantalla de "properament".
 const TEASERS: [string, string][] = [
   ['⚽', 'Pachangues: qui hi va, gols, assistències i qui guanya'],
   ['⭐', 'Notes dels companys de l\'1 al 10 després de cada partit'],
@@ -14,7 +14,7 @@ export default function Kings() {
       <div className="kings-glow" />
       <div className="kings-crown">👑</div>
       <h1 className="kings-title">KINGS</h1>
-      <div className="kings-sub">Futsal · Torneig anual dels Tibus</div>
+      <div className="kings-sub">Torneig de futsal · Els Tibus de la Kings</div>
       <div className="kings-soon">PROPERAMENT…</div>
       <ul className="kings-list">
         {TEASERS.map(([e, t], i) => (
