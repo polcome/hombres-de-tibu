@@ -174,11 +174,28 @@ textarea:focus {
   color: var(--muted);
   font-size: 10px;
   letter-spacing: 2px;
+  white-space: nowrap;
 }
 .topbar-right {
   display: flex;
   gap: 8px;
   align-items: center;
+  flex-shrink: 0;
+}
+/* Mòbil estret amb la corona i l'Admin: que el subtítol no salti de línia */
+@media (max-width: 420px) {
+  .brand {
+    gap: 8px;
+  }
+  .brand small {
+    letter-spacing: 1px;
+  }
+  .topbar-right {
+    gap: 6px;
+  }
+  .topbar-right .chip {
+    padding: 6px 8px;
+  }
 }
 
 .bottomnav {
