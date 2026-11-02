@@ -217,6 +217,17 @@ export function createDemoApi(): Api {
         if (cur?.emoji !== emoji) db.expedientReactions.push({ expedient_id: id, member_id: me, emoji })
       })
     },
+    async seenCards() {
+      const me = meId()
+      if (!me) return null
+      return JSON.parse(localStorage.getItem(`tibu-demo-seen-${me}`) ?? '[]')
+    },
+    async markCardsSeen(keys) {
+      const me = meId()
+      if (!me) return
+      const cur: string[] = JSON.parse(localStorage.getItem(`tibu-demo-seen-${me}`) ?? '[]')
+      localStorage.setItem(`tibu-demo-seen-${me}`, JSON.stringify([...new Set([...cur, ...keys])]))
+    },
     async castVote(monthId, mvpId, mvpReason, antiId, antiReason) {
       const me = meId()
       const db = load()

@@ -1673,3 +1673,352 @@ textarea:focus {
   text-align: left;
   color: var(--muted);
 }
+
+/* ============================================================
+   Sobre de carta nova (CardPack): sobre que es talla i revelació FIFA
+   ============================================================ */
+.pack-overlay {
+  --a: #f5c542;
+  --b: #6b4bff;
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: radial-gradient(circle at 50% 42%, color-mix(in srgb, var(--b) 55%, #000) 0%, #07081a 70%);
+  color: #fff;
+  touch-action: none;
+  user-select: none;
+}
+.pack-cursed {
+  --a: #c0392b;
+  --b: #3a0d12;
+  background: radial-gradient(circle at 50% 42%, #2a0a0e 0%, #050506 75%);
+}
+.pack-plus {
+  --a: #c9a6ff;
+  --b: #5b2bd6;
+}
+.pack-ultra {
+  --a: #ff8a1f;
+  --b: #7a1d00;
+}
+.pack-beams {
+  position: absolute;
+  inset: -50%;
+  background: repeating-conic-gradient(from 0deg, color-mix(in srgb, var(--a) 22%, transparent) 0deg 8deg, transparent 8deg 20deg);
+  animation: pack-spin 28s linear infinite;
+  opacity: 0.55;
+  mask-image: radial-gradient(circle, #000 0%, transparent 60%);
+}
+.pack-cursed .pack-beams {
+  opacity: 0.25;
+}
+@keyframes pack-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.pack-particles {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 3;
+}
+.pack-stage {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+.pack {
+  position: relative;
+  width: min(230px, 62vw);
+  aspect-ratio: 5 / 7.4;
+  cursor: grab;
+  animation: pack-float 2.4s ease-in-out infinite;
+  filter: drop-shadow(0 18px 30px rgba(0, 0, 0, 0.6)) drop-shadow(0 0 30px color-mix(in srgb, var(--a) 45%, transparent));
+}
+@keyframes pack-float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-1.5deg);
+  }
+  50% {
+    transform: translateY(-10px) rotate(1.5deg);
+  }
+}
+.pack-top,
+.pack-body {
+  position: absolute;
+  left: 0;
+  right: 0;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--a) 90%, #fff) 0%, var(--a) 35%, color-mix(in srgb, var(--a) 55%, #000) 100%);
+  border: 2px solid color-mix(in srgb, var(--a) 60%, #fff);
+}
+.pack-cursed .pack-top,
+.pack-cursed .pack-body {
+  background: linear-gradient(135deg, #2b2b33 0%, #121216 60%, #3a0d12 100%);
+  border-color: #5b1f24;
+}
+.pack-top {
+  top: 0;
+  height: 16%;
+  border-radius: 14px 14px 4px 4px;
+  border-bottom: 2px dashed rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+  transition:
+    transform 0.7s cubic-bezier(0.2, 0.8, 0.2, 1),
+    opacity 0.7s;
+}
+.pack-cutline {
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  height: 4px;
+  background: #fff;
+  box-shadow:
+    0 0 12px #fff,
+    0 0 24px var(--a);
+}
+.pack-body {
+  top: 17%;
+  bottom: 0;
+  border-radius: 4px 4px 14px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  overflow: hidden;
+  transition:
+    transform 0.7s ease-in,
+    opacity 0.7s;
+}
+.pack-cursed .pack-body::before {
+  /* esquerda */
+  content: '';
+  position: absolute;
+  top: 8%;
+  left: 55%;
+  width: 3px;
+  height: 60%;
+  background: linear-gradient(#000, transparent);
+  transform: rotate(14deg);
+  box-shadow: -8px 30px 0 -1px rgba(0, 0, 0, 0.6);
+}
+.pack-logo {
+  font-size: 54px;
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.4));
+}
+.pack-brand {
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  font-size: 13px;
+  color: rgba(0, 0, 0, 0.75);
+}
+.pack-sub {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: rgba(0, 0, 0, 0.55);
+}
+.pack-cursed .pack-brand,
+.pack-cursed .pack-sub {
+  color: #c0392b;
+}
+.pack-shine {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.55) 45%, transparent 60%);
+  transform: translateX(-100%);
+  animation: pack-shine 2.6s ease-in-out infinite;
+}
+@keyframes pack-shine {
+  60%,
+  100% {
+    transform: translateX(100%);
+  }
+}
+.pack-open {
+  animation: none;
+}
+.pack-open .pack-top {
+  transform: translate(60px, -160px) rotate(35deg);
+  opacity: 0;
+}
+.pack-open .pack-body {
+  transform: translateY(120%);
+  opacity: 0;
+}
+.pack-hint {
+  font-weight: 700;
+  animation: pack-pulse 1.4s ease-in-out infinite;
+}
+@keyframes pack-pulse {
+  50% {
+    opacity: 0.5;
+  }
+}
+.pack-skip {
+  color: var(--muted);
+}
+.pack-flash {
+  position: fixed;
+  inset: 0;
+  background: #fff;
+  animation: pack-flash 0.75s ease-out forwards;
+  pointer-events: none;
+}
+.pack-cursed .pack-flash {
+  background: #8a1c1c;
+}
+@keyframes pack-flash {
+  0% {
+    opacity: 0;
+  }
+  25% {
+    opacity: 0.95;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+.pack-shake {
+  animation: pack-shake 0.5s linear;
+}
+@keyframes pack-shake {
+  20%,
+  60% {
+    transform: translate(-8px, 4px);
+  }
+  40%,
+  80% {
+    transform: translate(8px, -4px);
+  }
+}
+
+/* Revelació pas a pas */
+.walkout {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  padding: 16px;
+  text-align: center;
+}
+.walkout > * {
+  animation: walkout-in 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.3) both;
+}
+@keyframes walkout-in {
+  from {
+    opacity: 0;
+    transform: scale(0.6) translateY(20px);
+  }
+}
+.walkout-intro {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.walkout-emoji {
+  font-size: 72px;
+  filter: drop-shadow(0 0 24px var(--a));
+}
+.walkout-stats {
+  display: grid;
+  grid-template-columns: repeat(3, auto);
+  gap: 6px 18px;
+  align-items: center;
+  font-family: 'Barlow Condensed', 'Arial Narrow', system-ui, sans-serif;
+  font-size: 20px;
+  animation: none;
+}
+.walkout-ovr {
+  grid-column: 1 / -1;
+  font-size: 64px;
+  font-weight: 900;
+  line-height: 1;
+  color: var(--a);
+  text-shadow: 0 0 24px var(--a);
+  animation: walkout-in 0.6s both;
+}
+.walkout-stat {
+  animation: walkout-in 0.5s both;
+}
+.walkout-stat b {
+  font-size: 26px;
+  color: var(--a);
+}
+.walkout-name div {
+  font-size: 36px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.walkout-name small {
+  color: var(--a);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.walkout-photo {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 3px solid var(--a);
+  box-shadow: 0 0 30px var(--a);
+}
+.walkout-photo img,
+.walkout-photo span {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: grid;
+  place-items: center;
+  font-size: 54px;
+  font-weight: 900;
+}
+.walkout-tap {
+  animation: pack-pulse 1.4s ease-in-out infinite;
+}
+
+/* Carta final */
+.pack-final {
+  position: relative;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  max-width: 420px;
+}
+.pack-final-title {
+  font-size: 20px;
+  font-weight: 900;
+  animation: walkout-in 0.5s both;
+}
+.pack-card {
+  animation: pack-card-in 1s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+@keyframes pack-card-in {
+  from {
+    opacity: 0;
+    transform: perspective(800px) rotateY(540deg) scale(0.3);
+  }
+}
+.pack-final .btn {
+  position: relative;
+  z-index: 5;
+}

@@ -21,7 +21,7 @@ App web del grup d'amics del gimnàs "Los Hombres de Tibu" (13 membres). Serveix
 - `src/logic/acta.ts`: genera l'acta del mes amb plantilles (sense IA, `generateActa`) i el prompt per a la IA (`aiPrompt`, amb 24 estils a `AI_STYLES`: `pickStyle` en tria un a l'atzar que no s'hagi fet servir els últims 23 mesos, i es desa a `months.acta_style`. Ha de ser impredictible: no l'assignis per mes).
 - `src/logic/months.ts`: utilitats de mesos (`'YYYY-MM'`).
 - `src/pages/*`: Home, Dossier, Vote, Trainings, Cards, Palmares, MonthPage, Player, Admin, Login.
-- `src/components/*`: FifaCard + CardArt (plantilles SVG) + fifa.css, CardZoom (pop-up de cartes, amb controls de foto), ActaView (acta publicada amb format visual a partir del text de WhatsApp), Album (àlbum de cromos), PhotoEditor (encuadrar), PhotoControls, CameraCapture (càmera dins l'app amb getUserMedia), TrainingItem, ui.
+- `src/components/*`: FifaCard + CardArt (plantilles SVG) + fifa.css, CardZoom (pop-up de cartes, amb controls de foto), ActaView (acta publicada amb format visual a partir del text de WhatsApp), CardPack (sobre de carta nova: `PackWatcher` + `PackOpening`), Album (àlbum de cromos), PhotoEditor (encuadrar), PhotoControls, CameraCapture (càmera dins l'app amb getUserMedia), TrainingItem, ui.
 
 ## Decisions de disseny (no les canviïs sense preguntar)
 - **Vot 100% secret:** la taula `ballots` no té votant ni data, i `voters` només guarda qui ha votat. Es vota per la RPC `cast_vote`.
@@ -60,6 +60,7 @@ App web del grup d'amics del gimnàs "Los Hombres de Tibu" (13 membres). Serveix
   - La **foto base** (carta base i avatar) se la pot posar cadascú al seu perfil o al pop-up de la seva carta base; l'admin pot canviar la de tothom. Va per la RPC `set_member_photo` (si no existeix, el client fa servir `updateMember`, que només funciona per a admins).
   - Les **fotos de cartes especials** només les posen els admins: des de l'àlbum o des del pop-up de qualsevol carta (`CardZoom` amb `photoKey`).
   - El perfil mostra sempre la carta base. A Inici i a Cartes (Carta base i Col·lecció) totes les cartes van petites i en clicar-les s'obren en gran en un pop-up, que té el botó "Veure perfil". La pestanya "Carta base" mostra sempre la carta base actual de cadascú (sense TOTM ni Anti-MVP).
+- **Sobres de cartes noves** (`src/components/CardPack.tsx`): quan un membre guanya una carta especial, el primer cop que entra (o a l'instant si ja hi és) li surt un sobre que s'obre lliscant el dit i una revelació tipus FIFA (emoji i raresa → stats → nom → foto → carta amb confeti). Temes: daurat, maleït (pluja i sacsejada), PLUS (espurnes liles) i ULTRA (flames). Les vistes es guarden a `seen_cards` (cadascú només les seves); la fila `__init__` marca que les que ja tenia en estrenar-ho no surten. Si la taula no existeix, no surt res. A Admin → «Prova del sobre» es pot provar amb qualsevol carta sense guardar res.
 - **Àlbum de cromos** (`src/components/Album.tsx`): al perfil hi ha una vista prèvia que obre un àlbum a pantalla completa. La portada té la carta base actual, el progrés (X/40) i un índex. Hi ha una pàgina per família (base + PLUS + ULTRA) i una per als èxits esportius, amb els buits bloquejats. Es passa pàgina lliscant o amb fletxes. L'admin hi posa les fotos de cada carta.
 - **Descartat de moment** (l'usuari ho ha dit): minijocs, porra/Tibucoins, premis, comodins, rol "editor de fotos" i blindar la foto obligatòria a la BD.
 
@@ -79,6 +80,7 @@ App web del grup d'amics del gimnàs "Los Hombres de Tibu" (13 membres). Serveix
 13. `supabase/migracio-esborrar-propi.sql`: esborrar els propis expedients i comentaris amb codi secret.
 14. `supabase/migracio-superadmin.sql`: el Come és superadmin.
 15. `supabase/neteja-novembre-2026.sql`: neteja de dades de prova, recompte d'entrenos a 2/11/2026 com a recompte inicial, octubre (MVP Ferran, anti Policho).
+16. `supabase/migracio-cartes-vistes.sql`: taula `seen_cards` per als sobres (⚠️ pendent de confirmar que l'usuari l'ha executat).
 
 Quan un canvi necessiti BD:
 - Crea una **migració nova** `supabase/migracio-*.sql` que sigui idempotent (`if not exists`, `drop policy if exists`).

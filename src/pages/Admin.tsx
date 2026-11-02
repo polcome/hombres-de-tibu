@@ -3,7 +3,8 @@ import { api } from '../api'
 import { useAction, useStore } from '../store'
 import type { AchievementKind, AwardType, Member, Month, TrainingKind } from '../types'
 import { activeMonth, closedMonths, currentMonthKey, monthLabel, shiftMonth, todayISO } from '../logic/months'
-import { ACHIEVEMENT_FOR_BONUS, CARD_DEFS, displayName, memberById } from '../logic/stats'
+import { ACHIEVEMENT_FOR_BONUS, CARD_DEFS, displayName, focusOf, memberById, rating } from '../logic/stats'
+import { PackOpening } from '../components/CardPack'
 import { aiPrompt, generateActa, pickStyle } from '../logic/acta'
 import { Avatar } from '../components/Avatar'
 import { CopyButton, ErrorMsg, MemberSelect, Section, WhatsAppButton } from '../components/ui'
@@ -28,6 +29,7 @@ export default function Admin() {
       <TrainingAdmin />
       <AchievementsAdmin />
       <HistoryAdmin />
+      <PackTestAdmin />
     </div>
   )
 }
@@ -489,6 +491,42 @@ function AchievementsAdmin() {
           )
         })}
       </div>
+    </Section>
+  )
+}
+
+/** Prova de l'animació del sobre amb qualsevol carta (no es guarda res) */
+function PackTestAdmin() {
+  const { db, me } = useStore()
+  const [id, setId] = useState(CARD_DEFS[0].id)
+  const [open, setOpen] = useState(false)
+  if (!me) return null
+  const def = CARD_DEFS.find((d) => d.id === id)!
+  return (
+    <Section title="🎁 Prova del sobre">
+      <p className="muted small">
+        Quan algú guanya una carta nova, el primer cop que entra li surt un sobre per obrir. Aquí el pots provar amb qualsevol carta (amb la teva cara i sense
+        guardar res).
+      </p>
+      <div className="row wrap">
+        <select value={id} onChange={(e) => setId(e.target.value)}>
+          {CARD_DEFS.map((d) => (
+            <option key={d.id} value={d.id}>
+              {d.emoji} {d.name}
+            </option>
+          ))}
+        </select>
+        <button className="btn btn-primary" onClick={() => setOpen(true)}>
+          Obrir sobre de prova
+        </button>
+      </div>
+      {open && (
+        <PackOpening
+          card={{ member: me, rating: rating(db, me.id), variant: def.variant, level: def.level, boost: def.boost, focus: focusOf(def), label: 'Prova', title: def.name, emoji: def.emoji }}
+          def={def}
+          onDone={() => setOpen(false)}
+        />
+      )}
     </Section>
   )
 }

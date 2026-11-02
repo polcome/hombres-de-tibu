@@ -625,4 +625,19 @@ drop trigger if exists protect_owner on members;
 create trigger protect_owner before insert or update or delete on members
   for each row execute function protect_owner();
 
+-- ---------------------------------------------------------------------
+-- Cartes vistes (animació del sobre en guanyar una carta)
+-- ---------------------------------------------------------------------
+create table if not exists seen_cards (
+  member_id uuid not null references members(id) on delete cascade,
+  card_key  text not null,
+  seen_at   timestamptz not null default now(),
+  primary key (member_id, card_key)
+);
+alter table seen_cards enable row level security;
+drop policy if exists "own seen cards read" on seen_cards;
+drop policy if exists "own seen cards insert" on seen_cards;
+create policy "own seen cards read" on seen_cards for select using (member_id = current_member_id());
+create policy "own seen cards insert" on seen_cards for insert with check (member_id = current_member_id());
+
 notify pgrst, 'reload schema';

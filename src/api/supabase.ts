@@ -132,6 +132,21 @@ export function createSupabaseApi(url: string, key: string): Api {
     async react(expedientId, emoji) {
       check(await sb.rpc('react', { p_expedient: expedientId, p_emoji: emoji }))
     },
+    async seenCards() {
+      const me = await this.me()
+      if (!me) return null
+      // Si la migració encara no s'ha executat, no hi ha sobres (no peta res)
+      const { data, error } = await sb.from('seen_cards').select('card_key').eq('member_id', me)
+      return error ? null : (data as { card_key: string }[]).map((r) => r.card_key)
+    },
+    async markCardsSeen(keys) {
+      const me = await this.me()
+      if (!me || !keys.length) return
+      await sb.from('seen_cards').upsert(
+        keys.map((card_key) => ({ member_id: me, card_key })),
+        { onConflict: 'member_id,card_key', ignoreDuplicates: true },
+      )
+    },
     async castVote(monthId, mvpId, mvpReason, antiId, antiReason) {
       check(
         await sb.rpc('cast_vote', {

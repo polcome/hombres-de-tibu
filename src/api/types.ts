@@ -19,6 +19,9 @@ export interface Api {
   addExpedient(e: Pick<Expedient, 'month_id' | 'target_id' | 'kind' | 'text' | 'author'>): Promise<void>
   addComment(c: { expedient_id: string; author: string | null; text: string }): Promise<void>
   react(expedientId: string, emoji: string): Promise<void>
+  /** Cartes que l'usuari ja ha obert (null si la funció no està disponible: llavors no surten sobres) */
+  seenCards(): Promise<string[] | null>
+  markCardsSeen(keys: string[]): Promise<void>
   castVote(monthId: string, mvpId: string, mvpReason: string, antiId: string, antiReason: string): Promise<void>
 
   // Admin

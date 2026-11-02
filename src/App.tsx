@@ -13,6 +13,7 @@ import MonthPage from './pages/MonthPage'
 import Player from './pages/Player'
 import Admin from './pages/Admin'
 import Login from './pages/Login'
+import { PackWatcher } from './components/CardPack'
 
 function Shell() {
   const { me, loading, error } = useStore()
@@ -57,6 +58,8 @@ function Shell() {
           )}
         </div>
       </header>
+
+      {!loading && !error && <PackWatcher />}
 
       <main className="container">
         {loading ? (
