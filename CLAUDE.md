@@ -38,7 +38,7 @@ App web del grup d'amics del gimnàs "Los Hombres de Tibu" (13 membres). Serveix
 - **Comentaris:** il·limitats, anònims i sense sessió.
 - **Esborrar el que és teu:** els entrenos propis (no el recompte inicial) es poden treure (RLS de `trainings`). Els expedients i comentaris propis també, sense trencar l'anonimat: en publicar, el mòbil genera un codi secret (`src/logic/own.ts`, localStorage) i a la BD només en va el hash (`delete_token`); les RPC `delete_own_expedient` / `delete_own_comment` el comproven. Només funciona des del mòbil on es va publicar. L'admin pot esborrar-ho tot.
 - **Entrenos:** format "gym (fora)".
-  - Hi ha un recompte inicial de 2026 amb `baseline = true`, que compta per a l'any però no per a cap mes.
+  - Hi ha un recompte inicial de 2026 amb `baseline = true` (a data 2/11/2026), que compta per a l'any però no per a cap mes.
   - **Foto obligatòria per a gym** (només ho controla el client) i opcional per a fora. Es pot fer amb la càmera de l'app o triar de la galeria.
   - Les fotos es comprimeixen a 1080px abans de pujar-les.
   - Les fotos de prova són **d'una sola visualització** per dispositiu (localStorage). L'autor i l'admin les poden veure sempre.
@@ -77,7 +77,8 @@ App web del grup d'amics del gimnàs "Los Hombres de Tibu" (13 membres). Serveix
 11. `supabase/migracio-desempat-anti.sql`: afegeix el desempat de l'anti per menys vots de MVP.
 12. `supabase/migracio-estil-acta.sql`: columna `months.acta_style`.
 13. `supabase/migracio-esborrar-propi.sql`: esborrar els propis expedients i comentaris amb codi secret.
-14. `supabase/migracio-superadmin.sql`: el Come és superadmin (⚠️ pendent de confirmar que l'usuari l'ha executat).
+14. `supabase/migracio-superadmin.sql`: el Come és superadmin.
+15. `supabase/neteja-novembre-2026.sql`: neteja de dades de prova, recompte d'entrenos a 2/11/2026 com a recompte inicial, octubre (MVP Ferran, anti Policho) (⚠️ pendent de confirmar que l'usuari l'ha executat).
 
 Quan un canvi necessiti BD:
 - Crea una **migració nova** `supabase/migracio-*.sql` que sigui idempotent (`if not exists`, `drop policy if exists`).
