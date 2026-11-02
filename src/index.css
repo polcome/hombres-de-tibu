@@ -2783,3 +2783,97 @@ textarea:focus {
   border-radius: 4px;
   background: var(--a);
 }
+
+/* KINGS: pantalla de properament */
+.chip-kings {
+  border-color: rgba(245, 197, 66, 0.5);
+  background: rgba(245, 197, 66, 0.12);
+}
+.kings {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 36px 18px 28px;
+  border-radius: 20px;
+  border: 1px solid rgba(245, 197, 66, 0.4);
+  background: linear-gradient(160deg, #1a1430 0%, #0d0f22 60%, #2a1a08 100%);
+  text-align: center;
+}
+.kings-glow {
+  position: absolute;
+  top: -40%;
+  left: 50%;
+  width: 420px;
+  height: 420px;
+  transform: translateX(-50%);
+  background: radial-gradient(circle, rgba(245, 197, 66, 0.35), transparent 65%);
+  animation: pack-pulse 2.4s ease-in-out infinite;
+  pointer-events: none;
+}
+.kings-crown {
+  position: relative;
+  font-size: 72px;
+  filter: drop-shadow(0 0 24px #f5c542);
+  animation:
+    crown-drop 1s cubic-bezier(0.3, 1.4, 0.5, 1) both,
+    pack-float 3s 1s ease-in-out infinite;
+}
+.kings-title {
+  position: relative;
+  margin: 0;
+  font-family: 'Barlow Condensed', 'Arial Narrow', system-ui, sans-serif;
+  font-size: 64px;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+  background: linear-gradient(180deg, #fff6cf, #f5c542 55%, #b07d12);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: scene-text 0.8s 0.4s both;
+}
+.kings-sub {
+  position: relative;
+  color: var(--muted);
+  font-size: 14px;
+  letter-spacing: 0.08em;
+}
+.kings-soon {
+  position: relative;
+  margin: 8px 0 6px;
+  padding: 8px 18px;
+  border-radius: 999px;
+  border: 1px dashed #f5c542;
+  color: #f5c542;
+  font-weight: 900;
+  letter-spacing: 0.25em;
+  animation: pack-pulse 1.6s ease-in-out infinite;
+}
+.kings-list {
+  position: relative;
+  list-style: none;
+  margin: 6px 0 4px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  max-width: 360px;
+  text-align: left;
+}
+.kings-list li {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 14px;
+  animation: walkout-in 0.5s both;
+}
+.kings-list li span {
+  font-size: 20px;
+}

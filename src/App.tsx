@@ -13,6 +13,7 @@ import MonthPage from './pages/MonthPage'
 import Player from './pages/Player'
 import Admin from './pages/Admin'
 import Login from './pages/Login'
+import Kings from './pages/Kings'
 import { PackWatcher } from './components/CardPack'
 
 function Shell() {
@@ -42,6 +43,9 @@ function Shell() {
           </span>
         </Link>
         <div className="topbar-right">
+          <NavLink to="/kings" className="chip chip-kings" title="Kings">
+            👑
+          </NavLink>
           {me?.is_admin && (
             <NavLink to="/admin" className="chip">
               ⚙️ Admin
@@ -78,6 +82,7 @@ function Shell() {
             <Route path="/jugador/:slug" element={<Player />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/kings" element={<Kings />} />
             <Route path="*" element={<Home />} />
           </Routes>
         )}
