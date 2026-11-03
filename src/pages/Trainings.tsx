@@ -255,7 +255,7 @@ export default function Trainings() {
       </Section>
 
       <Section title="📸 Últims entrenos del grup">
-        <p className="muted small">Valida els entrenos dels altres: ✅ vàlid o 🧢 dubtós. Amb 3 🧢 (i més 🧢 que ✅), queda marcat com a dubtós perquè l'admin hi faci una ullada.</p>
+        <p className="muted small">Valida els entrenos dels altres: ✅ vàlid o ❓ dubtós. Amb 3 ❓ (i més ❓ que ✅), queda marcat com a dubtós perquè l'admin hi faci una ullada.</p>
         <div className="stack-sm">
           {feed.slice(0, feedLimit).map((t) => (
             <TrainingItem key={t.id} t={t} />

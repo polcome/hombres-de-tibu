@@ -117,7 +117,7 @@ export function PackWatcher() {
 
 const WELCOME: [string, string, string][] = [
   ['🦈', 'Benvingut a Hombres de Tibu', "L'app oficial de la colla: tot el que passa al grup queda registrat aquí."],
-  ['🏋️', 'Entrenos', 'Apunta cada entreno (al gym, amb foto) i valida els dels altres amb ✅ o 🧢.'],
+  ['🏋️', 'Entrenos', 'Apunta cada entreno (al gym, amb foto) i valida els dels altres amb ✅ o ❓.'],
   ['📁', 'Dossier', 'Obre expedients de mèrits i faltes dels companys. Anònims o signats.'],
   ['🗳️', 'Votació', "A final de mes votes l'MVP i l'anti-MVP. Vot secret."],
   ['🃏', 'Cartes', 'Tens una carta que puja o baixa amb el que fas, i pots guanyar cartes especials.'],

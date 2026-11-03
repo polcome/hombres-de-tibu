@@ -42,7 +42,7 @@ App web del grup d'amics del gimnàs "Los Hombres de Tibu" (13 membres). Serveix
   - **Foto obligatòria per a gym** (només ho controla el client) i opcional per a fora. Es pot fer amb la càmera de l'app o triar de la galeria.
   - Les fotos es comprimeixen a 1080px abans de pujar-les.
   - Les fotos de prova són **d'una sola visualització** per dispositiu (localStorage). L'autor i l'admin les poden veure sempre.
-  - Validació del grup amb ✅/🧢. Un entreno és "dubtós" amb 3 o més 🧢 i més 🧢 que ✅. Continua comptant fins que l'admin l'esborri.
+  - Validació del grup amb ✅/❓ (abans era 🧢). Un entreno és "dubtós" amb 3 o més ❓ i més ❓ que ✅. Continua comptant fins que l'admin l'esborri.
 - **Cartes FIFA:** 5 estadístiques. La mitjana és 35% ENT + 15% CON + 20% MVP + 20% COM + 10% FOR (`WEIGHTS` a `stats.ts`). VOT i CAR es van treure.
   - **Tot és per any natural:** ENT = 40 + gym de l'any ÷ 4 i FOR = 35 + (fora de l'any + entrenos virtuals d'èxits) ÷ 3, acumulatius: s'omplen durant l'any (el recompte inicial es prorrateja per a dates anteriors a la seva), MVP = 63 + 9·MVPs de l'any, COM = 88 − 13·antis de l'any, CON amb les setmanes que comencen dins l'any. L'1 de gener tothom torna a zero. Les cartes guanyades es queden.
   - CON (constància): setmanes senceres de l'any amb 3+ entrenos **de gym** (`CON_WEEK_GYM`), només des que es registren entrenos a l'app. CON = 40 + 59·(½·bones/setmanes + ½·min(1, bones/52)) (`CON_FULL_WEEKS`): meitat % i meitat acumulat lineal, així un 2/2 (71) val menys que un 15/15 (78) i un 52/52 arriba a 99. Sense setmanes: 70.

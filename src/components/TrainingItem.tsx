@@ -62,7 +62,7 @@ export function TrainingItem({ t }: { t: Training }) {
         <div className="grow">
           <div>
             {m ? <Link to={`/jugador/${m.slug}`}><b>{displayName(m)}</b></Link> : <b>¿?</b>} {t.kind === 'gym' ? '💪 gym' : '🏃 fora'}
-            {dubious && <span className="badge badge-red"> 🧢 dubtós</span>}
+            {dubious && <span className="badge badge-red"> ❓ dubtós</span>}
           </div>
           <div className="muted small">
             {new Date(t.date).toLocaleDateString('ca-ES', { weekday: 'short', day: 'numeric', month: 'short' })}
@@ -88,7 +88,7 @@ export function TrainingItem({ t }: { t: Training }) {
           ✅ {ok || ''}
         </button>
         <button disabled={!canVote || busy} className={mine === 'fake' ? 'on' : ''} onClick={() => vote('fake')} title="Dubtós">
-          🧢 {fake || ''}
+          ❓ {fake || ''}
         </button>
       </div>
 
