@@ -338,7 +338,11 @@ const streakHits = (ids: string[], n: number) => {
   return hits
 }
 
-export function unlockedCards(db: DB): CardUnlock[] {
+/** Les cartes només compten a partir d'aquest mes: el palmarès anterior (2025) és només històric */
+export const CARDS_FROM = '2026-01'
+
+export function unlockedCards(all: DB): CardUnlock[] {
+  const db: DB = { ...all, awards: all.awards.filter((a) => a.month_id >= CARDS_FROM), months: all.months.filter((m) => m.id >= CARDS_FROM) }
   const out: CardUnlock[] = []
   const def = (id: string) => CARD_DEFS.find((d) => d.id === id)!
   const push = (id: string, memberId: string, key: string, label?: string) =>

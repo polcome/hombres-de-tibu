@@ -54,6 +54,7 @@ App web del grup d'amics del gimnàs "Los Hombres de Tibu" (13 membres). Serveix
   - Les ratxes donen una carta per cada bloc complet de n mesos seguits (`streakHits`), no una per cada finestra.
   - Cartes especials: el `boost` se suma a la mitjana d'aquella carta i es reparteix entre les stats (`boostedStats`, ho fa `FifaCard`): 60% a la stat principal (30% + 30% si en té dues, `CARD_FOCUS`) i 10% a cada altra, escalat perquè la mitjana ponderada pugi just el boost. La carta base no es toca mai.
   - Valoració de les cartes especials: la de final del mes de la carta (congelada). Les anuals, o les d'un any sense cap dada d'entrenos a l'app, fan servir la valoració actual (`unlockMonth`).
+  - **Les cartes només compten des de `CARDS_FROM` = '2026-01'** (`unlockedCards` ignora awards i mesos anteriors): el palmarès del 2025 és només històric (surt al Palmarès i als totals de cadascú).
   - Els ids de `CARD_DEFS` no es canvien encara que canviï el nom (hi van lligades les fotos de cartes).
   - **Èxits esportius** (manuals, taula `achievements`): ascens, mitja marató, marató i Hyrox. L'admin els dona des d'Admin a una o diverses persones amb el nom de l'esdeveniment (tots els que hi van tenen la mateixa carta). Tenen boost propi com les altres especials (Ascens i Mitja +3, Hyrox +4, Marató +6) i, a més, sumen entrenos fora **virtuals** al càlcul de FOR de la carta base durant l'any natural de l'èxit (`ACHIEVEMENT_FOR_BONUS`: 12/12/15/25); al recompte d'entrenos no hi surten.
 - **Fotos de membres i cartes:** n'hi ha una de base i una opcional per a cada carta especial (`card_photos`, clau `defId:mes|any`).
@@ -85,6 +86,7 @@ App web del grup d'amics del gimnàs "Los Hombres de Tibu" (13 membres). Serveix
 17. `supabase/recompte-2026-11-03.sql`: recompte d'entrenos actualitzat a 3/11/2026.
 18. `supabase/recompte-fins-octubre.sql`: el recompte inicial passa a ser fins al 31/10.
 19. `supabase/recompte-inicial-2026.sql`: recompte inicial definitiu fins al 31/10/2026 (valors absoluts; Bernat 159).
+20. `supabase/palmares-2025.sql`: MVPs i antis del 2025 (l'anti, des del març) (⚠️ pendent de confirmar que l'usuari l'ha executat).
 
 Quan un canvi necessiti BD:
 - Crea una **migració nova** `supabase/migracio-*.sql` que sigui idempotent (`if not exists`, `drop policy if exists`).
@@ -92,7 +94,7 @@ Quan un canvi necessiti BD:
 - Fes que el client **no peti** si la migració encara no s'ha executat (vegeu com `loadAll` tolera `card_photos` i `training_votes`).
 - Després digues a l'usuari que l'executi a Supabase → SQL Editor. Claude no té accés a la BD de producció.
 
-Correspondència de noms (per al palmarès): Pol Come = `come`, Pol Sainz = `polsy`, Ferran Quintana = `fq`, Ferran Mateu Dos Santos = `ferran`, Arnau Deig = `deig`, Gerard Morales = `gerard`, Eduard Papaseit = `eduard`, Marc Sierra = `marc`, Josep Pareja = `josep`.
+Correspondència de noms (per al palmarès): Pol Come = `come`, Pol Sainz = `polsy`, Pol Guerra = `policho`, Jordi Borderies = `jordi`, Bernat Aloy = `bernat`, Andrés Peña = `pena`, Ferran Quintana = `fq`, Ferran Mateu Dos Santos = `ferran`, Arnau Deig = `deig`, Gerard Morales = `gerard`, Eduard Papaseit = `eduard`, Marc Sierra = `marc`, Josep Pareja = `josep`.
 
 ## Com treballar-hi
 - `npm install`, `npm run dev` (mode demo) i `npm run build` (inclou `tsc -b`, que ha de passar sense errors ni variables sense usar).
