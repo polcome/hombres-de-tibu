@@ -36,6 +36,7 @@ function seed(): DB {
     nickname: null,
     photo_url: null,
     is_admin: slug === 'come',
+    is_owner: slug === 'come',
     active: true,
   }))
   const by = (s: string) => members.find((m) => m.slug === s)!.id
@@ -217,6 +218,10 @@ export function createDemoApi(): Api {
         db.expedientReactions = db.expedientReactions.filter((r) => r !== cur)
         if (cur?.emoji !== emoji) db.expedientReactions.push({ expedient_id: id, member_id: me, emoji })
       })
+    },
+    async auditLog() {
+      // En mode demo no hi ha registre (el fa la base de dades amb triggers)
+      return []
     },
     async markTrainingSeen(id) {
       const me = meId()

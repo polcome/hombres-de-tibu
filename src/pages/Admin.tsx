@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { api } from '../api'
 import { useAction, useStore } from '../store'
-import type { AchievementKind, AwardType, Member, Month, TrainingKind } from '../types'
+import type { AchievementKind, AuditEntry, AwardType, Member, Month, TrainingKind } from '../types'
+import { describeAudit } from '../logic/audit'
 import { activeMonth, closedMonths, currentMonthKey, monthLabel, shiftMonth, todayISO } from '../logic/months'
 import { ACHIEVEMENT_FOR_BONUS, CARD_DEFS, displayName, focusOf, memberById, rating } from '../logic/stats'
 import { PackOpening, Welcome, basePack } from '../components/CardPack'
@@ -30,6 +31,7 @@ export default function Admin() {
       <AchievementsAdmin />
       <HistoryAdmin />
       <PackTestAdmin />
+      {me.is_owner && <AuditAdmin />}
     </div>
   )
 }
@@ -543,6 +545,55 @@ function PackTestAdmin() {
           <PackOpening card={pack.card} def={pack.def} onDone={() => setOpen(false)} />
         )
       )}
+    </Section>
+  )
+}
+
+/** Registre d'activitat: només el veu el superadmin */
+function AuditAdmin() {
+  const { db } = useStore()
+  const [rows, setRows] = useState<AuditEntry[] | null>(null)
+  const [err, setErr] = useState<string | null>(null)
+  const [filter, setFilter] = useState<'all' | 'deletes' | 'danger'>('danger')
+  const load = () => {
+    setErr(null)
+    api.auditLog().then(setRows, (e) => setErr((e as Error).message))
+  }
+  useEffect(load, [])
+  const lines = (rows ?? []).map((e) => ({ e, l: describeAudit(db, e) }))
+  const shown = lines.filter(({ e, l }) => (filter === 'all' ? true : filter === 'deletes' ? e.op === 'DELETE' : l.danger))
+  return (
+    <Section title="🕵️ Registre d'activitat" right={<button className="link" onClick={load}>↻</button>}>
+      <p className="muted small">
+        Només el veus tu. Tot el que s'afegeix, es canvia o s'esborra i qui ho ha fet. Ningú el pot esborrar des de l'app. Els expedients i comentaris
+        continuen sent anònims, i les paperetes no hi surten.
+      </p>
+      <div className="row wrap">
+        {(
+          [
+            ['danger', '🚨 Coses d\'altres'],
+            ['deletes', '🗑 Esborrats'],
+            ['all', 'Tot'],
+          ] as const
+        ).map(([k, t]) => (
+          <button key={k} type="button" className={`chip ${filter === k ? 'on-green' : ''}`} onClick={() => setFilter(k)}>
+            {t}
+          </button>
+        ))}
+      </div>
+      <ErrorMsg err={err} />
+      {rows === null && !err && <p className="muted small">Carregant…</p>}
+      {rows !== null && !shown.length && <p className="muted small">Res per aquí. Tot tranquil. 😇</p>}
+      <div className="audit-list">
+        {shown.map(({ e, l }) => (
+          <div key={e.id} className={`audit-row ${l.danger ? 'audit-danger' : ''}`}>
+            <div className="muted small">{new Date(e.at).toLocaleString('ca-ES', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</div>
+            <div>
+              <b>{l.who}</b> {l.text}
+            </div>
+          </div>
+        ))}
+      </div>
     </Section>
   )
 }

@@ -1,4 +1,4 @@
-import type { AchievementKind, AwardType, DB, Expedient, Member, Month, Training } from '../types'
+import type { AchievementKind, AwardType, DB, Expedient, Member, Month, Training, AuditEntry } from '../types'
 
 export interface Api {
   mode: 'supabase' | 'demo'
@@ -22,6 +22,8 @@ export interface Api {
   /** Cartes que l'usuari ja ha obert (null si la funció no està disponible: llavors no surten sobres) */
   /** Apunta que l'usuari ha obert la foto de prova d'un entreno (una sola visualització per usuari) */
   markTrainingSeen(id: string): Promise<void>
+  /** Registre d'activitat (només el superadmin el pot llegir; per als altres, buit) */
+  auditLog(limit?: number): Promise<AuditEntry[]>
   seenCards(): Promise<string[] | null>
   markCardsSeen(keys: string[]): Promise<void>
   castVote(monthId: string, mvpId: string, mvpReason: string, antiId: string, antiReason: string): Promise<void>

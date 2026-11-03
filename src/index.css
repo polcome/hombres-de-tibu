@@ -2909,3 +2909,24 @@ textarea:focus {
   border: 1px solid #f5c542;
   background: rgba(245, 197, 66, 0.1);
 }
+
+/* Registre d'activitat (superadmin) */
+.audit-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+.audit-row {
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: var(--bg2);
+  border-left: 3px solid var(--line);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.audit-danger {
+  border-left-color: #e8202a;
+  background: rgba(232, 32, 42, 0.08);
+}

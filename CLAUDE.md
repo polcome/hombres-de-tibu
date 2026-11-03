@@ -3,7 +3,7 @@
 App web del grup d'amics del gimnàs "Los Hombres de Tibu" (13 membres). Serveix per a la votació mensual de MVP i anti-MVP, el recompte d'entrenos, un dossier d'expedients i cartes de jugador (estil FIFA, però a la UI es diuen només «cartes»: mai «FIFA»). Tot és comèdia entre amics.
 
 - **Idioma:** tota la UI, els textos i els missatges de commit en **català** (col·loquial i amb humor). Parla en català amb l'usuari.
-- **Admin / propietari:** Come (usuari `come`, GitHub `polcome`). Ell decideix. És el **superadmin** (`members.is_owner`, trigger `protect_owner`): ningú li pot treure l'admin, desactivar-lo, reiniciar-li el compte ni esborrar-lo, i només ell pot donar o treure l'admin als altres. No surt enlloc de la UI.
+- **Admin / propietari:** Come (usuari `come`, GitHub `polcome`). Ell decideix. És el **superadmin** (`members.is_owner`, trigger `protect_owner`): ningú li pot treure l'admin, desactivar-lo, reiniciar-li el compte ni esborrar-lo, i només ell pot donar o treure l'admin als altres. No surt enlloc de la UI, excepte que només ell veu el **registre d'activitat** a Admin (taula `audit_log`, omplerta per triggers `audit_row` a trainings, expedients, comentaris, membres, mesos, awards, èxits, fotos de cartes i votants; RLS: només el pot llegir l'`is_owner`, ningú el pot modificar ni esborrar; textos a `src/logic/audit.ts`). Respecta l'anonimat: els INSERT d'expedients i comentaris no guarden l'autor, i les RPC `delete_own_*` marquen `tibu.anon` perquè l'autor que esborra el seu també surti com a anònim. Les paperetes no es registren mai.
 - **Web:** https://polcome.github.io/hombres-de-tibu/
 - **Cost:** ha de ser 100% gratuït. Res de serveis de pagament ni d'APIs d'IA de pagament.
 
@@ -88,6 +88,7 @@ App web del grup d'amics del gimnàs "Los Hombres de Tibu" (13 membres). Serveix
 19. `supabase/recompte-inicial-2026.sql`: recompte inicial definitiu fins al 31/10/2026 (valors absoluts; Bernat 159).
 20. `supabase/palmares-2025.sql`: MVPs i antis del 2025 (l'anti, des del març).
 21. `supabase/migracio-fotos-vistes.sql`: taula `training_views` (fotos d'una sola visualització per usuari).
+22. `supabase/migracio-registre.sql`: registre d'activitat `audit_log` per al superadmin (⚠️ pendent de confirmar que l'usuari l'ha executat).
 
 Quan un canvi necessiti BD:
 - Crea una **migració nova** `supabase/migracio-*.sql` que sigui idempotent (`if not exists`, `drop policy if exists`).

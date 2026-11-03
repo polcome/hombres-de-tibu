@@ -1,7 +1,7 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import type { Api } from './types'
 import { forgetOwn, newOwn, ownToken } from '../logic/own'
-import type { DB } from '../types'
+import type { AuditEntry, DB } from '../types'
 
 const EMAIL_DOMAIN = 'hombresdetibu.app'
 const email = (slug: string) => `${slug.trim().toLowerCase()}@${EMAIL_DOMAIN}`
@@ -25,7 +25,7 @@ export function createSupabaseApi(url: string, key: string): Api {
 
     async loadAll() {
       const [members, months, trainings, awards, expedients, comments, ballots, voters, cardPhotos, trainingVotes, achievements, reactions, posts, views] = await Promise.all([
-        sb.from('members').select('id,slug,name,nickname,photo_url,is_admin,active,auth_id').order('name'),
+        sb.from('members').select('*').order('name'),
         sb.from('months').select('*').order('id'),
         sb.from('trainings').select('*').order('date'),
         sb.from('awards').select('*'),
@@ -134,6 +134,11 @@ export function createSupabaseApi(url: string, key: string): Api {
     },
     async react(expedientId, emoji) {
       check(await sb.rpc('react', { p_expedient: expedientId, p_emoji: emoji }))
+    },
+    async auditLog(limit = 300) {
+      const { data, error } = await sb.from('audit_log').select('*').order('at', { ascending: false }).limit(limit)
+      if (error) throw new Error(error.code === '42P01' ? "Falta executar la migració del registre (migracio-registre.sql)" : error.message)
+      return data as AuditEntry[]
     },
     async markTrainingSeen(id) {
       const me = await this.me()

@@ -11,6 +11,21 @@ export interface Member {
   is_admin: boolean
   active: boolean
   auth_id?: string | null
+  /** Superadmin (el Come). No surt enlloc de la UI, només obre el registre d'activitat */
+  is_owner?: boolean
+}
+
+/** Una línia del registre d'activitat (només la veu el superadmin) */
+export interface AuditEntry {
+  id: number
+  at: string
+  actor_id: string | null
+  anonymous: boolean
+  tbl: string
+  op: 'INSERT' | 'UPDATE' | 'DELETE'
+  row_id: string | null
+  old_data: Record<string, unknown> | null
+  new_data: Record<string, unknown> | null
 }
 
 export interface Month {
