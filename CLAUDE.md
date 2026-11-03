@@ -11,6 +11,7 @@ App web del grup d'amics del gimnàs "Los Hombres de Tibu" (13 membres). Serveix
 - Vite + React 19 + TypeScript, CSS propi (`src/index.css`, tema fosc). No hi ha cap framework CSS.
 - `react-router-dom` amb **HashRouter** (perquè funcioni a GitHub Pages) i `html-to-image` per descarregar les cartes.
 - Backend: **Supabase** (Postgres + Auth + Storage), pla gratuït, cridat directament des del client amb la clau anon. La seguretat la donen **RLS i funcions RPC** (`supabase/schema.sql`).
+- **App instal·lable (PWA):** `public/manifest.webmanifest` + icones PNG (`icon-192`, `icon-512`, `icon-maskable-512`, `apple-touch-icon` per a l'iPhone) i metes a `index.html`. Es fa servir en mode standalone, així que la barra de dalt té `env(safe-area-inset-top)`. Sense notificacions de moment.
 - Deploy: GitHub Actions → GitHub Pages (`.github/workflows/deploy.yml`) a cada push a `main`. Les variables de repo `SUPABASE_URL` i `SUPABASE_ANON_KEY` s'injecten com a `VITE_SUPABASE_*`.
 - Sense aquestes variables, l'app arrenca en **mode demo** (`src/api/demo.ts`): dades d'exemple a localStorage, contrasenya "tibu" per a tothom, i Come és l'admin.
 

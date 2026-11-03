@@ -145,7 +145,8 @@ textarea:focus {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 16px;
+  /* A l'iPhone instal·lada com a app, la barra d'estat (hora, bateria) va per sobre: deixem-li espai */
+  padding: calc(10px + env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 10px max(16px, env(safe-area-inset-left));
   background: rgba(11, 13, 26, 0.85);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--line);
