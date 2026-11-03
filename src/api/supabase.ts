@@ -256,13 +256,13 @@ export function createSupabaseApi(url: string, key: string): Api {
     async deleteExpedient(id) {
       const token = ownToken(id)
       if (token) check(await sb.rpc('delete_own_expedient', { p_id: id, p_token: token }))
-      else check(await sb.from('expedients').delete().eq('id', id))
+      else if (!check(await sb.from('expedients').delete().eq('id', id).select('id'))?.length) throw new Error('Només el pots esborrar si és teu')
       forgetOwn(id)
     },
     async deleteComment(id) {
       const token = ownToken(id)
       if (token) check(await sb.rpc('delete_own_comment', { p_id: id, p_token: token }))
-      else check(await sb.from('comments').delete().eq('id', id))
+      else if (!check(await sb.from('comments').delete().eq('id', id).select('id'))?.length) throw new Error('Només el pots esborrar si és teu')
       forgetOwn(id)
     },
   }

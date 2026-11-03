@@ -722,4 +722,19 @@ begin
   perform set_config('tibu.anon', '', true);
 end $$;
 
+-- ---------------------------------------------------------------------
+-- Dossier: els expedients i comentaris d'altres només els esborra el superadmin
+-- ---------------------------------------------------------------------
+create or replace function is_owner() returns boolean
+language sql stable security definer set search_path = public as $$
+  select coalesce((select is_owner from members where auth_id = auth.uid()), false)
+$$;
+
+drop policy if exists "admin deletes expedients" on expedients;
+drop policy if exists "admin deletes comments" on comments;
+drop policy if exists "owner deletes expedients" on expedients;
+drop policy if exists "owner deletes comments" on comments;
+create policy "owner deletes expedients" on expedients for delete using (is_owner());
+create policy "owner deletes comments" on comments for delete using (is_owner());
+
 notify pgrst, 'reload schema';

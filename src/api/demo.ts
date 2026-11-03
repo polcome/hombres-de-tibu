@@ -139,6 +139,10 @@ export function createDemoApi(): Api {
   const requireAdmin = () => {
     if (!isAdmin()) throw new Error('Només admins')
   }
+  // Com la RLS del dossier: el que no és teu només ho esborra el superadmin
+  const requireOwner = () => {
+    if (!load().members.find((m) => m.id === meId())?.is_owner) throw new Error('Només el pots esborrar si és teu')
+  }
 
   return {
     mode: 'demo',
@@ -374,12 +378,12 @@ export function createDemoApi(): Api {
       mutate((db) => (db.achievements = (db.achievements ?? []).filter((x) => x.id !== id)))
     },
     async deleteExpedient(id) {
-      if (!ownToken(id)) requireAdmin()
+      if (!ownToken(id)) requireOwner()
       mutate((db) => (db.expedients = db.expedients.filter((e) => e.id !== id)))
       forgetOwn(id)
     },
     async deleteComment(id) {
-      if (!ownToken(id)) requireAdmin()
+      if (!ownToken(id)) requireOwner()
       mutate((db) => (db.comments = db.comments.filter((c) => c.id !== id)))
       forgetOwn(id)
     },

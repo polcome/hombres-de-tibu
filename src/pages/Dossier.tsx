@@ -48,7 +48,7 @@ export function ExpedientItem({ e, compact }: { e: Expedient; compact?: boolean 
             {e.author ? `per ${e.author}` : '🕵️ xivato anònim'} · {timeAgo(e.created_at)}
           </div>
         </div>
-        {(me?.is_admin || ownToken(e.id)) && !compact && (
+        {(me?.is_owner || ownToken(e.id)) && !compact && (
           <ConfirmButton className="link ml-auto danger" confirmLabel="Esborrar?" onConfirm={() => run(() => api.deleteExpedient(e.id))}>
             🗑
           </ConfirmButton>
@@ -78,7 +78,7 @@ export function ExpedientItem({ e, compact }: { e: Expedient; compact?: boolean 
               {comments.map((c) => (
                 <div key={c.id} className="comment">
                   <b>{c.author || 'Anònim'}</b> {c.text} <span className="muted small">· {timeAgo(c.created_at)}</span>
-                  {(me?.is_admin || ownToken(c.id)) && (
+                  {(me?.is_owner || ownToken(c.id)) && (
                     <ConfirmButton confirmLabel="Esborrar?" onConfirm={() => run(() => api.deleteComment(c.id))}>
                       🗑
                     </ConfirmButton>
