@@ -89,7 +89,7 @@ App web del grup d'amics del gimnàs "Los Hombres de Tibu" (13 membres). Serveix
 20. `supabase/palmares-2025.sql`: MVPs i antis del 2025 (l'anti, des del març).
 21. `supabase/migracio-fotos-vistes.sql`: taula `training_views` (fotos d'una sola visualització per usuari).
 22. `supabase/migracio-registre.sql`: registre d'activitat `audit_log` per al superadmin.
-23. `supabase/migracio-dossier-nomes-owner.sql`: al dossier, només el superadmin esborra el que no és seu (⚠️ pendent de confirmar que l'usuari l'ha executat).
+23. `supabase/migracio-dossier-nomes-owner.sql`: al dossier, només el superadmin esborra el que no és seu.
 
 Quan un canvi necessiti BD:
 - Crea una **migració nova** `supabase/migracio-*.sql` que sigui idempotent (`if not exists`, `drop policy if exists`).
