@@ -17,6 +17,8 @@ export default function Vote() {
   const [mvpReason, setMvpReason] = useState('')
   const [anti, setAnti] = useState('')
   const [antiReason, setAntiReason] = useState('')
+  // Confirmació dins l'app (confirm() no surt al navegador intern del WhatsApp)
+  const [confirming, setConfirming] = useState(false)
 
   if (!month || month.status !== 'voting')
     return (
@@ -61,8 +63,9 @@ export default function Vote() {
           className="form"
           onSubmit={(e) => {
             e.preventDefault()
-            if (confirm(`Confirmes?\n\n🏆 MVP: ${displayName(memberById(db, mvp))}\n🤡 Anti: ${displayName(memberById(db, anti))}\n\nNo es pot canviar.`))
-              run(() => api.castVote(month.id, mvp, mvpReason, anti, antiReason))
+            if (!confirming) return setConfirming(true)
+            setConfirming(false)
+            run(() => api.castVote(month.id, mvp, mvpReason, anti, antiReason))
           }}
         >
           <div className="vote-box vote-mvp">
@@ -87,12 +90,24 @@ export default function Vote() {
           </div>
 
           <ErrorMsg err={err} />
+          {confirming && (
+            <div className="vote-confirm">
+              <b>Confirmes el vot? No es pot canviar.</b>
+              <div>🏆 MVP: {displayName(memberById(db, mvp))}</div>
+              <div>🤡 Anti: {displayName(memberById(db, anti))}</div>
+            </div>
+          )}
           <button
             className="btn btn-primary btn-big"
             disabled={busy || !mvp || !anti || mvpReason.trim().length < MIN || antiReason.trim().length < MIN}
           >
-            Enviar vot secret 🔒
+            {confirming ? '✅ Sí, enviar el vot' : 'Enviar vot secret 🔒'}
           </button>
+          {confirming && (
+            <button type="button" className="link muted" onClick={() => setConfirming(false)}>
+              Encara no, vull canviar alguna cosa
+            </button>
+          )}
         </form>
       </Section>
 

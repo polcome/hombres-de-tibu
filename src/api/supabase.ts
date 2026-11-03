@@ -108,7 +108,8 @@ export function createSupabaseApi(url: string, key: string): Api {
       else check(await sb.from('training_votes').delete().eq('training_id', trainingId).eq('member_id', me))
     },
     async deleteTraining(id) {
-      check(await sb.from('trainings').delete().eq('id', id))
+      const rows = check(await sb.from('trainings').delete().eq('id', id).select('id'))
+      if (!rows?.length) throw new Error("No s'ha pogut treure l'entreno (només pots treure els teus)")
     },
     async addExpedient(e) {
       const { id, hash } = await newOwn()

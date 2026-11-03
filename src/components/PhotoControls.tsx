@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { PhotoEditor } from './PhotoEditor'
-import { ErrorMsg } from './ui'
+import { ConfirmButton, ErrorMsg } from './ui'
 import { useAction } from '../store'
 
 interface Props {
@@ -33,15 +33,9 @@ export function PhotoControls({ url, onChange, compact, removeLabel = 'Treure' }
             <button type="button" className="btn" disabled={busy} onClick={() => setEditing(url)} title="Tornar a encuadrar">
               ✂️{compact ? '' : ' Encuadrar'}
             </button>
-            <button
-              type="button"
-              className="btn danger"
-              disabled={busy}
-              onClick={() => confirm('Treure aquesta foto?') && run(() => onChange(null))}
-              title={removeLabel}
-            >
+            <ConfirmButton className="btn danger" disabled={busy} title={removeLabel} confirmLabel="Segur?" onConfirm={() => run(() => onChange(null))}>
               🗑{compact ? '' : ` ${removeLabel}`}
-            </button>
+            </ConfirmButton>
           </>
         )}
         <input

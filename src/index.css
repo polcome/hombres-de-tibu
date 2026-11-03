@@ -2894,3 +2894,18 @@ textarea:focus {
 .kings-list li span {
   font-size: 20px;
 }
+
+/* Confirmació en dos tocs (ConfirmButton) i del vot */
+.confirm-armed {
+  font-weight: 800;
+  animation: pack-pulse 0.9s ease-in-out infinite;
+}
+.vote-confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid #f5c542;
+  background: rgba(245, 197, 66, 0.1);
+}

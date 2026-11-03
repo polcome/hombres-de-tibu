@@ -7,7 +7,7 @@ import { EMOJIS, type Expedient } from '../types'
 import { currentMonthKey, monthLabel, timeAgo, todayISO } from '../logic/months'
 import { displayName, memberById } from '../logic/stats'
 import { Avatar } from '../components/Avatar'
-import { ErrorMsg, MemberSelect, Section } from '../components/ui'
+import { ConfirmButton, ErrorMsg, MemberSelect, Section } from '../components/ui'
 
 export const MAX_POSTS_PER_DAY = 2
 
@@ -49,9 +49,9 @@ export function ExpedientItem({ e, compact }: { e: Expedient; compact?: boolean 
           </div>
         </div>
         {(me?.is_admin || ownToken(e.id)) && !compact && (
-          <button className="link ml-auto danger" onClick={() => confirm('Esborrar expedient?') && run(() => api.deleteExpedient(e.id))}>
+          <ConfirmButton className="link ml-auto danger" confirmLabel="Esborrar?" onConfirm={() => run(() => api.deleteExpedient(e.id))}>
             🗑
-          </button>
+          </ConfirmButton>
         )}
       </div>
       <p className="exp-text">{e.text}</p>
@@ -79,9 +79,9 @@ export function ExpedientItem({ e, compact }: { e: Expedient; compact?: boolean 
                 <div key={c.id} className="comment">
                   <b>{c.author || 'Anònim'}</b> {c.text} <span className="muted small">· {timeAgo(c.created_at)}</span>
                   {(me?.is_admin || ownToken(c.id)) && (
-                    <button className="link danger" onClick={() => confirm('Esborrar comentari?') && run(() => api.deleteComment(c.id))}>
+                    <ConfirmButton confirmLabel="Esborrar?" onConfirm={() => run(() => api.deleteComment(c.id))}>
                       🗑
-                    </button>
+                    </ConfirmButton>
                   )}
                 </div>
               ))}

@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import type { Member } from '../types'
 import { displayName } from '../logic/stats'
 
@@ -81,5 +81,47 @@ export function Section({ title, right, children }: { title: ReactNode; right?: 
       </div>
       {children}
     </section>
+  )
+}
+
+/**
+ * Botó que demana confirmació amb un segon toc ("Segur?").
+ * No fem servir confirm() perquè el navegador intern del WhatsApp i d'Instagram no el mostra i el botó no faria res.
+ */
+export function ConfirmButton({
+  onConfirm,
+  children,
+  className = 'link danger',
+  confirmLabel = 'Segur? Toca per confirmar',
+  disabled,
+  title,
+}: {
+  onConfirm: () => unknown
+  children: ReactNode
+  className?: string
+  confirmLabel?: ReactNode
+  disabled?: boolean
+  title?: string
+}) {
+  const [armed, setArmed] = useState(false)
+  useEffect(() => {
+    if (!armed) return
+    const t = setTimeout(() => setArmed(false), 4000)
+    return () => clearTimeout(t)
+  }, [armed])
+  return (
+    <button
+      type="button"
+      className={`${className} ${armed ? 'confirm-armed' : ''}`}
+      disabled={disabled}
+      title={title}
+      onClick={() => {
+        if (!armed) return setArmed(true)
+        setArmed(false)
+        onConfirm()
+      }}
+    >
+      {armed ? confirmLabel : children}
+    </button>
   )
 }

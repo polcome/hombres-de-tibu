@@ -8,7 +8,7 @@ import { currentMonthKey, monthKey, monthLabel, shiftMonth, todayISO } from '../
 import { displayName, fmtTotals, monthTotals, yearTotals } from '../logic/stats'
 import { whatsappCount } from '../logic/acta'
 import { Avatar } from '../components/Avatar'
-import { CopyButton, ErrorMsg, Section, WhatsAppButton } from '../components/ui'
+import { ConfirmButton, CopyButton, ErrorMsg, Section, WhatsAppButton } from '../components/ui'
 import { TrainingItem } from '../components/TrainingItem'
 import { compressImage } from '../logic/image'
 import { CameraCapture, cameraSupported } from '../components/CameraCapture'
@@ -203,9 +203,9 @@ export default function Trainings() {
                     {t.photo_url && <span title="Amb foto">📷</span>}
                     <span>{new Date(t.date).toLocaleDateString('ca-ES', { weekday: 'short', day: 'numeric', month: 'short' })}</span>
                     {t.note && <span className="muted">{t.note}</span>}
-                    <button className="link danger ml-auto" onClick={() => confirm('Treure aquest entreno?') && run(() => api.deleteTraining(t.id))}>
+                    <ConfirmButton className="link danger ml-auto" confirmLabel="segur? toca" onConfirm={() => run(() => api.deleteTraining(t.id))}>
                       treure
-                    </button>
+                    </ConfirmButton>
                   </div>
                 ))}
               </div>

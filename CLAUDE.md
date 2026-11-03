@@ -97,6 +97,7 @@ Quan un canvi necessiti BD:
 Correspondència de noms (per al palmarès): Pol Come = `come`, Pol Sainz = `polsy`, Pol Guerra = `policho`, Jordi Borderies = `jordi`, Bernat Aloy = `bernat`, Andrés Peña = `pena`, Ferran Quintana = `fq`, Ferran Mateu Dos Santos = `ferran`, Arnau Deig = `deig`, Gerard Morales = `gerard`, Eduard Papaseit = `eduard`, Marc Sierra = `marc`, Josep Pareja = `josep`.
 
 ## Com treballar-hi
+- **No facis servir `confirm()` ni `alert()` a les pantalles dels membres:** el navegador intern del WhatsApp i d'Instagram no els mostra i el botó no fa res. Fes servir `ConfirmButton` (`components/ui.tsx`, confirmació amb un segon toc) o una confirmació dins la pantalla (com el vot).
 - `npm install`, `npm run dev` (mode demo) i `npm run build` (inclou `tsc -b`, que ha de passar sense errors ni variables sense usar).
 - Prova els canvis visuals amb Playwright contra `npx vite preview` en mode demo, amb viewport de mòbil (390×844). L'usuari ho fa servir sobretot des del mòbil.
 - Commits petits en català i push a `main` (desplega sol).

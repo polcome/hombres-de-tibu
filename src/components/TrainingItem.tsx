@@ -6,6 +6,7 @@ import { useAction, useStore } from '../store'
 import type { DB, Training } from '../types'
 import { displayName, memberById } from '../logic/stats'
 import { Avatar } from './Avatar'
+import { ConfirmButton, ErrorMsg } from './ui'
 
 // Fotos "d'una sola visualització": es recorda en aquest dispositiu quines ja s'han obert
 const SEEN_KEY = 'tibu-proofs-seen'
@@ -36,7 +37,7 @@ export function trainingStatus(db: DB, t: Training) {
 
 export function TrainingItem({ t }: { t: Training }) {
   const { db, me } = useStore()
-  const { run, busy } = useAction()
+  const { run, busy, err } = useAction()
   const [zoom, setZoom] = useState(false)
   const [seen, setSeen] = useState(() => seenSet().has(t.id))
   const m = memberById(db, t.member_id)
@@ -71,11 +72,12 @@ export function TrainingItem({ t }: { t: Training }) {
           </div>
         </div>
         {(me?.is_admin || (me?.id === t.member_id && !t.baseline)) && (
-          <button className="link danger" onClick={() => confirm('Esborrar aquest entreno?') && run(() => api.deleteTraining(t.id))}>
+          <ConfirmButton confirmLabel="Esborrar?" onConfirm={() => run(() => api.deleteTraining(t.id))}>
             🗑
-          </button>
+          </ConfirmButton>
         )}
       </div>
+      <ErrorMsg err={err} />
 
       <div className="reactions">
         {t.photo_url && (
