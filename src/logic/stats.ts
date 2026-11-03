@@ -37,10 +37,23 @@ export function winnersOf(db: DB, monthId: string) {
   return { mvp: list.filter((a) => a.type === 'mvp'), anti: list.filter((a) => a.type === 'anti') }
 }
 
+/**
+ * Dia des del qual es compten els entrenos dia a dia (per a mesos i setmanes): el primer entreno apuntat a l'app,
+ * però mai abans de l'endemà del recompte inicial. Els entrenos d'abans estan dins el recompte i no tenen mes,
+ * així que comptar aquells mesos donaria Fantasmes falsos a tothom.
+ */
+export function trackingStart(db: DB): string | null {
+  const logged = db.trainings.filter((t) => !t.baseline).map((t) => t.date).sort()
+  if (!logged.length) return null
+  const base = db.trainings.filter((t) => t.baseline).map((t) => t.date).sort().at(-1)
+  const afterBase = base ? addDays(base, 1) : null
+  return afterBase && afterBase > logged[0] ? afterBase : logged[0]
+}
+
 /** Primer mes amb entrenaments registrats a l'app (no recompte inicial) */
 export function appStartMonth(db: DB) {
-  const dates = db.trainings.filter((t) => !t.baseline).map((t) => t.date).sort()
-  return dates.length ? monthKey(dates[0]) : monthKey(todayISO())
+  const d = trackingStart(db)
+  return d ? monthKey(d) : monthKey(todayISO())
 }
 
 // ---------------------------------------------------------------------------
@@ -143,8 +156,11 @@ export const CON_FULL_WEEKS = 52
  */
 export function consistency(db: DB, memberId: string, asOf: string) {
   const logged = db.trainings.filter((t) => !t.baseline)
-  if (!logged.length) return 70
-  const first = weekStart(logged.reduce((m, t) => (t.date < m ? t.date : m), logged[0].date))
+  const startDay = trackingStart(db)
+  if (!logged.length || !startDay) return 70
+  // Primera setmana sencera des que es compten els entrenos dia a dia
+  let first = weekStart(startDay)
+  if (first < startDay) first = addDays(first, 7)
   const end = weekStart(addDays(asOf, 1)) // la setmana en curs no compta fins que acaba
   // Primera setmana que comença dins l'any
   let from = weekStart(`${asOf.slice(0, 4)}-01-01`)
@@ -358,7 +374,7 @@ export function unlockedCards(all: DB): CardUnlock[] {
   const years = [...new Set([...db.trainings.map((t) => t.date.slice(0, 4)), ...closed.map((m) => m.slice(0, 4))])].sort()
   const start = appStartMonth(db)
   // Mesos amb entrenaments registrats dia a dia
-  const trainingMonths = [...new Set(db.trainings.filter((t) => !t.baseline).map((t) => monthKey(t.date)))].sort()
+  const trainingMonths = [...new Set(db.trainings.filter((t) => !t.baseline).map((t) => monthKey(t.date)))].filter((k) => k >= start).sort()
 
   for (const m of db.members) {
     const { mvp, anti } = awardsOf(db, m.id)
