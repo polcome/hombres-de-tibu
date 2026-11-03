@@ -87,7 +87,7 @@ App web del grup d'amics del gimnàs "Los Hombres de Tibu" (13 membres). Serveix
 18. `supabase/recompte-fins-octubre.sql`: el recompte inicial passa a ser fins al 31/10.
 19. `supabase/recompte-inicial-2026.sql`: recompte inicial definitiu fins al 31/10/2026 (valors absoluts; Bernat 159).
 20. `supabase/palmares-2025.sql`: MVPs i antis del 2025 (l'anti, des del març).
-21. `supabase/migracio-fotos-vistes.sql`: taula `training_views` (fotos d'una sola visualització per usuari) (⚠️ pendent de confirmar que l'usuari l'ha executat).
+21. `supabase/migracio-fotos-vistes.sql`: taula `training_views` (fotos d'una sola visualització per usuari).
 
 Quan un canvi necessiti BD:
 - Crea una **migració nova** `supabase/migracio-*.sql` que sigui idempotent (`if not exists`, `drop policy if exists`).
