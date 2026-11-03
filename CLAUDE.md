@@ -83,7 +83,8 @@ App web del grup d'amics del gimnàs "Los Hombres de Tibu" (13 membres). Serveix
 15. `supabase/neteja-novembre-2026.sql`: neteja de dades de prova, recompte d'entrenos a 2/11/2026 com a recompte inicial, octubre (MVP Ferran, anti Policho).
 16. `supabase/migracio-cartes-vistes.sql`: taula `seen_cards` per als sobres.
 17. `supabase/recompte-2026-11-03.sql`: recompte d'entrenos actualitzat a 3/11/2026.
-18. `supabase/recompte-fins-octubre.sql`: el recompte inicial passa a ser fins al 31/10 (es treuen els entrenos de novembre, que l'admin afegeix a mà) (⚠️ pendent de confirmar que l'usuari l'ha executat).
+18. `supabase/recompte-fins-octubre.sql`: el recompte inicial passa a ser fins al 31/10.
+19. `supabase/recompte-inicial-2026.sql`: recompte inicial definitiu fins al 31/10/2026 (valors absoluts; Bernat 159) (⚠️ pendent de confirmar que l'usuari l'ha executat).
 
 Quan un canvi necessiti BD:
 - Crea una **migració nova** `supabase/migracio-*.sql` que sigui idempotent (`if not exists`, `drop policy if exists`).
