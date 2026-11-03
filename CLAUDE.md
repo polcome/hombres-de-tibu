@@ -38,7 +38,7 @@ App web del grup d'amics del gimnàs "Los Hombres de Tibu" (13 membres). Serveix
 - **Comentaris:** il·limitats, anònims i sense sessió.
 - **Esborrar el que és teu:** els entrenos propis (no el recompte inicial) es poden treure (RLS de `trainings`). Els expedients i comentaris propis també, sense trencar l'anonimat: en publicar, el mòbil genera un codi secret (`src/logic/own.ts`, localStorage) i a la BD només en va el hash (`delete_token`); les RPC `delete_own_expedient` / `delete_own_comment` el comproven. Només funciona des del mòbil on es va publicar. L'admin pot esborrar-ho tot.
 - **Entrenos:** format "gym (fora)".
-  - Hi ha un recompte inicial de 2026 amb `baseline = true` (a data 3/11/2026, ajustat perquè recompte inicial + entrenos de l'app = recompte del WhatsApp), que compta per a l'any però no per a cap mes.
+  - Hi ha un recompte inicial de 2026 amb `baseline = true` (fins al 31/10/2026; els de novembre s'apunten a l'app perquè comptin al mes), que compta per a l'any però no per a cap mes.
   - **Foto obligatòria per a gym** (només ho controla el client) i opcional per a fora. Es pot fer amb la càmera de l'app o triar de la galeria.
   - Les fotos es comprimeixen a 1080px abans de pujar-les.
   - Les fotos de prova són **d'una sola visualització** per dispositiu (localStorage). L'autor i l'admin les poden veure sempre.
@@ -82,7 +82,8 @@ App web del grup d'amics del gimnàs "Los Hombres de Tibu" (13 membres). Serveix
 14. `supabase/migracio-superadmin.sql`: el Come és superadmin.
 15. `supabase/neteja-novembre-2026.sql`: neteja de dades de prova, recompte d'entrenos a 2/11/2026 com a recompte inicial, octubre (MVP Ferran, anti Policho).
 16. `supabase/migracio-cartes-vistes.sql`: taula `seen_cards` per als sobres.
-17. `supabase/recompte-2026-11-03.sql`: recompte d'entrenos actualitzat a 3/11/2026 (⚠️ pendent de confirmar que l'usuari l'ha executat).
+17. `supabase/recompte-2026-11-03.sql`: recompte d'entrenos actualitzat a 3/11/2026.
+18. `supabase/recompte-fins-octubre.sql`: el recompte inicial passa a ser fins al 31/10 (es treuen els entrenos de novembre, que l'admin afegeix a mà) (⚠️ pendent de confirmar que l'usuari l'ha executat).
 
 Quan un canvi necessiti BD:
 - Crea una **migració nova** `supabase/migracio-*.sql` que sigui idempotent (`if not exists`, `drop policy if exists`).
