@@ -41,7 +41,7 @@ App web del grup d'amics del gimnàs "Los Hombres de Tibu" (13 membres). Serveix
   - Hi ha un recompte inicial de 2026 amb `baseline = true` (fins al 31/10/2026; els de novembre s'apunten a l'app perquè comptin al mes), que compta per a l'any però no per a cap mes.
   - **Foto obligatòria per a gym** (només ho controla el client) i opcional per a fora. Es pot fer amb la càmera de l'app o triar de la galeria.
   - Les fotos es comprimeixen a 1080px abans de pujar-les.
-  - Les fotos de prova són **d'una sola visualització** per dispositiu (localStorage). L'autor i l'admin les poden veure sempre.
+  - Les fotos de prova són **d'una sola visualització per usuari** (taula `training_views`, només les pròpies; també es guarda al mòbil). Es marca com a vista **en obrir-la**. Cal haver entrat per obrir-la. L'autor i els admins les poden veure sempre.
   - Validació del grup amb ✅/❓ (abans era 🧢). Un entreno és "dubtós" amb 3 o més ❓ i més ❓ que ✅. Continua comptant fins que l'admin l'esborri.
 - **Cartes FIFA:** 5 estadístiques. La mitjana és 35% ENT + 15% CON + 20% MVP + 20% COM + 10% FOR (`WEIGHTS` a `stats.ts`). VOT i CAR es van treure.
   - **Tot és per any natural:** ENT = 40 + gym de l'any ÷ 4 i FOR = 35 + (fora de l'any + entrenos virtuals d'èxits) ÷ 3, acumulatius: s'omplen durant l'any (el recompte inicial es prorrateja per a dates anteriors a la seva), MVP = 63 + 9·MVPs de l'any, COM = 88 − 13·antis de l'any, CON amb les setmanes que comencen dins l'any. L'1 de gener tothom torna a zero. Les cartes guanyades es queden.
@@ -87,6 +87,7 @@ App web del grup d'amics del gimnàs "Los Hombres de Tibu" (13 membres). Serveix
 18. `supabase/recompte-fins-octubre.sql`: el recompte inicial passa a ser fins al 31/10.
 19. `supabase/recompte-inicial-2026.sql`: recompte inicial definitiu fins al 31/10/2026 (valors absoluts; Bernat 159).
 20. `supabase/palmares-2025.sql`: MVPs i antis del 2025 (l'anti, des del març).
+21. `supabase/migracio-fotos-vistes.sql`: taula `training_views` (fotos d'una sola visualització per usuari) (⚠️ pendent de confirmar que l'usuari l'ha executat).
 
 Quan un canvi necessiti BD:
 - Crea una **migració nova** `supabase/migracio-*.sql` que sigui idempotent (`if not exists`, `drop policy if exists`).

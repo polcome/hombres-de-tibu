@@ -8,7 +8,7 @@ import { displayName, memberById } from '../logic/stats'
 import { Avatar } from './Avatar'
 import { ConfirmButton, ErrorMsg } from './ui'
 
-// Fotos "d'una sola visualització": es recorda en aquest dispositiu quines ja s'han obert
+// Fotos "d'una sola visualització": es guarda per usuari a la BD (training_views) i, per si de cas, també al mòbil
 const SEEN_KEY = 'tibu-proofs-seen'
 function seenSet(): Set<string> {
   try {
@@ -39,21 +39,26 @@ export function TrainingItem({ t }: { t: Training }) {
   const { db, me } = useStore()
   const { run, busy, err } = useAction()
   const [zoom, setZoom] = useState(false)
-  const [seen, setSeen] = useState(() => seenSet().has(t.id))
+  const [seenNow, setSeenNow] = useState(false)
+  const seen = seenNow || db.myTrainingViews.includes(t.id) || seenSet().has(t.id)
   const m = memberById(db, t.member_id)
   const { ok, fake, dubious } = trainingStatus(db, t)
   const mine = db.trainingVotes.find((v) => v.training_id === t.id && v.member_id === me?.id)?.vote
   const canVote = me && me.id !== t.member_id
   // L'autor i l'admin la poden tornar a veure sempre
   const unlimited = me?.id === t.member_id || me?.is_admin
-  const canOpen = !!t.photo_url && (unlimited || !seen)
-  const closePhoto = () => {
-    setZoom(false)
+  // Cal haver entrat per obrir-la (si no, no es pot saber qui l'ha vista)
+  const canOpen = !!t.photo_url && !!me && (unlimited || !seen)
+  const openPhoto = () => {
+    setZoom(true)
+    // Es marca com a vista en obrir-la (no en tancar-la), així sortir de l'app no permet tornar-la a veure
     if (!unlimited) {
       markSeen(t.id)
-      setSeen(true)
+      setSeenNow(true)
+      api.markTrainingSeen(t.id).catch(() => {})
     }
   }
+  const closePhoto = () => setZoom(false)
   const vote = (v: 'ok' | 'fake') => run(() => api.voteTraining(t.id, mine === v ? null : v))
 
   return (
@@ -81,9 +86,9 @@ export function TrainingItem({ t }: { t: Training }) {
 
       <div className="reactions">
         {t.photo_url && (
-          <button type="button" className={`view-once ${canOpen ? '' : 'opened'}`} disabled={!canOpen} onClick={() => setZoom(true)}>
-            <span className="view-once-icon">{canOpen ? '1' : '✓'}</span>
-            {canOpen ? 'Foto' : 'Oberta'}
+          <button type="button" className={`view-once ${canOpen ? '' : 'opened'}`} disabled={!canOpen} onClick={openPhoto} title={me ? undefined : 'Entra per veure la foto'}>
+            <span className="view-once-icon">{canOpen ? '1' : me ? '✓' : '🔒'}</span>
+            {canOpen ? 'Foto' : me ? 'Oberta' : 'Foto'}
           </button>
         )}
         <button disabled={!canVote || busy} className={mine === 'ok' ? 'on' : ''} onClick={() => vote('ok')} title="Vàlid">

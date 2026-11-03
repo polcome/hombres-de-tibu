@@ -24,7 +24,7 @@ export function createSupabaseApi(url: string, key: string): Api {
     mode: 'supabase',
 
     async loadAll() {
-      const [members, months, trainings, awards, expedients, comments, ballots, voters, cardPhotos, trainingVotes, achievements, reactions, posts] = await Promise.all([
+      const [members, months, trainings, awards, expedients, comments, ballots, voters, cardPhotos, trainingVotes, achievements, reactions, posts, views] = await Promise.all([
         sb.from('members').select('id,slug,name,nickname,photo_url,is_admin,active,auth_id').order('name'),
         sb.from('months').select('*').order('id'),
         sb.from('trainings').select('*').order('date'),
@@ -38,6 +38,7 @@ export function createSupabaseApi(url: string, key: string): Api {
         sb.from('achievements').select('id,member_id,kind,event,date').order('date'),
         sb.from('expedient_reactions').select('*'),
         sb.from('expedient_posts').select('day'), // RLS: només les pròpies
+        sb.from('training_views').select('training_id'), // RLS: només les pròpies
       ])
       return {
         members: check(members),
@@ -54,6 +55,7 @@ export function createSupabaseApi(url: string, key: string): Api {
         achievements: achievements.error ? [] : achievements.data,
         expedientReactions: reactions.error ? [] : reactions.data,
         myPostDays: posts.error ? [] : (posts.data as { day: string }[]).map((p) => p.day),
+        myTrainingViews: views.error ? [] : (views.data as { training_id: string }[]).map((v) => v.training_id),
       } as DB
     },
 
@@ -132,6 +134,12 @@ export function createSupabaseApi(url: string, key: string): Api {
     },
     async react(expedientId, emoji) {
       check(await sb.rpc('react', { p_expedient: expedientId, p_emoji: emoji }))
+    },
+    async markTrainingSeen(id) {
+      const me = await this.me()
+      if (!me) return
+      // Si la migració encara no s'ha executat, no peta: queda només al mòbil
+      await sb.from('training_views').upsert({ training_id: id, member_id: me }, { onConflict: 'training_id,member_id', ignoreDuplicates: true })
     },
     async seenCards() {
       const me = await this.me()

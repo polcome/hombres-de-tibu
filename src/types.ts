@@ -121,6 +121,8 @@ export interface DB {
   expedientReactions: ExpedientReaction[]
   /** Dies (YYYY-MM-DD) en què l'usuari amb sessió ha publicat expedients (un per publicació) */
   myPostDays: string[]
+  /** Fotos de prova que l'usuari ja ha obert (ids d'entreno) */
+  myTrainingViews: string[]
 }
 
 export const EMOJIS = ['😂', '🔥', '💀', '👏', '🤡'] as const

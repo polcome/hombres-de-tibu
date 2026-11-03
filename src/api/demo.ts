@@ -39,7 +39,7 @@ function seed(): DB {
     active: true,
   }))
   const by = (s: string) => members.find((m) => m.slug === s)!.id
-  const db: DB = { members, months: [], trainings: [], awards: [], expedients: [], comments: [], ballots: [], voters: [], cardPhotos: [], trainingVotes: [], achievements: [], expedientReactions: [], myPostDays: [] }
+  const db: DB = { members, months: [], trainings: [], awards: [], expedients: [], comments: [], ballots: [], voters: [], cardPhotos: [], trainingVotes: [], achievements: [], expedientReactions: [], myPostDays: [], myTrainingViews: [] }
 
   BASE.forEach(([slug, , gym, fora]) => {
     db.trainings.push({ id: uid(), member_id: by(slug), date: '2026-10-16', kind: 'gym', count: gym, baseline: true, note: 'Recompte inicial 2026' })
@@ -155,6 +155,7 @@ export function createDemoApi(): Api {
         achievements: db.achievements ?? [],
         expedientReactions: db.expedientReactions ?? [],
         myPostDays: posts.filter((p) => p.member_id === meId()).map((p) => p.day),
+        myTrainingViews: JSON.parse(localStorage.getItem(`tibu-demo-views-${meId()}`) ?? '[]'),
       }
     },
     async me() {
@@ -216,6 +217,13 @@ export function createDemoApi(): Api {
         db.expedientReactions = db.expedientReactions.filter((r) => r !== cur)
         if (cur?.emoji !== emoji) db.expedientReactions.push({ expedient_id: id, member_id: me, emoji })
       })
+    },
+    async markTrainingSeen(id) {
+      const me = meId()
+      if (!me) return
+      const k = `tibu-demo-views-${me}`
+      const cur: string[] = JSON.parse(localStorage.getItem(k) ?? '[]')
+      if (!cur.includes(id)) localStorage.setItem(k, JSON.stringify([...cur, id]))
     },
     async seenCards() {
       const me = meId()

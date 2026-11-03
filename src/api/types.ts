@@ -20,6 +20,8 @@ export interface Api {
   addComment(c: { expedient_id: string; author: string | null; text: string }): Promise<void>
   react(expedientId: string, emoji: string): Promise<void>
   /** Cartes que l'usuari ja ha obert (null si la funció no està disponible: llavors no surten sobres) */
+  /** Apunta que l'usuari ha obert la foto de prova d'un entreno (una sola visualització per usuari) */
+  markTrainingSeen(id: string): Promise<void>
   seenCards(): Promise<string[] | null>
   markCardsSeen(keys: string[]): Promise<void>
   castVote(monthId: string, mvpId: string, mvpReason: string, antiId: string, antiReason: string): Promise<void>
