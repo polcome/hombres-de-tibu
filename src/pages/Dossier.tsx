@@ -23,7 +23,7 @@ export function ExpedientItem({ e, compact }: { e: Expedient; compact?: boolean 
   const { run, busy } = useAction()
   const [open, setOpen] = useState(false)
   const [text, setText] = useState('')
-  const [author, setAuthor] = useState('')
+  const [signedC, setSignedC] = useState(false)
   const target = memberById(db, e.target_id)
   const comments = db.comments.filter((c) => c.expedient_id === e.id)
   const counts = reactionCounts(e, db.expedientReactions)
@@ -94,7 +94,7 @@ export function ExpedientItem({ e, compact }: { e: Expedient; compact?: boolean 
                     await run(() =>
                       api.addComment({
                         expedient_id: e.id,
-                        author: author.trim() || null,
+                        author: signedC && me ? displayName(me) : null,
                         text: text.trim(),
                       }),
                     )
@@ -102,8 +102,17 @@ export function ExpedientItem({ e, compact }: { e: Expedient; compact?: boolean 
                     setText('')
                 }}
               >
-                <input placeholder="Nom (opcional)" value={author} onChange={(x) => setAuthor(x.target.value)} maxLength={40} style={{ maxWidth: 120 }} />
-                <input placeholder="Comenta…" value={text} onChange={(x) => setText(x.target.value)} maxLength={500} />
+                {me && (
+                  <button
+                    type="button"
+                    className={`btn comment-sign ${signedC ? 'on' : ''}`}
+                    title={signedC ? `Signat com a ${displayName(me)}` : 'Anònim'}
+                    onClick={() => setSignedC(!signedC)}
+                  >
+                    {signedC ? '✍️' : '🕵️'}
+                  </button>
+                )}
+                <input placeholder={signedC && me ? `Comenta com a ${displayName(me)}…` : 'Comenta anònimament…'} value={text} onChange={(x) => setText(x.target.value)} maxLength={500} />
                 <button className="btn btn-primary" disabled={busy}>
                   ➤
                 </button>
@@ -122,7 +131,7 @@ export default function Dossier() {
   const [target, setTarget] = useState('')
   const [kind, setKind] = useState<'merit' | 'falta'>('falta')
   const [text, setText] = useState('')
-  const [author, setAuthor] = useState('')
+  const [signed, setSigned] = useState(false)
   const [done, setDone] = useState(false)
   const months = [...new Set([currentMonthKey(), ...db.expedients.map((e) => e.month_id)])].sort().reverse()
   const [month, setMonth] = useState(months[0])
@@ -155,7 +164,7 @@ export default function Dossier() {
                   target_id: target,
                   kind,
                   text: text.trim(),
-                  author: author.trim() || null,
+                  author: signed && me ? displayName(me) : null,
                 }),
               )
               if (ok) {
@@ -185,13 +194,14 @@ export default function Dossier() {
               maxLength={1000}
               rows={3}
             />
-            <div className="row">
-              <input placeholder="Signat per… (buit = anònim)" value={author} onChange={(e) => setAuthor(e.target.value)} maxLength={40} />
-              {me && !author && (
-                <button type="button" className="btn" onClick={() => setAuthor(displayName(me))}>
-                  Signar
-                </button>
-              )}
+            {/* Anònim o signat amb el teu nom (no es pot signar com un altre) */}
+            <div className="toggle">
+              <button type="button" className={!signed ? 'on' : ''} onClick={() => setSigned(false)}>
+                🕵️ Anònim
+              </button>
+              <button type="button" className={signed ? 'on' : ''} onClick={() => setSigned(true)}>
+                ✍️ Signat com a {displayName(me)}
+              </button>
             </div>
             <ErrorMsg err={err} />
             <button className="btn btn-primary" disabled={busy || !target || text.trim().length < 3 || left === 0}>
@@ -199,8 +209,8 @@ export default function Dossier() {
                 ? '✅ Expedient obert!'
                 : left === 0
                   ? 'Ja has publicat 2 avui'
-                  : author.trim()
-                    ? `Publicar com a ${author.trim()}`
+                  : signed
+                    ? `Publicar com a ${displayName(me)}`
                     : 'Publicar anònimament 🕵️'}
             </button>
             <p className="muted small center">

@@ -36,7 +36,8 @@ App web del grup d'amics del gimnàs "Los Hombres de Tibu" (13 membres). Serveix
   - L'alta es fa amb un codi d'activació (`member_secrets`) que valida el trigger `handle_new_user`.
 - **Expedients:** cal sessió per publicar-los (RPC `post_expedient`), però el text surt anònim o signat amb un nom lliure. **Màxim 2 al dia per usuari** (dia de Madrid). La taula `expedient_posts` guarda qui i quin dia, però no quin expedient, perquè el xivato continuï sent anònim.
 - **Reaccions:** cal sessió, i només **una per usuari i expedient** (`expedient_reactions`; tocar la mateixa la treu, tocar-ne una altra la canvia). El jsonb `expedients.reactions` és llegat (es va posar a zero).
-- **Comentaris:** il·limitats, anònims i sense sessió.
+- **Signar:** al dossier (expedients i comentaris) o és anònim o signat amb **el teu nom** (botó, no text lliure). Ho garanteix la BD: `post_expedient` posa el nom amb `signed_name()` i la RLS dels comentaris només accepta `author` buit o igual a `signed_name()`.
+- **Comentaris:** il·limitats; anònims sense sessió, o signats amb el teu nom si has entrat.
 - **Esborrar el que és teu:** els entrenos propis (no el recompte inicial) es poden treure (RLS de `trainings`). Els expedients i comentaris propis també, sense trencar l'anonimat: en publicar, el mòbil genera un codi secret (`src/logic/own.ts`, localStorage) i a la BD només en va el hash (`delete_token`); les RPC `delete_own_expedient` / `delete_own_comment` el comproven. Només funciona des del mòbil on es va publicar. **Al dossier, el que no és teu només ho pot esborrar el superadmin** (RLS amb `is_owner()`); els altres admins no. Els entrenos d'altres sí que els pot esborrar qualsevol admin.
 - **Entrenos:** format "gym (fora)".
   - Hi ha un recompte inicial de 2026 amb `baseline = true` (fins al 31/10/2026; els de novembre s'apunten a l'app perquè comptin al mes), que compta per a l'any però no per a cap mes.
@@ -92,6 +93,7 @@ App web del grup d'amics del gimnàs "Los Hombres de Tibu" (13 membres). Serveix
 21. `supabase/migracio-fotos-vistes.sql`: taula `training_views` (fotos d'una sola visualització per usuari).
 22. `supabase/migracio-registre.sql`: registre d'activitat `audit_log` per al superadmin.
 23. `supabase/migracio-dossier-nomes-owner.sql`: al dossier, només el superadmin esborra el que no és seu.
+24. `supabase/migracio-signar-nom-propi.sql`: només es pot signar amb el teu nom (⚠️ pendent de confirmar que l'usuari l'ha executat).
 
 Quan un canvi necessiti BD:
 - Crea una **migració nova** `supabase/migracio-*.sql` que sigui idempotent (`if not exists`, `drop policy if exists`).

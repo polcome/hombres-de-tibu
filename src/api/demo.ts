@@ -207,9 +207,14 @@ export function createDemoApi(): Api {
         d.posts.push({ member_id: me, day: today })
       })
       const { id } = await newOwn()
-      mutate((db) => db.expedients.unshift({ ...e, id, reactions: {}, created_at: new Date().toISOString() }))
+      // Com la BD: si és signat, sempre amb el nom de qui publica
+      const mine = load().members.find((m) => m.id === me)
+      const author = e.author?.trim() && mine ? mine.nickname || mine.name : null
+      mutate((db) => db.expedients.unshift({ ...e, author, id, reactions: {}, created_at: new Date().toISOString() }))
     },
     async addComment(c) {
+      const mine = load().members.find((m) => m.id === meId())
+      if (c.author && c.author !== (mine?.nickname || mine?.name)) throw new Error('Només pots signar amb el teu nom')
       const { id } = await newOwn()
       mutate((db) => db.comments.push({ ...c, id, created_at: new Date().toISOString() }))
     },

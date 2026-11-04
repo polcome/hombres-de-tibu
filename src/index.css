@@ -406,6 +406,11 @@ textarea:focus {
   border-color: var(--green);
   color: var(--text);
 }
+.toggle .on {
+  background: rgba(124, 92, 255, 0.25);
+  border-color: var(--primary);
+  color: #fff;
+}
 .toggle .on-red {
   background: rgba(239, 68, 68, 0.15);
   border-color: var(--red);
@@ -2930,4 +2935,13 @@ textarea:focus {
 .audit-danger {
   border-left-color: #e8202a;
   background: rgba(232, 32, 42, 0.08);
+}
+
+/* Comentar anònim o signat (botó petit al costat del text) */
+.comment-sign {
+  padding: 6px 10px;
+  flex-shrink: 0;
+}
+.comment-sign.on {
+  border-color: var(--primary);
 }
