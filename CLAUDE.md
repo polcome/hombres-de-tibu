@@ -93,7 +93,7 @@ App web del grup d'amics del gimnàs "Los Hombres de Tibu" (13 membres). Serveix
 21. `supabase/migracio-fotos-vistes.sql`: taula `training_views` (fotos d'una sola visualització per usuari).
 22. `supabase/migracio-registre.sql`: registre d'activitat `audit_log` per al superadmin.
 23. `supabase/migracio-dossier-nomes-owner.sql`: al dossier, només el superadmin esborra el que no és seu.
-24. `supabase/migracio-signar-nom-propi.sql`: només es pot signar amb el teu nom (⚠️ pendent de confirmar que l'usuari l'ha executat).
+24. `supabase/migracio-signar-nom-propi.sql`: només es pot signar amb el teu nom.
 
 Quan un canvi necessiti BD:
 - Crea una **migració nova** `supabase/migracio-*.sql` que sigui idempotent (`if not exists`, `drop policy if exists`).

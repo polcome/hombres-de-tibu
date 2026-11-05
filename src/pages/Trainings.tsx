@@ -200,6 +200,7 @@ export default function Trainings() {
                 {mine.map((t) => (
                   <div key={t.id} className="row small">
                     <span>{t.kind === 'gym' ? '💪' : '🏃'}</span>
+                    {t.count > 1 && <b>×{t.count}</b>}
                     {t.photo_url && <span title="Amb foto">📷</span>}
                     <span>{new Date(t.date).toLocaleDateString('ca-ES', { weekday: 'short', day: 'numeric', month: 'short' })}</span>
                     {t.note && <span className="muted">{t.note}</span>}

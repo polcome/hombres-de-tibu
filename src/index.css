@@ -2945,3 +2945,8 @@ textarea:focus {
 .comment-sign.on {
   border-color: var(--primary);
 }
+
+/* Entrenos afegits de cop (una línia que val més d'1) */
+.training-count {
+  color: var(--primary);
+}

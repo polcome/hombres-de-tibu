@@ -68,6 +68,7 @@ export function TrainingItem({ t }: { t: Training }) {
         <div className="grow">
           <div>
             {m ? <Link to={`/jugador/${m.slug}`}><b>{displayName(m)}</b></Link> : <b>¿?</b>} {t.kind === 'gym' ? '💪 gym' : '🏃 fora'}
+            {t.count > 1 && <b className="training-count"> ×{t.count}</b>}
             {dubious && <span className="badge badge-red"> ❓ dubtós</span>}
           </div>
           <div className="muted small">
