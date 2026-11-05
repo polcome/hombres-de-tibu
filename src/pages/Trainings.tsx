@@ -9,7 +9,7 @@ import { displayName, fmtTotals, monthTotals, yearTotals } from '../logic/stats'
 import { whatsappCount } from '../logic/acta'
 import { Avatar } from '../components/Avatar'
 import { ConfirmButton, CopyButton, ErrorMsg, Section, WhatsAppButton } from '../components/ui'
-import { TrainingItem } from '../components/TrainingItem'
+import { TrainingItem, trainingWhen } from '../components/TrainingItem'
 import { compressImage } from '../logic/image'
 import { CameraCapture, cameraSupported } from '../components/CameraCapture'
 
@@ -202,7 +202,7 @@ export default function Trainings() {
                     <span>{t.kind === 'gym' ? '💪' : '🏃'}</span>
                     {t.count > 1 && <b>×{t.count}</b>}
                     {t.photo_url && <span title="Amb foto">📷</span>}
-                    <span>{new Date(t.date).toLocaleDateString('ca-ES', { weekday: 'short', day: 'numeric', month: 'short' })}</span>
+                    <span>{trainingWhen(t)}</span>
                     {t.note && <span className="muted">{t.note}</span>}
                     <ConfirmButton className="link danger ml-auto" confirmLabel="segur? toca" onConfirm={() => run(() => api.deleteTraining(t.id))}>
                       treure

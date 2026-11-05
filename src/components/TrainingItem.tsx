@@ -27,6 +27,16 @@ function markSeen(id: string) {
   }
 }
 
+/** Dia de l'entreno i hora en què es va apuntar (si es va apuntar un altre dia, també el dia) */
+export function trainingWhen(t: Training) {
+  const day = new Date(t.date).toLocaleDateString('ca-ES', { weekday: 'short', day: 'numeric', month: 'short' })
+  if (!t.created_at) return day
+  const c = new Date(t.created_at)
+  const hour = c.toLocaleTimeString('ca-ES', { hour: '2-digit', minute: '2-digit' })
+  const sameDay = c.toLocaleDateString('sv-SE') === t.date
+  return sameDay ? `${day} · ${hour}` : `${day} · apuntat el ${c.toLocaleDateString('ca-ES', { day: 'numeric', month: 'numeric' })} a les ${hour}`
+}
+
 /** Un entreno és "dubtós" si té 3+ vots de fake i més fakes que oks */
 export function trainingStatus(db: DB, t: Training) {
   const votes = db.trainingVotes.filter((v) => v.training_id === t.id)
@@ -72,7 +82,7 @@ export function TrainingItem({ t }: { t: Training }) {
             {dubious && <span className="badge badge-red"> ❓ dubtós</span>}
           </div>
           <div className="muted small">
-            {new Date(t.date).toLocaleDateString('ca-ES', { weekday: 'short', day: 'numeric', month: 'short' })}
+            {trainingWhen(t)}
             {t.note && ` · ${t.note}`}
             {!t.photo_url && ' · sense foto'}
           </div>
