@@ -3,6 +3,7 @@
 import type { Api } from './types'
 import type { DB, Member } from '../types'
 import { forgetOwn, newOwn, ownToken } from '../logic/own'
+import { blobToDataUrl } from '../logic/image'
 
 const KEY = 'tibu-demo-db-v3'
 const ME = 'tibu-demo-me'
@@ -196,7 +197,10 @@ export function createDemoApi(): Api {
       if (!(t && t.member_id === meId() && !t.baseline)) requireAdmin()
       mutate((db) => (db.trainings = db.trainings.filter((t) => t.id !== id)))
     },
-    async addExpedient(e) {
+    async expedientPhoto(id) {
+      return localStorage.getItem(`tibu-demo-exp-photo-${id}`)
+    },
+    async addExpedient(e, photo) {
       const me = meId()
       if (!me) throw new Error("Has d'entrar per publicar (continuarà sent anònim)")
       const today = new Date().toLocaleDateString('sv-SE')
@@ -210,7 +214,8 @@ export function createDemoApi(): Api {
       // Com la BD: si és signat, sempre amb el nom de qui publica
       const mine = load().members.find((m) => m.id === me)
       const author = e.author?.trim() && mine ? mine.nickname || mine.name : null
-      mutate((db) => db.expedients.unshift({ ...e, author, id, reactions: {}, created_at: new Date().toISOString() }))
+      if (photo) localStorage.setItem(`tibu-demo-exp-photo-${id}`, await blobToDataUrl(photo))
+      mutate((db) => db.expedients.unshift({ ...e, author, id, has_photo: !!photo, reactions: {}, created_at: new Date().toISOString() }))
     },
     async addComment(c) {
       const mine = load().members.find((m) => m.id === meId())

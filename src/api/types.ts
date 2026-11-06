@@ -16,7 +16,9 @@ export interface Api {
   /** Validar (ok) o marcar com a dubtós (fake) l'entreno d'un altre; null treu el vot */
   voteTraining(trainingId: string, vote: 'ok' | 'fake' | null): Promise<void>
   deleteTraining(id: string): Promise<void>
-  addExpedient(e: Pick<Expedient, 'month_id' | 'target_id' | 'kind' | 'text' | 'author'>): Promise<void>
+  addExpedient(e: Pick<Expedient, 'month_id' | 'target_id' | 'kind' | 'text' | 'author'>, photo?: Blob | null): Promise<void>
+  /** Foto adjunta d'un expedient (data URL), només quan algú la vol veure */
+  expedientPhoto(id: string): Promise<string | null>
   addComment(c: { expedient_id: string; author: string | null; text: string }): Promise<void>
   react(expedientId: string, emoji: string): Promise<void>
   /** Cartes que l'usuari ja ha obert (null si la funció no està disponible: llavors no surten sobres) */

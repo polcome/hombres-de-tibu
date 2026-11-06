@@ -72,6 +72,8 @@ export interface Expedient {
   author: string | null
   reactions: Record<string, number>
   created_at: string
+  /** Té foto adjunta (es baixa a part, amb `expedientPhoto`) */
+  has_photo?: boolean
 }
 
 export interface Comment {

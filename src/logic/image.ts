@@ -20,3 +20,13 @@ export async function compressImage(file: Blob, max = 1080, quality = 0.75): Pro
     URL.revokeObjectURL(url)
   }
 }
+
+/** Blob → data URL (per guardar fotos petites dins la BD) */
+export function blobToDataUrl(b: Blob): Promise<string> {
+  return new Promise((res, rej) => {
+    const r = new FileReader()
+    r.onload = () => res(String(r.result))
+    r.onerror = () => rej(new Error("No s'ha pogut llegir la foto"))
+    r.readAsDataURL(b)
+  })
+}

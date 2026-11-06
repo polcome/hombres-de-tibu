@@ -1,6 +1,7 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import type { Api } from './types'
 import { forgetOwn, newOwn, ownToken } from '../logic/own'
+import { blobToDataUrl } from '../logic/image'
 import type { AuditEntry, DB } from '../types'
 
 const EMAIL_DOMAIN = 'hombresdetibu.app'
@@ -113,16 +114,26 @@ export function createSupabaseApi(url: string, key: string): Api {
       const rows = check(await sb.from('trainings').delete().eq('id', id).select('id'))
       if (!rows?.length) throw new Error("No s'ha pogut treure l'entreno (només pots treure els teus)")
     },
-    async addExpedient(e) {
+    async addExpedient(e, photo) {
       const { id, hash } = await newOwn()
       const args = { p_month: e.month_id, p_target: e.target_id, p_kind: e.kind, p_text: e.text, p_author: e.author }
-      let r = await sb.rpc('post_expedient', { ...args, p_id: id, p_token_hash: hash })
-      // Si encara no s'ha executat la migració d'esborrar el propi, es publica com abans (i no es podrà esborrar)
+      const p_photo = photo ? await blobToDataUrl(photo) : null
+      let r = await sb.rpc('post_expedient', { ...args, p_id: id, p_token_hash: hash, ...(p_photo ? { p_photo } : {}) })
       if (r.error?.code === 'PGRST202') {
+        // Sense la migració de les fotos del dossier no es pot adjuntar foto
+        if (p_photo) {
+          forgetOwn(id)
+          throw new Error('Encara no es poden adjuntar fotos (falta executar la migració migracio-fotos-dossier.sql)')
+        }
+        // Sense la migració d'esborrar el propi, es publica com abans (i no es podrà esborrar)
         forgetOwn(id)
         r = await sb.rpc('post_expedient', args)
       }
       check(r)
+    },
+    async expedientPhoto(id) {
+      const { data } = await sb.from('expedient_photos').select('data').eq('expedient_id', id).maybeSingle()
+      return (data as { data: string } | null)?.data ?? null
     },
     async addComment(c) {
       const { id, hash } = await newOwn()

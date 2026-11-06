@@ -2950,3 +2950,12 @@ textarea:focus {
 .training-count {
   color: var(--primary);
 }
+
+/* Foto adjunta d'un expedient */
+.exp-photo-btn {
+  margin: 0 0 10px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}

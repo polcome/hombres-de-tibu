@@ -22,7 +22,7 @@ App web del grup d'amics del gimnàs "Los Hombres de Tibu" (13 membres). Serveix
 - `src/logic/acta.ts`: genera l'acta del mes amb plantilles (sense IA, `generateActa`) i el prompt per a la IA (`aiPrompt`, amb 24 estils a `AI_STYLES`: `pickStyle` en tria un a l'atzar que no s'hagi fet servir els últims 23 mesos, i es desa a `months.acta_style`. Ha de ser impredictible: no l'assignis per mes).
 - `src/logic/months.ts`: utilitats de mesos (`'YYYY-MM'`).
 - `src/pages/*`: Home, Dossier, Vote, Trainings, Cards, Palmares, MonthPage, Player, Admin, Login, Kings.
-- `src/components/*`: FifaCard + CardArt (plantilles SVG) + fifa.css, CardZoom (pop-up de cartes, amb controls de foto), ActaView (acta publicada amb format visual a partir del text de WhatsApp), CardPack (sobre de carta nova: `PackWatcher` + `PackOpening`), Album (àlbum de cromos), PhotoEditor (encuadrar), PhotoControls, CameraCapture (càmera dins l'app amb getUserMedia), TrainingItem, ui.
+- `src/components/*`: FifaCard + CardArt (plantilles SVG) + fifa.css, CardZoom (pop-up de cartes, amb controls de foto), ActaView (acta publicada amb format visual a partir del text de WhatsApp), CardPack (sobre de carta nova: `PackWatcher` + `PackOpening`), Album (àlbum de cromos), PhotoEditor (encuadrar), PhotoControls, CameraCapture (càmera dins l'app amb getUserMedia), PhotoPicker (adjuntar foto: càmera o galeria), TrainingItem, ui.
 
 ## Decisions de disseny (no les canviïs sense preguntar)
 - **Vot 100% secret:** la taula `ballots` no té votant ni data, i `voters` només guarda qui ha votat. Es vota per la RPC `cast_vote`.
@@ -36,6 +36,7 @@ App web del grup d'amics del gimnàs "Los Hombres de Tibu" (13 membres). Serveix
   - L'alta es fa amb un codi d'activació (`member_secrets`) que valida el trigger `handle_new_user`.
 - **Expedients:** cal sessió per publicar-los (RPC `post_expedient`), però el text surt anònim o signat amb un nom lliure. **Màxim 2 al dia per usuari** (dia de Madrid). La taula `expedient_posts` guarda qui i quin dia, però no quin expedient, perquè el xivato continuï sent anònim.
 - **Reaccions:** cal sessió, i només **una per usuari i expedient** (`expedient_reactions`; tocar la mateixa la treu, tocar-ne una altra la canvia). El jsonb `expedients.reactions` és llegat (es va posar a zero).
+- **Foto als expedients** (opcional): càmera de l'app o galeria (`PhotoPicker`), comprimida a 900px. Es guarda a la BD (`expedient_photos`, data URL) i **no al Storage**, perquè el Storage apunta qui puja cada fitxer i trencaria l'anonimat. `expedients.has_photo` diu si n'hi ha; l'app la baixa només en tocar «📷 Veure foto» (`expedientPhoto`). Es pot veure sempre (no és d'una sola visualització). Només s'afegeix amb `post_expedient` (`p_photo`).
 - **Signar:** al dossier (expedients i comentaris) o és anònim o signat amb **el teu nom** (botó, no text lliure). Ho garanteix la BD: `post_expedient` posa el nom amb `signed_name()` i la RLS dels comentaris només accepta `author` buit o igual a `signed_name()`.
 - **Comentaris:** il·limitats; anònims sense sessió, o signats amb el teu nom si has entrat.
 - **Esborrar el que és teu:** els entrenos propis (no el recompte inicial) es poden treure (RLS de `trainings`). Els expedients i comentaris propis també, sense trencar l'anonimat: en publicar, el mòbil genera un codi secret (`src/logic/own.ts`, localStorage) i a la BD només en va el hash (`delete_token`); les RPC `delete_own_expedient` / `delete_own_comment` el comproven. Només funciona des del mòbil on es va publicar. **Al dossier, el que no és teu només ho pot esborrar el superadmin** (RLS amb `is_owner()`); els altres admins no. Els entrenos d'altres sí que els pot esborrar qualsevol admin.
@@ -94,6 +95,7 @@ App web del grup d'amics del gimnàs "Los Hombres de Tibu" (13 membres). Serveix
 22. `supabase/migracio-registre.sql`: registre d'activitat `audit_log` per al superadmin.
 23. `supabase/migracio-dossier-nomes-owner.sql`: al dossier, només el superadmin esborra el que no és seu.
 24. `supabase/migracio-signar-nom-propi.sql`: només es pot signar amb el teu nom.
+25. `supabase/migracio-fotos-dossier.sql`: foto opcional als expedients (⚠️ pendent de confirmar que l'usuari l'ha executat).
 
 Quan un canvi necessiti BD:
 - Crea una **migració nova** `supabase/migracio-*.sql` que sigui idempotent (`if not exists`, `drop policy if exists`).

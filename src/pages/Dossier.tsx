@@ -8,6 +8,8 @@ import { currentMonthKey, monthLabel, timeAgo, todayISO } from '../logic/months'
 import { displayName, memberById } from '../logic/stats'
 import { Avatar } from '../components/Avatar'
 import { ConfirmButton, ErrorMsg, MemberSelect, Section } from '../components/ui'
+import { PhotoPicker, type PickedPhoto } from '../components/PhotoPicker'
+import { createPortal } from 'react-dom'
 
 export const MAX_POSTS_PER_DAY = 2
 
@@ -55,6 +57,7 @@ export function ExpedientItem({ e, compact }: { e: Expedient; compact?: boolean 
         )}
       </div>
       <p className="exp-text">{e.text}</p>
+      {e.has_photo && <ExpedientPhoto id={e.id} />}
       {!compact && (
         <>
           <div className="reactions">
@@ -132,6 +135,7 @@ export default function Dossier() {
   const [kind, setKind] = useState<'merit' | 'falta'>('falta')
   const [text, setText] = useState('')
   const [signed, setSigned] = useState(false)
+  const [photo, setPhoto] = useState<PickedPhoto | null>(null)
   const [done, setDone] = useState(false)
   const months = [...new Set([currentMonthKey(), ...db.expedients.map((e) => e.month_id)])].sort().reverse()
   const [month, setMonth] = useState(months[0])
@@ -165,11 +169,13 @@ export default function Dossier() {
                   kind,
                   text: text.trim(),
                   author: signed && me ? displayName(me) : null,
-                }),
+                }, photo?.blob),
               )
               if (ok) {
                 setText('')
                 setTarget('')
+                if (photo) URL.revokeObjectURL(photo.url)
+                setPhoto(null)
                 setDone(true)
                 setMonth(currentMonthKey())
                 setTimeout(() => setDone(false), 2500)
@@ -194,6 +200,8 @@ export default function Dossier() {
               maxLength={1000}
               rows={3}
             />
+            {/* Foto opcional: es guarda més petita, que és per veure-la al mòbil */}
+            <PhotoPicker value={photo} onChange={setPhoto} label="📷 Adjuntar foto de prova (opcional)" title="Foto de l'expedient" max={900} quality={0.7} />
             {/* Anònim o signat amb el teu nom (no es pot signar com un altre) */}
             <div className="toggle">
               <button type="button" className={!signed ? 'on' : ''} onClick={() => setSigned(false)}>
@@ -243,5 +251,40 @@ export default function Dossier() {
         </div>
       </Section>
     </div>
+  )
+}
+
+/** Foto adjunta d'un expedient: es baixa només quan algú la toca, i es pot veure sempre que es vulgui */
+function ExpedientPhoto({ id }: { id: string }) {
+  const [src, setSrc] = useState<string | null>(null)
+  const [open, setOpen] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const show = async () => {
+    setOpen(true)
+    if (src) return
+    setLoading(true)
+    setSrc(await api.expedientPhoto(id).catch(() => null))
+    setLoading(false)
+  }
+  return (
+    <>
+      <button type="button" className="chip exp-photo-btn" onClick={show}>
+        📷 Veure foto
+      </button>
+      {open &&
+        createPortal(
+          <div className="modal card-modal" onClick={() => setOpen(false)}>
+            <button type="button" className="card-modal-close" aria-label="Tancar">
+              ✕
+            </button>
+            {src ? (
+              <img className="proof-full" src={src} alt="Foto de l'expedient" />
+            ) : (
+              <div className="muted">{loading ? 'Carregant…' : "No s'ha pogut carregar la foto"}</div>
+            )}
+          </div>,
+          document.body,
+        )}
+    </>
   )
 }
